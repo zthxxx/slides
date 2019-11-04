@@ -1,0 +1,26 @@
+{
+  "name": "zthxxx-slides",
+  "version": "0.0.1",
+  "description": "slides for share",
+  "private": true,
+  "main": "index.js",
+  "scripts": {},
+  "repository": "zthxxx/slides",
+  "keywords": [
+    "markdown",
+    "slides"
+  ],
+  "author": "zthxxx",
+  "license": "CC-BY-NC-ND-4.0",
+  "bugs": {
+    "url": "https://github.com/zthxxx/slides/issues"
+  },
+  "homepage": "https://slides.zthxxx.me",
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "devDependencies": {
+    "eloc": "^1.1.18",
+    "rimraf": "^3.0.0"
+  }
+}
