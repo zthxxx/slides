@@ -125,7 +125,8 @@ trust, financial
 
 ---
 
-Git 所做的实质工作 —— 
+Git 所做的实质工作
+
 将被改写的文件保存为数据对象，更新暂存区，记录树对象，最后创建一个指明了顶层树对象和父提交的提交对象
 
 ```bash
@@ -222,12 +223,13 @@ git checkout master
 git pull
 ```
 
-```
+```bash
 git fetch origin +master:refs/heads/master
 git checkout master
 ```
 
-```
+```bash
+# or
 git fetch origin master
 git fetch . origin/master:master
 git checkout master
@@ -253,3 +255,40 @@ git update-ref refs/heads/test-fetch-new-branch HEAD
 [git block playground](https://docs.google.com/presentation/d/1sbYcDZV-_3a_1Yw9WxMiJZFgQJo6ZlD47Y-8lmKowFM/edit?usp=sharing)
 
 ---
+
+push 
+
+- 创建联调平台 
+- create merge 
+- 升正式版号 
+- 构建发版 
+- 回到业务仓库 
+- install commit push 
+- 创建业务方联调平台
+- 提 MR
+
+---
+
+push 自动化流程
+
+- [x] 创建联调平台 (auto)
+- create merge 
+- [x] 升正式版号 (auto)
+- [x] 构建发版 (auto)
+- [x] 回到业务仓库 (auto)
+- [x] install commit push (auto)
+- [x] 创建业务方联调平台 (auto)
+- [x] 提 MR (auto)
+
+---
+
+<img
+width="200" height="200"
+alt="zthxxx"
+src="https://avatars.githubusercontent.com/u/15135943"
+style="border-radius: 50%; border: solid 1px #bbb;"
+/>
+
+[![zthxxx](https://badgen.net/badge/github/%20zthxxx%20/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
+
+[ [jovial](https://github.com/zthxxx/jovial) · [leetsolve](https://github.com/zthxxx/leetsolve) · [hexo-wikitten](https://github.com/zthxxx/hexo-theme-Wikitten) ]
