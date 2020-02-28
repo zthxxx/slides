@@ -10,7 +10,8 @@ the most familiar strange 'block chain'
 - Git blob structure
 - Porcelain & Plumbing
 - Low-level usage
-- CI with git flow
+  - alternative git add commit checkout commands
+- Playground
 
 ---
 
@@ -53,7 +54,6 @@ https://bitcoin.org/bitcoin.pdf
 
 ---
 
-
 [Why is git not considered a 'block chain'](https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain)
 
 ---
@@ -95,7 +95,6 @@ trust, financial
 
 ---
 
-
 ![](./images/git-commit-data.png)
 
 ---
@@ -125,16 +124,19 @@ trust, financial
 
 ---
 
-Git 所做的实质工作
+The Essentially What Git Does
 
-将被改写的文件保存为数据对象，更新暂存区，记录树对象，最后创建一个指明了顶层树对象和父提交的提交对象
+- stores blobs for the files that have changed, 
+- updates the index, writes out trees, 
+- and writes commit objects that reference the top-level trees and the commits. 
 
 ```bash
-git cat-file
-git show-ref
-git update-ref 
-git show-ref
-git hash-object
+git cat-file # provide content or type info for repository objects
+git hash-object # compute hash and creates a blob from a file
+git update-index # register files in the working tree to the index
+git write-tree # create a tree object from the current index
+git commit-tree # create a commit object from tree object
+git update-ref # update the object name stored in a ref safely
 ```
 ---
 
@@ -213,6 +215,8 @@ origin/master
 
 fetch = +refs/heads/master:refs/remotes/origin/master
 fetch = +refs/heads/release-*:refs/remotes/origin/release-*
+
+# `+` means force update
 ```
 
 ---
@@ -239,46 +243,30 @@ git checkout master
 
 ```bash
 git fetch . +370bac699cfe2eeee6517991ed8c1dcaef50bf39:refs/heads/release
-# 和
+# is equivalent to
 git update-ref refs/heads/release 370bac699cfe2eeee6517991ed8c1dcaef50bf39
-# 这两条命令是等价的
 
-并且 
-git fetch . +HEAD:refs/heads/test-fetch-new-branch
-# 也等价于
+git fetch . +HEAD:refs/heads/test-fetch-new-branch # `+` means force update
+# is equivalent to
 git checkout -b test-fetch-new-branch
 git update-ref refs/heads/test-fetch-new-branch HEAD
 ```
 
 ---
 
-[git block playground](https://docs.google.com/presentation/d/1sbYcDZV-_3a_1Yw9WxMiJZFgQJo6ZlD47Y-8lmKowFM/edit?usp=sharing)
+## [git-block-playground](https://docs.google.com/presentation/d/1sbYcDZV-_3a_1Yw9WxMiJZFgQJo6ZlD47Y-8lmKowFM/edit?usp=sharing)
+
+(all those commit diagrams above are drawn in the playground)
 
 ---
 
-push 
+Reference
 
-- 创建联调平台 
-- create merge 
-- 升正式版号 
-- 构建发版 
-- 回到业务仓库 
-- install commit push 
-- 创建业务方联调平台
-- 提 MR
-
----
-
-push 自动化流程
-
-- [x] 创建联调平台 (auto)
-- create merge 
-- [x] 升正式版号 (auto)
-- [x] 构建发版 (auto)
-- [x] 回到业务仓库 (auto)
-- [x] install commit push (auto)
-- [x] 创建业务方联调平台 (auto)
-- [x] 提 MR (auto)
+- [bitcoin.org/bitcoin.pdf](https://bitcoin.org/bitcoin.pdf)
+- [git-scm.com/Git-Internals-Plumbing-and-Porcelain](https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain)
+- [github.com/pluralsight/git-internals](https://github.com/pluralsight/git-internals-pdf)
+- [why-is-git-not-considered-a-block-chain](https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain)
+- [git-cheatsheet-chs](https://amio.github.io/git-cheatsheet-chs/)
 
 ---
 
@@ -291,4 +279,4 @@ style="border-radius: 50%; border: solid 1px #bbb;"
 
 [![zthxxx](https://badgen.net/badge/github/%20zthxxx%20/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
 
-[ [jovial](https://github.com/zthxxx/jovial) · [leetsolve](https://github.com/zthxxx/leetsolve) · [hexo-wikitten](https://github.com/zthxxx/hexo-theme-Wikitten) ]
+[ [jovial](https://github.com/zthxxx/jovial) · [zsh-history-enquirer](https://github.com/zthxxx/zsh-history-enquirer) · [hexo-wikitten](https://github.com/zthxxx/hexo-theme-Wikitten) ]
