@@ -4,13 +4,12 @@ the most familiar strange 'block chain'
 
 ---
 
+### TOC
+
 - Merkle Tree
-- Why is git not considered a block chain
-- Git Workspace
-- Git blob structure
-- Porcelain & Plumbing
-- Low-level usage
-  - alternative git add commit checkout commands
+- Why is git not considered a 'block chain'
+- Git Workspace / Data Structure
+- Porcelain & Plumbing / Low-level Usage
 - Playground
 
 ---
@@ -35,14 +34,11 @@ the most familiar strange 'block chain'
 
 ---
 
-https://bitcoin.org/bitcoin.pdf
+### https://bitcoin.org/bitcoin.pdf
 
-- Block Sign Chain
-- PoW
-- [Difficulty](https://learnmeabitcoin.com/beginners/difficulty)
-- Block Reward
-- Smart Contract (eg. ETH)
-- IPO (eg. ETH)
+Block Sign Chain / PoW / [Difficulty](https://learnmeabitcoin.com/beginners/difficulty) / Block Reward 
+
+Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ---
 
@@ -54,11 +50,11 @@ https://bitcoin.org/bitcoin.pdf
 
 ---
 
-[Why is git not considered a 'block chain'](https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain)
+### [Why is git not considered a 'block chain'](https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain)
 
 ---
 
-Why is git considered a 'block chain'
+### Why is git considered a 'block chain'
 
 - similarity
 - hash block, signature
@@ -66,16 +62,13 @@ Why is git considered a 'block chain'
 
 ---
 
-[Why is git not considered a 'block chain'](https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain)
+### [Why is git not considered a 'block chain'](https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain)
 
-- Block Sign Chain
-- PoW
-- [Difficulty](https://learnmeabitcoin.com/beginners/difficulty)
-- Block Reward
-- Smart Contract (eg. ETH)
-- IPO (eg. ETH)
+Block Sign Chain / PoW / [Difficulty](https://learnmeabitcoin.com/beginners/difficulty)
 
-trust, financial
+Block Reward / Smart Contract (eg. ETH) / IPO (eg. ETH)
+
+*trust, financial*
 
 ---
 
@@ -111,24 +104,28 @@ trust, financial
 <style>
   p {
     display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   p img {
-    width: fit-content;
-    height: fit-content;
+    max-width: 80%;
   }
 </style>
 
-![git-workspace](./images/git-workspace.png)
 ![git-min-commit](./images/git-min-commit.png)
+![git-workspace](./images/git-workspace.png)
+
 
 ---
 
-The Essentially What Git Does
+### The Essentially What Git Does
 
 - stores blobs for the files that have changed, 
 - updates the index, writes out trees, 
-- and writes commit objects that reference the top-level trees and the commits. 
+- writes commit objects that reference the top-level trees and the commits. 
+
+---
 
 ```bash
 git cat-file # provide content or type info for repository objects
@@ -138,6 +135,7 @@ git write-tree # create a tree object from the current index
 git commit-tree # create a commit object from tree object
 git update-ref # update the object name stored in a ref safely
 ```
+
 ---
 
 ```bash
@@ -254,13 +252,13 @@ git update-ref refs/heads/test-fetch-new-branch HEAD
 
 ---
 
-## [git-block-playground](https://docs.google.com/presentation/d/1sbYcDZV-_3a_1Yw9WxMiJZFgQJo6ZlD47Y-8lmKowFM/edit?usp=sharing)
+### [git-block-playground](https://docs.google.com/presentation/d/1sbYcDZV-_3a_1Yw9WxMiJZFgQJo6ZlD47Y-8lmKowFM/edit?usp=sharing)
 
 (all those commit diagrams above are drawn in the playground)
 
 ---
 
-Reference
+### Reference
 
 - [bitcoin.org/bitcoin.pdf](https://bitcoin.org/bitcoin.pdf)
 - [git-scm.com/Git-Internals-Plumbing-and-Porcelain](https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain)
