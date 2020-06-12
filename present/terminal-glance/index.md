@@ -39,7 +39,7 @@ Terminal / 输入输出
   height: 360px;
   border-radius: 8px;
   padding: 8px 0 8px 8px;
-  background: #000;
+  background: #272936;
 }
 </style>
 
@@ -61,13 +61,13 @@ Terminal / 输入输出
 
 ---
 
-终端的历史
+### 终端的历史
 
-- 早期的电子管电脑，有一堆按钮组成的控制台 (`Console`)
+---
 
 ![ENIAC-console-panel](./images/ENIAC-console-panel.jpg)
 
-
+早期的电子管电脑，有一堆按钮组成的控制台 (`Console`)
 
 <style>
 p {
@@ -81,11 +81,9 @@ img {
 
 ---
 
-- 早期的电子管电脑，有一堆按钮组成的控制台 (`Console`)
-- 后来有了键盘，可以输入，打字在纸上 (`Teletype`)
-
 ![Teletype](./images/Teletype.jpg)
 
+后来有了键盘，可以输入，打字在纸上 (`Teletype`)
 
 <style>
 p {
@@ -101,12 +99,9 @@ img {
 
 ---
 
-- 早期的电子管电脑，有一堆按钮组成的控制台 (`Console`)
-- 后来有了键盘，可以输入，打字在纸上 (`Teletype`)
-- 再往后有了显示器，和键盘一起组成多用户输入输出 (`Terminal`), 
-  系统级别才显示到 Console
-
 ![DECVT100-terminal](./images/DECVT100-terminal.jpg)
+
+再往后有了显示器，和键盘一起组成多用户输入输出 (`Terminal`), 系统级别才显示到 Console
 
 <style>
 p {
@@ -145,7 +140,7 @@ img {
   height: 360px;
   border-radius: 8px;
   padding: 8px 0 8px 8px;
-  background: #000;
+  background: #272936;
 }
 </style>
 
@@ -226,7 +221,7 @@ done
   height: 360px;
   border-radius: 8px;
   padding: 8px 0 8px 8px;
-  background: #000;
+  background: #272936;
 }
 </style>
 
@@ -294,7 +289,7 @@ PTS                       |   |        |   +-------+    |       +-------+
   height: 360px;
   border-radius: 8px;
   padding: 8px 0 8px 8px;
-  background: #000;
+  background: #272936;
 }
 </style>
 
@@ -399,7 +394,7 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
   height: 360px;
   border-radius: 8px;
   padding: 8px 0 8px 8px;
-  background: #000;
+  background: #272936;
 }
 </style>
 
