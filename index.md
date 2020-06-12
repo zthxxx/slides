@@ -1,5 +1,6 @@
 # [zthxxx's Slides](https://slides.zthxxx.me)
 
+- *2020.06* [Live in Terminal](/present/live-in-terminal)
 - *2020.05* [Terminal Concept Guide](/present/terminal-glance)
 - *2020.02* [A Glance at Git Merkle](/present/git-merkle-glance)
 - *2019.11* [Zsh History Search Plugin](https://zsh-history-enquirer.zthxxx.me)
