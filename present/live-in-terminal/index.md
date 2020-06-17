@@ -38,7 +38,7 @@ Interact / Plugins
 
 ---
 
-[hollywood](https://github.com/dustinkirkland/hollywood)
+[**hollywood**](https://github.com/dustinkirkland/hollywood)
 
 <iframe
   class="terminal"
@@ -80,7 +80,7 @@ Interact / Plugins
 
 ---
 
-[pcman in terminal](https://myman.sourceforge.io/)
+[**pcman**](https://myman.sourceforge.io/)
 
 <iframe
   class="terminal"
@@ -125,7 +125,7 @@ Interact / Plugins
 
 ---
 
-[colorsheet](https://github.com/zthxxx/jovial/blob/v1.1.5/jovial.plugin.zsh#L244)
+[**colorsheet**](https://github.com/zthxxx/jovial/blob/v1.1.5/jovial.plugin.zsh#L244)
 
 <iframe
   class="terminal"
@@ -147,7 +147,7 @@ Interact / Plugins
 
 ---
 
-像素级还原 - [browsh](https://github.com/browsh-org/browsh)
+**像素级还原 - [browsh](https://github.com/browsh-org/browsh)**
 
 <iframe
   class="terminal"
@@ -167,7 +167,7 @@ Interact / Plugins
 
 ---
 
-[GoTTY](https://github.com/yudai/gotty)
+[**GoTTY**](https://github.com/yudai/gotty)
 
 <iframe
   class="terminal"
@@ -189,19 +189,19 @@ Interact / Plugins
 
 ---
 
-[YouCompleteMe](https://github.com/ycm-core/YouCompleteMe)
+[**YouCompleteMe**](https://github.com/ycm-core/YouCompleteMe)
 
 ![YouCompleteMe-preview](https://user-images.githubusercontent.com/10584846/58738348-5060da80-83fd-11e9-9537-d07fdbf4554c.gif)
 
 ---
 
-[ink](https://github.com/vadimdemedes/ink#usage)
+[**ink**](https://github.com/vadimdemedes/ink#usage)
 
 react in terminal
 
 ---
 
-[Inquirer.js](https://github.com/SBoudrias/Inquirer.js)
+[**Inquirer.js**](https://github.com/SBoudrias/Inquirer.js)
 
 - 询问式输入 (npm init)
 - checkbox / radio button
@@ -210,7 +210,7 @@ react in terminal
 
 ---
 
-[REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)
+[**REPL**](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)
 
 node / python / mysql / redis
 
@@ -234,19 +234,20 @@ node / python / mysql / redis
 
 ---
 
+**交互方式总结**
+
 - CLI
-  - command / pipeline (input-output)
-  - 二维码
+  - command / pipeline (input-output / 二维码)
+  - call GUI app
 - TUI
   - 全屏化 / 窗口化 / popover
   - mouse / game
 - REPL
 - sound / notify
 
-
 ---
 
-bash / zsh / fish
+**bash / zsh / fish**
 
 <iframe
   class="terminal"
@@ -268,16 +269,18 @@ bash / zsh / fish
 
 ---
 
-zsh theme plugins
+### zsh theme plugins
 
-- [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh)
-- [powerlevel10k](https://github.com/romkatv/powerlevel10k)
-- [jovial](https://github.com/zthxxx/jovial)
-- [autojump](https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/autojump/autojump.plugin.zsh)
-- [bgnotify](https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/bgnotify/bgnotify.plugin.zsh)
-- [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-- [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-- [zsh-history-enquirer](https://github.com/zthxxx/zsh-history-enquirer)
+[oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) / 
+[powerlevel10k](https://github.com/romkatv/powerlevel10k) /
+[jovial](https://github.com/zthxxx/jovial)
+
+[autojump](https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/autojump/autojump.plugin.zsh) /
+[bgnotify](https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/bgnotify/bgnotify.plugin.zsh) /
+[zsh-history-enquirer](https://github.com/zthxxx/zsh-history-enquirer)
+
+[autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) /
+[syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
 
 
 ---
