@@ -4,7 +4,9 @@
   "description": "slides for share",
   "private": true,
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "dev": "eloc open index.md -i 'images/**' -b -t \"`head -n 1 index.md | perl -pe 's/#+ +//g'`\""
+  },
   "repository": "zthxxx/slides",
   "keywords": [
     "markdown",
