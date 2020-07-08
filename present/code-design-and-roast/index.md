@@ -399,6 +399,7 @@ export default () => {
 
 避免单调乏味，引导视线和阅读，突出强调主体
 
+易读 / 理解
 
 ---
 
@@ -466,7 +467,7 @@ export default () => {
 ---
 
 <iframe 
-  src="//player.bilibili.com/player.html?aid=883238758&bvid=BV1HK4y1t7jD&cid=191303549&page=1&high_quality=1"
+  src="https:///player.bilibili.com/player.html?aid=883238758&bvid=BV1HK4y1t7jD&cid=191303549&page=1&high_quality=1"
   scrolling="no"
   border="0"
   frameborder="no"
@@ -478,8 +479,7 @@ export default () => {
 
 ---
 
-让我们回到代码风格
-
+我们现在有了一些理论指导，让我们回到代码风格
 
 ---
 
