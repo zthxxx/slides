@@ -142,13 +142,16 @@
     justify-content: space-between;
   }
 
-  img {
+  .content img {
     padding: 0 80px;
     height: 680px;
     justify-self: center;
   }
-
 </style>
+
+---
+
+![蒙德里安](./images/mondrian.jpg)
 
 ---
 
@@ -160,7 +163,7 @@
 
 <!-- 同一份代码不同的人看来，有人会觉得 ok，有人会觉得 suck -->
 
-怎么做好看，是在审美观下的`趋势`和`总结`，以及`原则`
+怎么做好看，是在审美观下的`趋势`和`总结`，以及`原则` (这些原则都是**限制**)
 
 <!-- 所以我想做的是对齐大家的代码风格认知 -->
 
@@ -228,3 +231,290 @@ export default () => {
 
 ---
 
+<!-- 相当肤浅的笔记 -->
+
+![](./images/平面设计入门基础-zthxxx-20170312.svg)
+
+---
+
+![](./images/平面基础模块-zthxxx-20170312.png)
+
+---
+
+## 平面设计中的排版原则
+
+---
+
+## 对齐 / 重复 / 亲密 / 对比
+
+---
+
+
+### 对齐 Alignment
+
+每一项都应当与页面上的某个相关内容存在某种视觉联系
+
+![](./images/alignment.png)
+
+
+<style>
+  .content img {
+    max-height: 600px;
+    justify-self: center;
+  }
+</style>
+
+<!-- 代码 case -->
+<!-- https://www.swalladge.net/archives/2018/10/15/alternative-code-styles/ -->
+
+---
+
+
+### 重复 Repetition
+
+重复给人带来和谐有秩序的美感，不要过分堆砌花哨
+
+![bad-case](./images/repetition-bad-case.jpg)
+
+
+<style>
+  .content h3 {
+    margin-bottom: 0.5em;
+  }
+
+  .content p {
+    margin: 0.5em 0;
+  }
+
+  .content img {
+    max-height: 540px;
+    justify-self: center;
+  }
+</style>
+
+---
+
+### 重复 Repetition
+
+重复给人带来和谐有秩序的美感，不要过分堆砌花哨
+
+![good-case](./images/repetition-good-case.jpg)
+
+<style>
+  .content h3 {
+    margin-bottom: 0.5em;
+  }
+
+  .content p {
+    margin: 0.5em 0;
+  }
+
+  .content img {
+    max-height: 540px;
+    justify-self: center;
+  }
+</style>
+
+
+---
+
+![bad-case](./images/如何预防猝死-bad-case.jpg)
+
+![good-case](./images/如何预防猝死-good-case.jpg)
+
+
+<style>
+  .slide .content {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .content img {
+    padding: 0 20px;
+    height: 500px;
+    justify-self: center;
+  }
+</style>
+
+---
+
+### 亲密 Proximity
+
+彼此相关的项应当靠近在一起，归组成一个视觉单元，反之分开
+
+<!-- 彼此不相干的元素不应存在亲密性 -->
+<!-- 留白就是在亲密这一步产生的 -->
+
+
+---
+
+![bad-case](./images/亲密-菜-bad-case.jpg)
+
+![good-case](./images/亲密-菜-good-case.jpg)
+
+
+<style>
+  .slide .content {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .slide .content::-webkit-scrollbar {
+    display: none;
+  }
+
+  .content img {
+    padding: 0 100px;
+    height: 800px;
+    justify-self: center;
+  }
+</style>
+
+---
+
+![bad-case](./images/亲密-熬夜-bad-case.png)
+
+![good-case](./images/亲密-熬夜-good-case.png)
+
+<style>
+  .slide .content {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .slide .content::-webkit-scrollbar {
+    display: none;
+  }
+
+  .content img {
+    padding: 0 20px;
+    height: 800px;
+    justify-self: center;
+  }
+</style>
+
+---
+
+### 对比 Contrast
+
+避免单调乏味，引导视线和阅读，突出强调主体
+
+
+---
+
+四大原则相互关联
+
+<div class="group">
+  <div class="row">
+    <div class="circle">对齐</div><div class="circle">重复</div>
+  </div>
+  <div class="row">
+    <div class="circle">亲密</div><div class="circle">对比</div>
+  </div>
+</div>
+
+
+<style>
+  .group .row {
+    position: relative;
+    width: 620px;
+    height: 240px;
+  }
+
+  .group .circle {
+    display: inline-block;
+    width: 300px;
+    height: 300px;
+    line-height: 300px;
+    text-align: center;
+    
+    border: solid 1px #999;
+    border-radius: 50%;
+    text-align: center;
+  }
+
+  .group .circle:first-of-type {
+    position: relative;
+    right: -30px;
+  }
+
+  .group .circle:last-of-type {
+    position: relative;
+    left: -30px;
+  }
+</style>
+
+---
+
+![all-bad-case](./images/牛皮藓广告.jpg)
+
+![all-bad-case](./images/牛皮藓电子广告.jpg)
+
+<style>
+  .slide .content {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .content img {
+    padding: 0 20px;
+    height: 500px;
+    justify-self: center;
+  }
+</style>
+
+---
+
+<iframe 
+  src="//player.bilibili.com/player.html?aid=883238758&bvid=BV1HK4y1t7jD&cid=191303549&page=1&high_quality=1"
+  scrolling="no"
+  border="0"
+  frameborder="no"
+  framespacing="0"
+  allowfullscreen="true"
+  style="width: 1200px; height: 800px"
+/>
+
+
+---
+
+让我们回到代码风格
+
+
+---
+
+
+
+---
+
+
+
+---
+
+
+
+---
+
+
+
+---
+
+
+
+---
+
+
+
+---
+
+Refs:
+
+- https://zhuanlan.zhihu.com/p/99720701
+- https://zhuanlan.zhihu.com/p/66361948
+- https://zhuanlan.zhihu.com/p/50128485
+- https://zhuanlan.zhihu.com/p/37628295
+- https://zhuanlan.zhihu.com/p/37386004
+- https://zhuanlan.zhihu.com/p/37628534
+- https://zhuanlan.zhihu.com/p/99720701
+- https://www.jianshu.com/p/640b035efe48
+- https://www.uisdc.com/compared-and-align-principle
