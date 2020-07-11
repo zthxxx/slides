@@ -6,9 +6,9 @@
 
 本栏目可能含有以下场景
 
-**思维跳跃**　/ **偏题万里** / **概念无数**
+**思维跳跃**　/　**偏题万里**　/　**概念无数**
 
-**反问成堆**　/ **肤浅主观** / **手忙脚乱**
+**反问成堆**　/　**肤浅主观**　/　**手忙脚乱**
 
 ---
 
@@ -19,7 +19,7 @@
 
 ---
 
-## 开篇
+## 开偏
 
 <div class="chat">
 
@@ -241,11 +241,24 @@ export default () => {
 
 ---
 
-## 平面设计中的排版原则
+## 平面设计中的 **排版原则**
+
+
+<style>
+  .content h2 {
+    font-weight: 300;
+  }
+</style>
 
 ---
 
-## 对齐 / 重复 / 亲密 / 对比
+## **对齐** / **重复** / **亲密** / **对比**
+
+<style>
+  .content h2 {
+    font-weight: 300;
+  }
+</style>
 
 ---
 
@@ -345,7 +358,6 @@ export default () => {
 <!-- 彼此不相干的元素不应存在亲密性 -->
 <!-- 留白就是在亲密这一步产生的 -->
 
-
 ---
 
 ![bad-case](./images/亲密-菜-bad-case.jpg)
@@ -416,6 +428,10 @@ export default () => {
 
 
 <style>
+  .group {
+    padding-bottom: 80px;
+  }
+
   .group .row {
     position: relative;
     width: 620px;
@@ -483,27 +499,65 @@ export default () => {
 
 ---
 
+对齐
 
+![](./images/code/align-center.png)
+
+
+<style>
+  .slide .content {
+    overflow: scroll;
+  }
+  .slide .content::-webkit-scrollbar {
+    display: none;
+  }
+
+  .content img {
+    max-height: 600px;
+    justify-self: center;
+  }
+</style>
+---
+
+缩进
+
+![](./images/code/indent-fibonacci.png)
+
+<style>
+  .slide .content {
+    overflow: scroll;
+  }
+  .slide .content::-webkit-scrollbar {
+    display: none;
+  }
+
+  .content img {
+    max-height: 600px;
+    justify-self: center;
+  }
+</style>
 
 ---
 
+## 代码风格
 
+<!-- 现在再来回顾，我们为什么要加这些对齐方案，以及为什么这么对齐 -->
 
----
-
-
-
----
-
-
-
----
-
-
+<style>
+  .content h2 {
+    font-weight: 300;
+  }
+</style>
 
 ---
 
+## 数据依赖
 
+<style>
+  .content h2 {
+    font-weight: 300;
+  }
+</style>
 
 ---
 
@@ -518,3 +572,14 @@ Refs:
 - https://zhuanlan.zhihu.com/p/99720701
 - https://www.jianshu.com/p/640b035efe48
 - https://www.uisdc.com/compared-and-align-principle
+
+
+<style>
+  .slide .content {
+    overflow: display;
+  }
+
+  .slide .content::-webkit-scrollbar {
+    display: none;
+  }
+</style>
