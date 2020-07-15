@@ -15,3 +15,5 @@ package-lock.json
 coverage
 
 *.log
+
+beta-band.json
