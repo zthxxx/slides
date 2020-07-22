@@ -127,6 +127,8 @@ Block Reward / Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ---
 
+### [Plumbing & Porcelain](https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain)
+
 ```bash
 git cat-file # provide content or type info for repository objects
 git hash-object # compute hash and creates a blob from a file
@@ -142,22 +144,21 @@ git update-ref # update the object name stored in a ref safely
 # git add README.md && git commit -m 'docs: update README'
 
 # git add
-# 100644: file; 100755: exec; 120000: symbolic-link
-# note snapshot
+## note snapshot
 
-git hash-object -w README.md
+blob_hash=$(git hash-object -w README.md)
 
-git update-index --add --cacheinfo 100644 \
-  blob-xxxxxxxxxxx README.md
+## 100644: file; 100755: exec; 120000: symbolic-link
+git update-index --add --cacheinfo 100644 ${blob_hash} README.md
 
 # git commit
 
-git write-tree
+tree_hash=$(git write-tree)
 
-echo 'docs: update README' | git commit-tree tree-xxxxxxx -p 'HEAD^{commit}'
+commit_hash=$(echo 'docs: update README' | git commit-tree ${tree_hash} -p 'HEAD^{commit}')
 
-git update-ref refs/heads/master commit-xxxxxxxxxx
-# # echo commit-xxxxxxxxxx > .git/refs/heads/master
+git update-ref refs/heads/master ${commit_hash}
+## echo ${commit_hash} > .git/refs/heads/master
 ```
 
 ---
