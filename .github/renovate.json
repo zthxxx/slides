@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "config:base",
+    "group:allNonMajor"
+  ],
+  "schedule": ["before 12am every 2 weeks on Tuesday"],
+  "timezone": "Asia/Shanghai"
+}
