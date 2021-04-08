@@ -22,7 +22,7 @@
     "node": ">=10.0.0"
   },
   "devDependencies": {
-    "eloc": "^1.1.18",
-    "rimraf": "^3.0.0"
+    "eloc": "1.3.1",
+    "rimraf": "3.0.2"
   }
 }
