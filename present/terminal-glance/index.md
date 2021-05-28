@@ -423,6 +423,7 @@ Ref Docs:
 - https://en.wikipedia.org/wiki/Terminal_emulator
 - https://en.wikipedia.org/wiki/ANSI_escape_code
 - https://stackoverflow.com/questions/18811129/full-screen-terminal-application-with-ruby-or-other-languages
+- https://stackoverflow.com/questions/11023929/using-the-alternate-screen-in-a-bash-script
 
 ---
 
