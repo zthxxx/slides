@@ -1,5 +1,8 @@
 # [zthxxx's Slides](https://slides.zthxxx.me)
 
+<div class="scroll">
+
+- *2020.09* [Our Git Operate Proposal](/present/git-operate-proposal)
 - *2020.08* [Graphic Design in Code Style](/present/code-design-and-roast)
 - *2020.06* [Live in Terminal](/present/live-in-terminal) <small>(need local service)</small>
 - *2020.05* [Terminal Concept Guide](/present/terminal-glance) <small>(need local service)</small>
@@ -8,12 +11,23 @@
 - *2019.11* [You Don't Need to Care Log](https://dont-care-log.zthxxx.me)
 - *2019.10* [Code as WYGIWYS](/present/code-as-wygiwys)
 
+</div>
+
 <style>
   .slide .content {
     justify-content: flex-start;
   }
 
   .slide .content::-webkit-scrollbar {
+    display: none;
+  }
+
+  .content .scroll {
+    max-height: 660px;
+    overflow: scroll;
+  }
+
+  .content .scroll::-webkit-scrollbar {
     display: none;
   }
 
