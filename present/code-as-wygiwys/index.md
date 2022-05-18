@@ -1,3 +1,14 @@
+---
+# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
+routerMode: hash
+# 16:10
+aspectRatio: 1.6
+# 1280 / (16:10) * (16:9)
+canvasWidth: 1422
+selectable: true
+layout: default
+---
+
 ## Code as <u>WYSIWYG</u>
 
 what you see is what you get
@@ -9,23 +20,27 @@ what you see is what you get
 BUT what you get **MAY NOT** be what you see
 
 ---
-<!-- Adblock -->
-<!--
-player.bilibili.com##DIV[class="bilibili-player-video-recommend"]
-player.bilibili.com##DIV[class="bilibili-player-video-pause-panel-container-mask"]
-player.bilibili.com##DIV[class="bilibili-player-video-pause-panel-container-qrcode"]
-player.bilibili.com##DIV[class="bilibili-player-video-sendjumpbar"]
--->
 
 <iframe 
-  src="//player.bilibili.com/player.html?aid=70927579&cid=122892471&page=1&high_quality=1"
+  src="https://player.bilibili.com/player.html?aid=70927579&cid=122892471&page=1&high_quality=1"
   scrolling="no"
   border="0"
   frameborder="no"
   framespacing="0"
   allowfullscreen="true"
-  style="width: 1200px; height: 800px"
+  class="w-full h-full"
 />
+
+<!--
+Adblock
+
+```
+player.bilibili.com##DIV[class="bilibili-player-video-recommend"]
+player.bilibili.com##DIV[class="bilibili-player-video-pause-panel-container-mask"]
+player.bilibili.com##DIV[class="bilibili-player-video-pause-panel-container-qrcode"]
+player.bilibili.com##DIV[class="bilibili-player-video-sendjumpbar"]
+```
+-->
 
 ---
 
@@ -53,6 +68,10 @@ player.bilibili.com##DIV[class="bilibili-player-video-sendjumpbar"]
 
 ---
 
+- 领域层（Domain Layer）
+- 端口层（Ports Layer）
+- 适配器层（Adapters Layer）
+
 <!--
 https://insights.thoughtworks.cn/from-sandwich-to-hexagon/
 
@@ -61,22 +80,17 @@ https://airbrake.io/blog/software-design/domain-driven-design
 http://wiki.smallcpp.cn/软件工程/DDD%20领域驱动设计与六边形架构.html
 -->
 
-- 领域层（Domain Layer）
-- 端口层（Ports Layer）
-- 适配器层（Adapters Layer）
-
 ---
+
 <div
-  style="width: 100%; height: 100%; text-align: center;"
+  class="w-full h-full flex justify-center items-center"
 >
-<img
-  src="./images/DDD-structure.png"
-  style="max-width: 100%; max-height: 100%;"
-/>
+  <img src="/images/DDD-structure.png" />
 </div>
+
 ---
 
-![](./images/DDD-application.jpg)
+![](/images/DDD-application.jpg)
 
 ---
 
@@ -92,6 +106,7 @@ stateX: A / B / C / ...
 
 ---
 
+
 - 每层写 `if` / `else` 判断
 
 - 使用 map 结构
@@ -106,24 +121,18 @@ stateX: A / B / C / ...
 
 ---
 
-<iframe width="100%" height="300" src="//jsfiddle.net/zthxxx/6a9c3g45/10/embedded/js/" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>
+<iframe
+  src="//jsfiddle.net/zthxxx/6a9c3g45/10/embedded/js/"
+  allowfullscreen="allowfullscreen"
+  allowpaymentrequest
+  frameborder="0"
+/>
 
 ---
-<style>
-:host .content {
-  flex-direction: row;
-}
 
-:host .content > pre {
-  padding: 40px 0;
-  border-right: 1px solid #bbb;
-}
-:host .content > pre:last-of-type {
-  border-right: none;
-}
-</style>
+<div class="code-container">
 
-```js
+```tsx
 import Component
 
 class Layout {
@@ -133,9 +142,9 @@ class Layout {
   render () {
     const Component = this.Component
     if (preview) {
-      // do some
+      // do something
     } else {
-      // do some
+      // do something
     }
     
     return (
@@ -145,15 +154,17 @@ class Layout {
 }
 ```
 
-```js
+<div class="separator" />
+
+```tsx
 import Chart
 
 class Component {
   render () {
     if (preview) {
-      // do some
+      // do something
     } else {
-      // do some
+      // do something
     }
  
     return <Chart preview={preview} />
@@ -161,31 +172,53 @@ class Component {
 }
 ```
 
-```js
+<div class="separator" />
+
+```tsx
 import xxx
 
 class Chart {
   render () {
     if (preview) {
-      // do some
+      // do something
       return xxx
     } else {
-      // do some
+      // do something
       return xxx
     }
   }
 }
 ```
 
+</div>
+
+
+<style scoped>
+  .slidev-layout {
+    --slidev-code-font-size: 0.5em;
+
+    & &gt; .code-container {
+      @apply flex flex-row justify-around items-stretch;
+      @apply w-full py-4 rounded-xl;
+      background: var(--prism-background);
+      font-size: 0.9em;
+
+      & &gt; .separator {
+        @apply min-w-1px my-4 bg-gray-300
+      }
+    }
+  }
+</style>
+
 ---
 
 1. 职责不单一，多种状态 if 判断很面条
 2. 感觉抽象或模式不到位，
-
-  不符合「两种状态就是两块不耦合的多态」的直觉
+   
+   不符合「两种状态就是两块不耦合的多态」的直觉
 3. 状态多了不易于封闭修改 
-
-  上面举例是 if else，实际因为历史原因已经很多 switch case
+  
+   上面举例是 if else，实际因为历史原因已经很多 switch case
 4. 每层是对外暴露的 API，这种写法也会侵入使用者代码去做判断
 5. 没想到如何把多种状态暴露成不同的接口
 
@@ -197,12 +230,12 @@ class Chart {
 <br />
 用了大段的 switch 处理不同逻辑
 <br />
-[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/master/lib/WebpackOptionsApply.js#L73-L197) 
+[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L73-L197) 
 <br />
 <br />
 以及以及 if else 切换模式判断
 <br />
-[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/master/lib/WebpackOptionsApply.js#L328-L375) 
+[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L328-L375) 
 
 ---
 
@@ -210,12 +243,12 @@ class Chart {
 
 相对固定的 内部 模式依然可以用 switch
 <br />
-[OptionsDefaulter.js](https://github.com/webpack/webpack/blob/master/lib/OptionsDefaulter.js#L75-L117) 
+[OptionsDefaulter.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/OptionsDefaulter.js#L75-L117) 
 <br />
 <br />
 不同模式 链式注册的写法
 <br />
-[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/master/lib/WebpackOptionsApply.js#L510-L541) 
+[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L510-L541) 
 <br />
 <br />
 (注册一定程度做了分离，但也
@@ -243,9 +276,9 @@ class Chart {
 
 ## 稍微好点但有明显问题的 Case  eslint 
 
-https://github.com/eslint/eslint/blob/master/lib/rules/index.js
+https://github.com/eslint/eslint/blob/v6.6.0/lib/rules/index.js
 
-https://github.com/eslint/eslint/blob/master/lib/rules/indent.js
+https://github.com/eslint/eslint/blob/v6.6.0/lib/rules/indent.js
 
 ---
 
@@ -271,12 +304,6 @@ oh-my-zsh  直接调用脚本文件
 
 ---
 
-<style>
-:host .content > p {
-  text-align: center;
-}
-</style>
-
 拆分成 `行为步骤` 和 `逻辑`
 <br />
 <sub>一个最细步骤只包含一种逻辑</sub>
@@ -284,3 +311,9 @@ oh-my-zsh  直接调用脚本文件
 组合步骤
 <br />
 <sub>不再是数据流控制</sub>
+
+<style>
+  p {
+    text-align: center;
+  }
+</style>

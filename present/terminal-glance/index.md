@@ -1,4 +1,13 @@
 ---
+# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
+routerMode: hash
+# 16:10
+aspectRatio: 1.6
+# 1280 / (16:10) * (16:9)
+canvasWidth: 1422
+selectable: true
+layout: default
+---
 
 ## CLI 概览 (其一)
 
@@ -34,15 +43,12 @@ Terminal / 输入输出
 
 
 <style>
-.terminal {
-  width: 80%;
-  height: 360px;
-  border-radius: 8px;
-  padding: 8px 0 8px 8px;
-  background: #272936;
-}
+  .terminal {
+    @apply w-4/5 rounded-lg;
+    height: 360px;
+    background: #272936;
+  }
 </style>
-
 
 ---
 
@@ -65,64 +71,72 @@ Terminal / 输入输出
 
 ---
 
-![ENIAC-console-panel](./images/ENIAC-console-panel.jpg)
+![ENIAC-console-panel](/images/ENIAC-console-panel.jpg)
 
 早期的电子管电脑，有一堆按钮组成的控制台 (`Console`)
 
 <style>
-p {
-  display: flex;
-  justify-content: center;
-}
-img {
-  width: 60%;
-}
+  p {
+    @apply w-full flex justify-center items-center;
+
+    img {
+      @apply max-w-1/2;
+    }
+  }
 </style>
 
 ---
 
-![Teletype](./images/Teletype.jpg)
+![Teletype](/images/Teletype.jpg)
 
 后来有了键盘，可以输入，打字在纸上 (`Teletype`)
 
 <style>
-p {
-  display: flex;
-  justify-content: center;
-}
-img {
-  width: 80%;
-  justify-self: center;
-}
+  p {
+    @apply w-full flex justify-center items-center;
+
+    img {
+      @apply max-w-1/2;
+    }
+  }
 </style>
 
 
 ---
 
-![DECVT100-terminal](./images/DECVT100-terminal.jpg)
+![DECVT100-terminal](/images/DECVT100-terminal.jpg)
 
-再往后有了显示器，和键盘一起组成多用户输入输出 (`Terminal`), 系统级别才显示到 Console
+再往后有了显示器，和键盘一起组成多用户输入输出 `Terminal`，系统级别才显示到 `Console`
 
 <style>
-p {
-  display: flex;
-  justify-content: flex-start;
-}
-img {
-  width: 80%;
-  justify-self: center;
-}
+  p {
+    @apply w-full;
+
+    img {
+      @apply max-w-1/2 mx-auto;
+    }
+  }
 </style>
 
 ---
 
-- 来到主机时代图形界面，没有这样的物理设备了，
-  
-  终端的概念变成了现在的虚拟终端 (`Virtual Console` / `Terminal Emulator`) 放在内核中
-  
-  内核管理终端输入输出的部分统称 TTY (`teletype` / `Teletypewriter`)
+来到主机时代图形界面，没有这样的物理设备了，
 
-  接入到 TTY 的给用户用的 App 统称终端 (`Terminal`)
+---  
+
+- 终端的概念变成了现在的虚拟终端，放在内核中
+  <br/>
+  <small>(`Virtual Console` / `Terminal Emulator`)</small> 
+  <br/>
+  <br/>
+- 内核管理终端输入输出的部分统称 TTY
+  <br/>
+  <small>(`teletype` / `Teletypewriter`)</small>
+  <br/>
+  <br/>
+- 接入到 TTY 的给用户用的 App 统称终端 
+  <br/>
+  <small>(`Terminal`)</small>
 
 ---
 
@@ -135,20 +149,18 @@ img {
 </iframe>
 
 <style>
-.terminal {
-  width: 80%;
-  height: 360px;
-  border-radius: 8px;
-  padding: 8px 0 8px 8px;
-  background: #272936;
-}
+  .terminal {
+    @apply w-4/5 rounded-lg;
+    height: 360px;
+    background: #272936;
+  }
 </style>
 
 ---
 
 TTY 负责控制字符的输入输出
 
-```
+```ts
                       +----------------+
                       |   TTY Driver   |
                       |      I/O       |
@@ -167,11 +179,16 @@ TTY 负责控制字符的输入输出
                       +----------------+
 ```
 
+<style>
+  pre {
+    --slidev-code-line-height: 1.2;
+  }
+</style>
 
 ---
 
 
-```
+```ts
    Input    +--------------------------+    R/W     +------+
 ----------->|                          |<---------->| bash |
             |          tty/0           |  actived   +------+
@@ -180,6 +197,11 @@ TTY 负责控制字符的输入输出
             +--------------------------+     W      +------+  
 ```
 
+<style>
+  pre {
+    --slidev-code-line-height: 1.2;
+  }
+</style>
 
 ---
 
@@ -216,20 +238,18 @@ done
 </iframe>
 
 <style>
-.terminal {
-  width: 80%;
-  height: 360px;
-  border-radius: 8px;
-  padding: 8px 0 8px 8px;
-  background: #272936;
-}
+  .terminal {
+    @apply w-4/5 rounded-lg;
+    height: 360px;
+    background: #272936;
+  }
 </style>
 
 ---
 
 ssh & pts
 
-```
+```ts
 +------------+              +------------+
 |            |              |            |
 |  Terminal  |------------->| ssh server |--------------------------+
@@ -251,6 +271,12 @@ PTS                       |   |        |   +-------+    |       +-------+
                           |    Kernel                   |
                           +-----------------------------+
 ```
+
+<style>
+  pre {
+    --slidev-code-line-height: 1.2;
+  }
+</style>
 
 ---
 
@@ -284,17 +310,15 @@ PTS                       |   |        |   +-------+    |       +-------+
 </iframe>
 
 <style>
-.terminal {
-  width: 80%;
-  height: 360px;
-  border-radius: 8px;
-  padding: 8px 0 8px 8px;
-  background: #272936;
-}
+  .terminal {
+    @apply w-4/5 rounded-lg;
+    height: 360px;
+    background: #272936;
+  }
 </style>
 
 <!--
-
+```
 tty
 
 lsof /dev/pts/0 2> /dev/null
@@ -321,7 +345,7 @@ echo -e "${CSI}35;1mTitle of the Program ${CSI}0m"
   # Cursor Left      <ESC>[{COUNT}D
 
   https://github.com/enquirer/enquirer/blob/master/lib/ansi.js
-
+```
 -->
 
 ---
@@ -335,24 +359,34 @@ echo -e "${CSI}35;1mTitle of the Program ${CSI}0m"
 
 ---
 
-[ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code#Terminal_output_sequences)
+<section class="w-full flex justify-around items-start">
+  <div class="flex flex-col items-center">
 
-```
-ESC="\u001b"
-ESC="\e"
-CSI="${ESC}["
+  [ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code#Terminal_output_sequences)
 
-# Cursor Up        <ESC>[{COUNT}A
-# Cursor Down      <ESC>[{COUNT}B
-# Cursor Right     <ESC>[{COUNT}C
-# Cursor Left      <ESC>[{COUNT}D
-```
+  ```bash
+  ESC="\u001b"
+  ESC="\e"
+  CSI="${ESC}["
 
-[SGR Colors](https://en.wikipedia.org/wiki/ANSI_escape_code#Colors)
+  # Cursor Up        <ESC>[{COUNT}A
+  # Cursor Down      <ESC>[{COUNT}B
+  # Cursor Right     <ESC>[{COUNT}C
+  # Cursor Left      <ESC>[{COUNT}D
+  ```
 
-```
-<ESC>[<Front>;<Background>m
-```
+  </div>
+
+  <div class="flex flex-col items-center">
+
+  [SGR Colors](https://en.wikipedia.org/wiki/ANSI_escape_code#Colors)
+
+  ```bash
+  <ESC>[<Front>;<Background>m
+  ```
+
+  </div>
+</section>
 
 ---
 
@@ -364,7 +398,7 @@ CSI="${ESC}["
 
 `stty -a` 
 
-```
+```bash
 speed 38400 baud; 35 rows; 120 columns;
 lflags: icanon isig iexten echo echoe echok echoke -echonl echoctl
 	-echoprt -altwerase -noflsh -tostop -flusho pendin -nokerninfo
@@ -379,6 +413,7 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
 	min = 1; quit = ^\; reprint = ^R; start = ^Q; status = ^T;
 	stop = ^S; susp = ^Z; time = 0; werase = ^W;
 ```
+
 ---
 
 
@@ -389,17 +424,16 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
 </iframe>
 
 <style>
-.terminal {
-  width: 80%;
-  height: 360px;
-  border-radius: 8px;
-  padding: 8px 0 8px 8px;
-  background: #272936;
-}
+  .terminal {
+    @apply w-4/5 rounded-lg;
+    height: 360px;
+    background: #272936;
+  }
 </style>
 
 
-<!-- 
+<!--
+```
 read input
 echo "$input"
 
@@ -408,11 +442,12 @@ echo "$input"
 
 echo '\e[?47h'  切换 tty 屏幕空间
 echo '\e[?47l'
+```
 -->
 
 ---
 
-\> To be continued
+\> To Be Continued
 
 ---
 
@@ -437,10 +472,9 @@ Ref Pictures & Flow:
 ---
 
 <img
-width="200" height="200"
-alt="zthxxx"
-src="https://avatars.githubusercontent.com/u/15135943"
-style="border-radius: 50%; border: solid 1px #bbb;"
+  alt="zthxxx"
+  src="https://avatars.githubusercontent.com/u/15135943"
+  class="w-52 h-52 rounded-full border-1 border-gray-400"
 />
 
 [![zthxxx](https://badgen.net/badge/github/%20zthxxx%20/blue?icon=github&label&scale=2)](https://github.com/zthxxx)

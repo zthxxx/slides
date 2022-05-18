@@ -1,3 +1,14 @@
+---
+# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
+routerMode: hash
+# 16:10
+aspectRatio: 1.6
+# 1280 / (16:10) * (16:9)
+canvasWidth: 1422
+selectable: true
+layout: default
+---
+
 ## A Glance at Git Merkle
 
 the most familiar strange 'block chain'
@@ -14,23 +25,23 @@ the most familiar strange 'block chain'
 
 ---
 
-![base-merkle-tree](./images/merkle-tree.png)
+![base-merkle-tree](/images/merkle-tree.png)
 
 ---
 
-![git-merkle](./images/git-merkle-tree-full.png)
+![git-merkle](/images/git-merkle-tree-full.png)
 
 ---
 
-![bitcoin-block-chain-thum](./images/bitcoin-block-chain-thum.png)
+![bitcoin-block-chain-thum](/images/bitcoin-block-chain-thum.png)
 
 ---
 
-![bitcoin-block](./images/bitcoin-block.png)
+![bitcoin-block](/images/bitcoin-block.png)
 
 ---
 
-![bitcoin-block-chain-full](./images/bitcoin-block-chain-thum.png)
+![bitcoin-block-chain-full](/images/bitcoin-block-chain-thum.png)
 
 ---
 
@@ -42,11 +53,11 @@ Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ---
 
-![blockchain-merkle](./images/merkle-tree-top-blockchain-interview-questions-edureka.png)
+![blockchain-merkle](/images/merkle-tree-top-blockchain-interview-questions-edureka.png)
 
 ---
 
-![git-merkle](./images/git-merkle-tree-full.png)
+![git-merkle](/images/git-merkle-tree-full.png)
 
 ---
 
@@ -72,50 +83,47 @@ Block Reward / Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ---
 
-![git-merkle](./images/git-merkle-tree-full.png)
+![git-merkle](/images/git-merkle-tree-full.png)
 
 ---
 
-![git-merkle-block](./images/git-merkle-tree-block.png)
+![git-merkle-block](/images/git-merkle-tree-block.png)
 
 ---
 
-![git-workspace](./images/git-workspace.png)
+![git-workspace](/images/git-workspace.png)
 
 ---
 
-![git-workdir-commit](./images/git-workdir-commit.png)
+![git-workdir-commit](/images/git-workdir-commit.png)
 
 ---
 
-![](./images/git-commit-data.png)
+![](/images/git-commit-data.png)
 
 ---
 
 
-![](./images/git-tree-data.png)
+![](/images/git-tree-data.png)
 
 ---
 
-![](./images/git-blob-data.png)
+![](/images/git-blob-data.png)
 
 ---
+
+![git-min-commit](/images/git-min-commit.png)
+![git-workspace](/images/git-workspace.png)
 
 <style>
   p {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+    @apply flex justify-center items-center;
 
-  p img {
-    max-width: 80%;
+    img {
+      @apply max-w-4/5;
+    }
   }
 </style>
-
-![git-min-commit](./images/git-min-commit.png)
-![git-workspace](./images/git-workspace.png)
-
 
 ---
 
@@ -174,7 +182,7 @@ git update-ref refs/heads/master $(
 
 ---
 
-![](./images/git-checkout-stage.png)
+![](/images/git-checkout-stage.png)
 
 ---
 
@@ -270,10 +278,9 @@ git update-ref refs/heads/test-fetch-new-branch HEAD
 ---
 
 <img
-width="200" height="200"
-alt="zthxxx"
-src="https://avatars.githubusercontent.com/u/15135943"
-style="border-radius: 50%; border: solid 1px #bbb;"
+  alt="zthxxx"
+  src="https://avatars.githubusercontent.com/u/15135943"
+  class="w-52 h-52 rounded-full border-1 border-gray-400"
 />
 
 [![zthxxx](https://badgen.net/badge/github/%20zthxxx%20/blue?icon=github&label&scale=2)](https://github.com/zthxxx)

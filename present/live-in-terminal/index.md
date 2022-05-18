@@ -1,4 +1,13 @@
 ---
+# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
+routerMode: hash
+# 16:10
+aspectRatio: 1.6
+# 1280 / (16:10) * (16:9)
+canvasWidth: 1422
+selectable: true
+layout: default
+---
 
 <iframe
   class="terminal"
@@ -7,27 +16,10 @@
 </iframe>
 
 <style>
-.slide {
-  background: #272936;
-}
-
-.slide .content {
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  transform: scale(.98);
-}
-
-.terminal {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-}
+  .terminal {
+    @apply rounded-lg;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -47,15 +39,10 @@ Interact / Plugins
 </iframe>
 
 <style>
-.terminal {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply rounded-lg overflow-hidden resize;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -69,13 +56,10 @@ Interact / Plugins
 </iframe>
 
 <style>
-.terminal {
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply rounded-lg overflow-hidden resize;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -89,15 +73,11 @@ Interact / Plugins
 </iframe>
 
 <style>
-.terminal {
-  width: 85%;
-  height: 100%;
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply rounded-lg overflow-hidden resize;
+    width: 85%;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -112,15 +92,11 @@ Interact / Plugins
 </iframe>
 
 <style>
-.terminal {
-  width: 85%;
-  height: 100%;
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply rounded-lg overflow-hidden resize;
+    width: 85%;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -134,15 +110,12 @@ Interact / Plugins
 </iframe>
 
 <style>
-.terminal {
-  width: 85%;
-  height: 520px;
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply rounded-lg overflow-hidden resize;
+    width: 85%;
+    height: 520px;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -156,13 +129,10 @@ Interact / Plugins
 </iframe>
 
 <style>
-.terminal {
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply rounded-lg overflow-hidden resize;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -176,20 +146,16 @@ Interact / Plugins
 </iframe>
 
 <style>
-.terminal {
-  width: 80%;
-  height: 300px;
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply w-4/5 rounded-lg overflow-hidden resize;
+    height: 300px;
+    background: #272936;
+  }
 </style>
 
 ---
 
-[**YouCompleteMe**](https://github.com/ycm-core/YouCompleteMe)
+[**neovim**](https://github.com/neovim/neovim)
 
 ![YouCompleteMe-preview](https://user-images.githubusercontent.com/10584846/58738348-5060da80-83fd-11e9-9537-d07fdbf4554c.gif)
 
@@ -221,15 +187,11 @@ node / python / mysql / redis
 </iframe>
 
 <style>
-.terminal {
-  width: 80%;
-  height: 300px;
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply w-4/5 rounded-lg overflow-hidden resize;
+    height: 300px;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -245,6 +207,7 @@ node / python / mysql / redis
 - REPL
 - sound / notify
 
+
 ---
 
 **bash / zsh / fish**
@@ -256,15 +219,12 @@ node / python / mysql / redis
 </iframe>
 
 <style>
-.terminal {
-  width: 85%;
-  height: 520px;
-  border-radius: 8px;
-  padding: 8px;
-  background: #272936;
-  overflow: hidden;
-  resize: both;
-}
+  .terminal {
+    @apply rounded-lg overflow-hidden resize;
+    width: 85%;
+    height: 520px;
+    background: #272936;
+  }
 </style>
 
 ---
@@ -286,10 +246,9 @@ node / python / mysql / redis
 ---
 
 <img
-width="200" height="200"
-alt="zthxxx"
-src="https://avatars.githubusercontent.com/u/15135943"
-style="border-radius: 50%; border: solid 1px #bbb;"
+  alt="zthxxx"
+  src="https://avatars.githubusercontent.com/u/15135943"
+  class="w-52 h-52 rounded-full border-1 border-gray-400"
 />
 
 [![zthxxx](https://badgen.net/badge/github/%20zthxxx%20/blue?icon=github&label&scale=2)](https://github.com/zthxxx)

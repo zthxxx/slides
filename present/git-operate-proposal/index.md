@@ -1,12 +1,18 @@
+---
+# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
+routerMode: hash
+# 16:10
+aspectRatio: 1.6
+# 1280 / (16:10) * (16:9)
+canvasWidth: 1422
+selectable: true
+layout: default
+---
+
 # Git Operate Proposal
 
 *Git Workflow 总结与提倡*
 
-<style>
-  .content h1 {
-    text-transform: none;
-  }
-</style>
 ---
 
 ## 核心目标：尽量回避冲突
@@ -19,30 +25,19 @@ React
 
 <div class="scroll">
 
-![](./images/react-git-branchs.png)
+![](/images/react-git-branchs.png)
 
 </div>
 
 <style>
-  .content .scroll {
-    max-height: 660px;
-    overflow: scroll;
-  }
+  .slidev-layout {
+    .scroll {
+      @apply overflow-y-scroll max-w-3/5 max-h-[660px];
 
-  .content .scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-
-  .content .scroll p {
-    margin: 0;
-  }
-
-  .content img {
-    display: block;
-    margin: auto;
-    max-width: 60%;
-    max-height: unset;
+      p {
+        @apply m-0;
+      }
+    }
   }
 </style>
 
@@ -53,30 +48,19 @@ Vue
 
 <div class="scroll">
 
-![](./images/vue-git-branchs.png)
+![](/images/vue-git-branchs.png)
 
 </div>
 
 <style>
-  .content .scroll {
-    max-height: 660px;
-    overflow: scroll;
-  }
+  .slidev-layout {
+    .scroll {
+      @apply overflow-y-scroll max-w-3/5 max-h-[660px];
 
-  .content .scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-
-  .content .scroll p {
-    margin: 0;
-  }
-
-  .content img {
-    display: block;
-    margin: auto;
-    max-width: 60%;
-    max-height: unset;
+      p {
+        @apply m-0;
+      }
+    }
   }
 </style>
 
@@ -87,30 +71,19 @@ Vue
 
 <div class="scroll">
 
-![](./images/merge-chaos.png)
+![](/images/merge-chaos.png)
 
 </div>
 
 <style>
-  .content .scroll {
-    max-height: 660px;
-    overflow: scroll;
-  }
+  .slidev-layout {
+    .scroll {
+      @apply overflow-y-scroll max-w-3/5 max-h-[660px];
 
-  .content .scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-
-  .content .scroll p {
-    margin: 0;
-  }
-
-  .content img {
-    display: block;
-    margin: auto;
-    max-width: 60%;
-    max-height: unset;
+      p {
+        @apply m-0;
+      }
+    }
   }
 </style>
 
@@ -125,25 +98,19 @@ Vue
 我们目前的 git flow
 
 - master: 直接上线，只能合 hotfix, release
-- release-*: 上线前回归测试，合各种 feat, 不紧急 fix
-- fix-*: 临时的修复分支
-- 单人 feat-*: 短期自己开发需要某个独立功能
+- release/*: 上线前回归测试，合各种 feat, 不紧急 fix
+- fix/*: 临时的修复分支
+- 单人 feat/*: 短期自己开发需要某个独立功能
 - feature stable: 中长期并行于 release，多人开发大模块
 
 ---
 
 我们目前的 git flow
 
-![](./images/current-git-flow.png)
-
-
-<style>
-  .content img {
-    display: block;
-    margin: auto;
-    max-width: 80%;
-  }
-</style>
+<img
+  class="max-h-[600px] mx-auto"
+  src="/images/current-git-flow.png"
+/>
 
 ---
 
@@ -162,6 +129,8 @@ Vue
 ---
 
 刚才的模拟命令
+
+<div class="scroll">
 
 ```bash
 # 前期准备
@@ -213,15 +182,17 @@ git checkout master
 git merge release
 ```
 
+</div>
 
 <style>
-  .content pre {
-    max-height: 660px;
-    overflow: scroll;
-  }
+  .slidev-layout {
+    .scroll {
+      @apply overflow-y-scroll max-w-1/2 max-h-[660px];
 
-  .content pre::-webkit-scrollbar {
-    display: none;
+      p {
+        @apply m-0;
+      }
+    }
   }
 </style>
 
@@ -243,17 +214,10 @@ git merge release
 
 rebase / squash
 
-
-![](./images/rebase-git-flow.png)
-
-
-<style>
-  .content img {
-    display: block;
-    margin: auto;
-    max-width: 80%;
-  }
-</style>
+<img
+  class="max-h-[500px] mx-auto"
+  src="/images/rebase-git-flow.png"
+/>
 
 ---
 
@@ -263,13 +227,5 @@ https://git-school.github.io/visualizing-git/#free
 
 ---
 
-![](./images/never-merge-master-into-self.svg)
+![](/images/never-merge-master-into-self.svg)
 
-
-<style>
-  .content img {
-    display: block;
-    margin: auto;
-    max-width: 100%;
-  }
-</style>

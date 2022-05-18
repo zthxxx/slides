@@ -1,14 +1,14 @@
 node_modules
 dist
-public
-.vscode
-.idea
+.site
 
 # misc
+.idea
 .DS_Store
 npm-debug.log*
 yarn-error.log
 
+# use pnpm-lock
 yarn.lock
 package-lock.json
 
@@ -16,4 +16,6 @@ coverage
 
 *.log
 
-beta-band.json
+index.html
+.remote-assets
+components.d.ts
