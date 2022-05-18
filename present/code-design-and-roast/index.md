@@ -1,4 +1,15 @@
-# Code Roast
+---
+# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
+routerMode: hash
+# 16:10
+aspectRatio: 1.6
+# 1280 / (16:10) * (16:9)
+canvasWidth: 1422
+selectable: true
+layout: default
+---
+
+# CODE ROAST
 
 *吐槽大会 ☆ 第三期*
 
@@ -13,9 +24,6 @@
 ---
 
 开篇 / 代码风格 <!-- 平面排版 --> / 数据依赖
-
-<style>
-</style>
 
 ---
 
@@ -56,72 +64,51 @@
 </div>
 
 <style>
-  .content h2 {
-    margin-bottom: 0.5em;
-  }
+  .slidev-layout {
+    h2 {
+      @apply mb-9;
+    }
 
-  .content .chat {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    padding-bottom: 100px;
-    width: 100%;
-    max-height: 660px;
-    
-    overflow: scroll;
-  }
+    .chat {
+      @apply w-full max-h-[660px] pb-[100px] overflow-scroll;
+      @apply flex flex-col justify-start;
 
-  .content .chat::-webkit-scrollbar {
-    display: none;
-  }
+      p {
+        @apply relative self-end m-4 px-5;
+        @apply rounded-[32px] bg-[#eee];
 
-  .chat p {
-    position: relative;
-    align-self: flex-end;
-    margin: 0.4em;
-    padding: 0 20px;
-    /* border: solid 1px #8888; */
-    border-radius: 32px;
-    background: #eee;
-  }
+        &.left {
+          @apply self-start;
+        }
 
+        &::before {
+          content: '';
+          @apply absolute top-2 -left-4 w-5 h-8;
+          @apply border-b-[16px] border-solid border-[#eee] rounded-bl-full;
+        }
 
-  .chat p.left {
-    align-self: flex-start;
-  }
-
-  .chat p:before{
-    content: '';
-    position: absolute;
-    left: -16px;
-    top: -4px;
-    width: 20px;
-    height: 30px;
-    border-width: 0;
-    border-style: solid;
-    border-color: transparent;
-    border-bottom-width: 16px;
-    border-bottom-color: currentColor;
-    border-radius: 0 0 0 80px;
-    color: #eee;
-  }
-
-  .chat p:not(.left):before{
-    left: unset;
-    right: -16px;
-    border-radius: 0 0 80px 0;
+        &:not(.left)::before {
+          left: unset;
+          @apply -right-4 rounded-none rounded-br-full;
+        }
+      }
+    }
   }
 </style>
 
 ---
 
 - 代码是否清晰易读很重要吗？
-<!-- 重要是相对的，对产品来说确实除非影响到产出功能，否则不重要 -->
-<!-- 但对代码来说，我们自己就是用户，很影响我们的使用体验 -->
 - 为什么我们觉得有些代码清晰易读、有些代码混乱不堪？
 - 当我们在说代码清晰、易读，我们到底在谈论什么？
 - 凭什么你说它好看它就好看了？
+
+
+<!--
+重要是相对的，对产品来说确实除非影响到产出功能，否则不重要
+
+但对代码来说，我们自己就是用户，很影响我们的使用体验
+-->
 
 ---
 
@@ -129,29 +116,33 @@
 
 ---
 
-<!-- 配图 椰树包装 对比 dribbble 上的 app -->
-<!-- https://dribbble.com/shots/13372241 -->
+![](https://slides.zthxxx.me/present/code-design-and-roast/images/椰树包装.jpg)
 
-![](./images/椰树包装.jpg)
-
-![](./images/dashboard-app-13372241.png)
+![](/images/dashboard-app-13372241.png)
 
 <style>
-  .slide .content {
+  .slidev-layout {
     flex-direction: row;
     justify-content: space-between;
   }
 
-  .content img {
+  img {
     padding: 0 80px;
     height: 680px;
     justify-self: center;
   }
 </style>
 
+
+<!--
+配图 椰树包装 对比 dribbble 上的 app
+
+https://dribbble.com/shots/13372241
+-->
+
 ---
 
-![蒙德里安](./images/mondrian.jpg)
+![蒙德里安](/images/mondrian.jpg)
 
 ---
 
@@ -159,14 +150,18 @@
 
 好看和不好看是在某种**审美观**下的对比
 
-<!-- 例如不同年龄段审美观不一样，不同地区也有差异，不同时代就更不同了 -->
+怎么做好看，是在审美观下的`趋势`和`总结`，
 
-<!-- 同一份代码不同的人看来，有人会觉得 ok，有人会觉得 suck -->
+以及`原则` <small>(这些原则都是**限制**)</small>
 
-怎么做好看，是在审美观下的`趋势`和`总结`，以及`原则` (这些原则都是**限制**)
 
-<!-- 所以我想做的是对齐大家的代码风格认知 -->
+<!--
+例如不同年龄段审美观不一样，不同地区也有差异，不同时代就更不同了
 
+同一份代码不同的人看来，有人会觉得 ok，有人会觉得 suck
+
+所以我想做的是对齐大家的代码风格认知
+-->
 
 ---
 
@@ -174,15 +169,14 @@
 
 > 「用理性去总结设计方法，或者提升设计效率，
 > <br>
-> 而不是用理性去定义美的标准。」
+> 　而不是用理性去定义美的标准。」
 
 ---
 
 <!-- 配图 希望展示我们是怎么从代码到设计的思维切换 -->
 <!-- https://dribbble.com/shots/13788366 -->
 
-```js
-
+```tsx
 import React from 'react'
 
 export default () => {
@@ -201,43 +195,35 @@ export default () => {
 
 <->
 
-![](./images/平面排版概念图-13788366.png)
+![](https://slides.zthxxx.me/present/code-design-and-roast/images/平面排版概念图-13788366.png)
 
 
 <style>
-  .slide .content {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-
-  pre {
-    background: #eee;
-    border-radius: 16px;
+  .slidev-layout {
+    @apply flex-row justify-between;
   }
 
   img {
     height: 560px;
-    justify-self: center;
-  }
-
-  pre .token.operator,
-  pre .token.entity, 
-  pre .token.url,
-  pre .language-css .token.string,
-  pre .style .token.string {
-    background: unset; 
   }
 </style>
+
+
+<!--
+配图 希望展示我们是怎么从代码到设计的思维切换
+
+https://dribbble.com/shots/13788366
+-->
 
 ---
 
 <!-- 相当肤浅的笔记 -->
 
-![](./images/平面设计入门基础-zthxxx-20170312.svg)
+![](https://slides.zthxxx.me/present/code-design-and-roast/images/平面设计入门基础-zthxxx-20170312.svg)
 
 ---
 
-![](./images/平面基础模块-zthxxx-20170312.png)
+![](https://slides.zthxxx.me/present/code-design-and-roast/images/平面基础模块-zthxxx-20170312.png)
 
 ---
 
@@ -245,7 +231,7 @@ export default () => {
 
 
 <style>
-  .content h2 {
+  .slidev-layout h2 {
     font-weight: 300;
   }
 </style>
@@ -255,7 +241,7 @@ export default () => {
 ## **对齐** / **重复** / **亲密** / **对比**
 
 <style>
-  .content h2 {
+  .slidev-layout h2 {
     font-weight: 300;
   }
 </style>
@@ -267,11 +253,11 @@ export default () => {
 
 每一项都应当与页面上的某个相关内容存在某种视觉联系
 
-![](./images/alignment.png)
+![](/images/alignment.png)
 
 
 <style>
-  .content img {
+  .slidev-layout img {
     max-height: 600px;
     justify-self: center;
   }
@@ -287,21 +273,22 @@ export default () => {
 
 重复给人带来和谐有秩序的美感，不要过分堆砌花哨
 
-![bad-case](./images/repetition-bad-case.jpg)
+![bad-case](/images/repetition-bad-case.jpg)
 
 
 <style>
-  .content h3 {
-    margin-bottom: 0.5em;
-  }
+  .slidev-layout {
+    h3 {
+      @apply mb-7;
+    }
 
-  .content p {
-    margin: 0.5em 0;
-  }
+    p {
+      @apply my-5;
+    }
 
-  .content img {
-    max-height: 540px;
-    justify-self: center;
+    img {
+      max-height: 540px;
+    }
   }
 </style>
 
@@ -311,41 +298,40 @@ export default () => {
 
 重复给人带来和谐有秩序的美感，不要过分堆砌花哨
 
-![good-case](./images/repetition-good-case.jpg)
+![good-case](/images/repetition-good-case.jpg)
 
 <style>
-  .content h3 {
-    margin-bottom: 0.5em;
-  }
+  .slidev-layout {
+    h3 {
+      @apply mb-7;
+    }
 
-  .content p {
-    margin: 0.5em 0;
-  }
+    p {
+      @apply my-5;
+    }
 
-  .content img {
-    max-height: 540px;
-    justify-self: center;
+    img {
+      max-height: 540px;
+    }
   }
 </style>
 
 
 ---
 
-![bad-case](./images/如何预防猝死-bad-case.jpg)
+![bad-case](https://slides.zthxxx.me/present/code-design-and-roast/images/如何预防猝死-bad-case.jpg)
 
-![good-case](./images/如何预防猝死-good-case.jpg)
+![good-case](https://slides.zthxxx.me/present/code-design-and-roast/images/如何预防猝死-good-case.jpg)
 
 
 <style>
-  .slide .content {
-    flex-direction: row;
-    justify-content: center;
-  }
+  .slidev-layout {
+    @apply flex-row px-0;
 
-  .content img {
-    padding: 0 20px;
-    height: 500px;
-    justify-self: center;
+    img {
+      @apply px-5;
+      height: 470px;
+    }
   }
 </style>
 
@@ -360,48 +346,36 @@ export default () => {
 
 ---
 
-![bad-case](./images/亲密-菜-bad-case.jpg)
+![bad-case](https://slides.zthxxx.me/present/code-design-and-roast/images/亲密-菜-bad-case.jpg)
 
-![good-case](./images/亲密-菜-good-case.jpg)
+![good-case](https://slides.zthxxx.me/present/code-design-and-roast/images/亲密-菜-good-case.jpg)
 
 
 <style>
-  .slide .content {
-    flex-direction: row;
-    justify-content: space-between;
-  }
+  .slidev-layout {
+    @apply flex-row justify-around;
 
-  .slide .content::-webkit-scrollbar {
-    display: none;
-  }
-
-  .content img {
-    padding: 0 100px;
-    height: 800px;
-    justify-self: center;
+    img {
+      @apply px-5;
+      height: 800px;
+    }
   }
 </style>
 
 ---
 
-![bad-case](./images/亲密-熬夜-bad-case.png)
+![bad-case](https://slides.zthxxx.me/present/code-design-and-roast/images/亲密-熬夜-bad-case.png)
 
-![good-case](./images/亲密-熬夜-good-case.png)
+![good-case](https://slides.zthxxx.me/present/code-design-and-roast/images/亲密-熬夜-good-case.png)
 
 <style>
-  .slide .content {
-    flex-direction: row;
-    justify-content: center;
-  }
+  .slidev-layout {
+    @apply flex-row justify-around;
 
-  .slide .content::-webkit-scrollbar {
-    display: none;
-  }
-
-  .content img {
-    padding: 0 20px;
-    height: 800px;
-    justify-self: center;
+    img {
+      @apply px-5;
+      height: 800px;
+    }
   }
 </style>
 
@@ -429,61 +403,54 @@ export default () => {
 
 <style>
   .group {
-    padding-bottom: 80px;
-  }
+    @apply pb-20;
 
-  .group .row {
-    position: relative;
-    width: 620px;
-    height: 240px;
-  }
+    .row {
+      @apply relative;
+      width: 620px;
+      height: 240px;
+    }
 
-  .group .circle {
-    display: inline-block;
-    width: 300px;
-    height: 300px;
-    line-height: 300px;
-    text-align: center;
-    
-    border: solid 1px #999;
-    border-radius: 50%;
-    text-align: center;
-  }
+    .circle {
+      @apply inline-block text-center rounded-full border-1 border-[#999];
+      width: 300px;
+      height: 300px;
+      line-height: 300px;
 
-  .group .circle:first-of-type {
-    position: relative;
-    right: -30px;
-  }
+      &:first-of-type {
+        @apply relative;
+        right: -30px;
+      }
 
-  .group .circle:last-of-type {
-    position: relative;
-    left: -30px;
+      &:last-of-type {
+        @apply relative;
+        left: -30px;
+      }
+    }
   }
 </style>
 
 ---
 
-![all-bad-case](./images/牛皮藓广告.jpg)
+![all-bad-case](https://slides.zthxxx.me/present/code-design-and-roast/images/牛皮藓广告.jpg)
 
-![all-bad-case](./images/牛皮藓电子广告.jpg)
+![all-bad-case](https://slides.zthxxx.me/present/code-design-and-roast/images/牛皮藓电子广告.jpg)
 
 <style>
-  .slide .content {
-    flex-direction: row;
-    justify-content: center;
-  }
+  .slidev-layout {
+    @apply flex-row px-0;
 
-  .content img {
-    padding: 0 20px;
-    height: 500px;
-    justify-self: center;
+    img {
+      @apply px-5;
+      height: 470px;
+    }
   }
 </style>
 
 ---
 
 <iframe 
-  src="https:///player.bilibili.com/player.html?aid=883238758&bvid=BV1HK4y1t7jD&cid=191303549&page=1&high_quality=1"
+  src="https://player.bilibili.com/player.html?aid=883238758&bvid=BV1HK4y1t7jD&cid=191303549&page=1&high_quality=1"
   scrolling="no"
   border="0"
   frameborder="no"
@@ -492,6 +459,16 @@ export default () => {
   style="width: 1200px; height: 800px"
 />
 
+<!--
+Adblock
+
+```
+player.bilibili.com##DIV[class="bilibili-player-video-recommend"]
+player.bilibili.com##DIV[class="bilibili-player-video-pause-panel-container-mask"]
+player.bilibili.com##DIV[class="bilibili-player-video-pause-panel-container-qrcode"]
+player.bilibili.com##DIV[class="bilibili-player-video-sendjumpbar"]
+```
+-->
 
 ---
 
@@ -501,39 +478,23 @@ export default () => {
 
 对齐
 
-![](./images/code/align-center.png)
+![](/images/code/align-center.png)
 
 
 <style>
-  .slide .content {
-    overflow: scroll;
-  }
-  .slide .content::-webkit-scrollbar {
-    display: none;
-  }
-
-  .content img {
+  img {
     max-height: 600px;
-    justify-self: center;
   }
 </style>
 ---
 
 缩进
 
-![](./images/code/indent-fibonacci.png)
+![](/images/code/indent-fibonacci.png)
 
 <style>
-  .slide .content {
-    overflow: scroll;
-  }
-  .slide .content::-webkit-scrollbar {
-    display: none;
-  }
-
-  .content img {
-    max-height: 600px;
-    justify-self: center;
+  img {
+    max-height: 500px;
   }
 </style>
 
@@ -541,20 +502,20 @@ export default () => {
 
 ## 代码风格
 
-<!-- 现在再来回顾，我们为什么要加这些对齐方案，以及为什么这么对齐 -->
-
 <style>
-  .content h2 {
+  .slidev-layout h2 {
     font-weight: 300;
   }
 </style>
+
+<!-- 现在再来回顾，我们为什么要加这些对齐方案，以及为什么这么对齐 -->
 
 ---
 
 ## 数据依赖
 
 <style>
-  .content h2 {
+  .slidev-layout h2 {
     font-weight: 300;
   }
 </style>
@@ -562,6 +523,9 @@ export default () => {
 ---
 
 Refs:
+
+
+<div class="scroll">
 
 - https://zhuanlan.zhihu.com/p/99720701
 - https://zhuanlan.zhihu.com/p/66361948
@@ -573,13 +537,13 @@ Refs:
 - https://www.jianshu.com/p/640b035efe48
 - https://www.uisdc.com/compared-and-align-principle
 
+</div>
 
 <style>
-  .slide .content {
-    overflow: display;
-  }
-
-  .slide .content::-webkit-scrollbar {
-    display: none;
+  .slidev-layout {
+    .scroll {
+      max-height: 600px;
+      overflow: scroll;
+    }
   }
 </style>

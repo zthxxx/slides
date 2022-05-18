@@ -1,12 +1,8 @@
 {
-  "name": "zthxxx-slides",
-  "version": "0.0.1",
+  "name": "@zthxxx/slides",
+  "version": "0.0.0",
   "description": "slides for share",
   "private": true,
-  "main": "index.js",
-  "scripts": {
-    "dev": "eloc open index.md -i 'images/**' -b -t \"`head -n 1 index.md | perl -pe 's/#+ +//g'`\""
-  },
   "repository": "zthxxx/slides",
   "keywords": [
     "markdown",
@@ -19,10 +15,19 @@
   },
   "homepage": "https://slides.zthxxx.me",
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "clean": "rm -rf .site"
+  },
+  "dependencies": {
+    "@slidev/cli": "^0.34.3",
+    "@slidev/theme-default": "^0.21.2",
+    "prism-themes": "^1.9.0"
   },
   "devDependencies": {
-    "eloc": "1.3.1",
-    "rimraf": "3.0.2"
+    "zx": "^7.0.7"
   }
 }

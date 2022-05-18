@@ -1,0 +1,216 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;700&family=Merriweather:ital,wght@1,300;1,700&display=swap');
+
+:root {
+  --slidev-slide-container-background: white;
+  --slidev-code-font-size: 0.6em;
+  --slidev-code-line-height: 1.4;
+  --slidev-code-margin: 0;
+  --slidev-code-padding: 1em 1.2em;
+  --slidev-code-radius: 0.3em;
+}
+
+#slide-container {
+  @apply flex justify-center items-center;
+}
+
+#slide-content {
+  @apply flex justify-center items-center;
+  background-color: var(--slidev-slide-container-background);
+}
+
+.dark #slide-content {
+  background-color: var(--slidev-slide-container-background);
+}
+
+.dark #slide-container {
+  --slidev-slide-container-background: black;
+}
+
+
+#slide-content .slidev-layout.end {
+  @apply w-full h-full;
+  color: var(--prism-foreground);
+  background-color: var(--slidev-slide-container-background);
+}
+
+
+/**
+ * to override
+ * - https://github.com/slidevjs/slidev/blob/v0.34.3/packages/client/styles/layouts-base.css
+ * - https://github.com/slidevjs/themes/blob/@slidev/theme-default@v0.21.2/packages/theme-default/styles/layouts.css
+ */
+.slidev-layout {
+  padding-inline: 1.77em;
+
+  --font-family: "Inter", "Roboto", sans-serif;
+  --code-font-family: "Roboto Mono", "Fira Code", "PT Mono", Menlo, monospace;
+  --quote-font-family: "Merriweather", serif;
+  font: 40px/1.6em var(--font-family);
+  font-feature-settings: 'calt', 'liga', 'case', 'ss02', 'ss03';
+  font-weight: 300;
+
+  &,
+  &.cover > div,
+  &.center > div,
+  &.intro > div {
+    @apply w-full h-full overflow-hidden;
+    @apply flex flex-col justify-center items-center place-self-center;
+
+    h1 {
+      font-family: var(--font-family);
+      font-size: 2.6em;
+      line-height: 1.4em;
+    }
+  }
+
+  h1 { font-size: 2.6em; line-height: 1.4em }
+  h2 { font-size: 1.8em; line-height: 1.4em }
+  h3 { font-size: 1.5em; line-height: 1.4em }
+  h4 { font-size: 1.2em; line-height: 1.6em }
+  h5 { font-size: 1.0em; line-height: 1.6em }
+
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.8em;
+    margin-top: 0.2em;
+    margin-inline: 0;
+    font-family: var(--font-family);
+  }
+
+
+  h6 {
+    font-weight: normal;
+    font-size: 2em;
+    line-height: 1.6em;
+    letter-spacing: -0.02em;
+  }
+
+  a, a:hover  {
+    color: #27E;
+    border-bottom: none;
+  }
+
+  a:hover {
+    text-decoration: underline 0.08em;
+  }
+
+  ol, ul {
+    margin-block: 1em;
+    padding-inline-start: 1em;
+  }
+
+  ul {
+    list-style: disc;
+
+    ul {
+      list-style: circle;
+    }
+  }
+
+  li {
+    line-height: unset;
+    margin-block: 0.4em;
+    margin-inline: 0;
+    padding: 0;
+    text-align: left;
+
+    & > ol,
+    & > ul {
+      margin-block: 0;
+    }
+  }
+
+  p + ol,
+  p + ul {
+    margin-top: 0;
+  }
+
+  p,
+  h1 + p {
+    margin-block: 1em;
+    line-height: unset;
+    opacity: 1;
+  }
+  
+  iframe {
+    @apply w-full h-full border-0;
+  }
+
+  blockquote {
+    @apply m-0 p-0 border-0 italic;
+    font-family: var(--quote-font-family);
+    font-size: 1em;
+    font-weight: 400;
+    line-height: unset;
+    color: inherit;
+    background: none;
+
+    em {
+      @apply opacity-50;
+    }
+  }
+
+  kbd {
+    display: inline-block;
+    min-width: 1em;
+    text-align: center;
+    padding: 0 0.3em 0.07em 0.3em;
+    margin: 0 0.1em;
+    color: #444d56;
+    background-color: #fafbfc;
+    border: 1px solid #c6cbd1;
+    border-bottom-color: #959da5;
+    box-shadow: inset 0 -3px 0 #959da5;
+    border-radius: 0.4em;
+  }
+
+  input[type="checkbox"] {
+    margin: 0 1em 0.3em 0.2em;
+    vertical-align: middle;
+    transform: scale(2);
+  }
+}
+
+p, img {
+  @apply max-w-full max-h-full;
+}
+
+/**
+ * to override
+ * - https://github.com/slidevjs/themes/blob/@slidev/theme-default@v0.21.2/packages/theme-default/styles/prism.css
+ */
+:not(pre) > code {
+  padding: 0 0.25em;
+  margin: 0 0.1em;
+  border-radius: 0.3em;
+  line-height: 1.4em;
+
+  font-size: 1em;
+  font-weight: bold;
+}
+
+html:not(.dark) :not(pre) > code {
+  --prism-background: #f2f2f2;
+}
+
+html.dark :not(pre) > code {
+  --prism-background: #333;
+}
+
+:not(pre) > code:before,
+:not(pre) > code:after {
+  content: '';
+  display: none;
+}
+
+pre:not(.slidev-code) {
+  margin: var(--prism-block-margin-y) var(--prism-block-margin-x);
+  font-family: var(--slidev-code-font-family);
+  padding: var(--slidev-code-padding);
+  font-size: var(--slidev-code-font-size);
+  line-height: var(--slidev-code-line-height);
+  border-radius: var(--slidev-code-radius);
+  overflow: auto;
+}

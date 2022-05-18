@@ -1,0 +1,9 @@
+{
+  // https://code.visualstudio.com/docs/languages/identifiers
+  "files.associations": {
+    "*.css": "less",
+  },
+  "[markdown]": {
+    "editor.wordWrap": "off",
+  }
+}

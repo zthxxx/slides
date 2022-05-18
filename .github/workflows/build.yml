@@ -1,0 +1,61 @@
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+name: Build for commit
+
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # https://github.com/chalk/supports-color/blob/main/index.js#L21
+      # https://github.com/chalk/supports-color/blob/main/index.js#L54
+      FORCE_COLOR: 1
+
+    steps:
+      - name: Checkout
+        # https://github.com/actions/checkout
+        uses: actions/checkout@v3
+        with:
+          # Number of commits to fetch. 0 indicates all history.
+          fetch-depth: 1
+
+      # https://github.com/pnpm/action-setup
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7.5.0
+
+      - name: Setup Node.js
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: https://registry.npmjs.org
+          cache: 'pnpm'
+
+      - name: Environment variables
+        run: |
+          env
+
+      - name: Install
+        run: |
+          pnpm install
+
+      - name: Build site
+        run: |
+          pnpm build
+
+      - name: Deploy site
+        if: ${{ github.ref == 'refs/heads/master' }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./.site
