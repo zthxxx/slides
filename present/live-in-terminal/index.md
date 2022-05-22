@@ -1,12 +1,5 @@
 ---
-# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
-routerMode: hash
-# 16:10
-aspectRatio: 1.6
-# 1280 / (16:10) * (16:9)
-canvasWidth: 1422
-selectable: true
-layout: default
+theme: eloc
 ---
 
 <iframe
@@ -231,7 +224,7 @@ node / python / mysql / redis
 
 ### zsh theme plugins
 
-[oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) / 
+[oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) /
 [powerlevel10k](https://github.com/romkatv/powerlevel10k) /
 [jovial](https://github.com/zthxxx/jovial)
 
@@ -245,12 +238,16 @@ node / python / mysql / redis
 
 ---
 
-<img
-  alt="zthxxx"
-  src="https://avatars.githubusercontent.com/u/15135943"
-  class="w-52 h-52 rounded-full border-1 border-gray-400"
-/>
+<p>
+  <a href="https://github.com/zthxxx" target="_blank" rel="noopener">
+    <img
+      alt="zthxxx"
+      src="https://avatars.githubusercontent.com/u/15135943"
+      class="w-52 h-52 rounded-full border-2 border-gray-300"
+    />
+  </a>
+</p>
 
-[![zthxxx](https://badgen.net/badge/github/%20zthxxx%20/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
+[![zthxxx](https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
 
 [ [jovial](https://github.com/zthxxx/jovial) · [zsh-history-enquirer](https://github.com/zthxxx/zsh-history-enquirer) · [midk](https://github.com/zthxxx/midk) ]

@@ -1,0 +1,125 @@
+@import 'prism-theme-vars/base.css';
+@import 'codemirror-theme-vars/base.css';
+@import 'prism-theme-vars/to-codemirror.css';
+
+
+/**
+ * prism theme One Light
+ * - https://github.com/prismjs/prism-themes/blob/v1.9.0/themes/prism-one-light.css
+ * - https://github.com/antfu/prism-theme-vars
+ */
+html:not(.dark) {
+  --prism-scheme: light;
+
+  /* Colors */
+  --prism-foreground: hsl(230, 8%, 24%);
+  --prism-background: hsl(230, 1%, 97%);
+
+  /* Tokens */
+  --prism-comment: hsl(230, 4%, 64%);
+  --prism-string: hsl(119, 34%, 47%);
+  --prism-literal: hsl(35, 99%, 36%);
+  --prism-keyword: hsl(301, 63%, 40%);
+  --prism-function: hsl(348, 68%, 58%);
+  --prism-deleted: hsl(5, 74%, 59%);
+  --prism-class: hsl(35, 99%, 36%);
+  --prism-builtin: hsl(119, 34%, 47%);
+  --prism-property: hsl(5, 74%, 59%);
+  --prism-namespace: #b05a78;
+  --prism-punctuation: hsl(230, 8%, 24%);
+  --prism-decorator: #bd8f8f;
+  --prism-operator: hsl(221, 87%, 60%);
+  --prism-number: var(--prism-literal);
+  --prism-boolean: var(--prism-literal);
+  --prism-variable: hsl(221, 87%, 60%);
+  --prism-constant: var(--prism-literal);
+  --prism-symbol: hsl(5, 74%, 59%);
+  --prism-interpolation: hsl(344, 84%, 43%);
+  --prism-selector: hsl(5, 74%, 59%);
+  --prism-keyword-control: var(--prism-keyword);
+  --prism-regex: var(--prism-string);
+  --prism-json-property: var(--prism-property);
+  --prism-inline-background: var(--prism-background);
+
+  /* Extension */
+  --prism-line-number: hsla(230, 8%, 24%, 0.2);
+  --prism-line-number-gutter: hsl(230, 1%, 62%);
+  --prism-line-highlight-background: hsla(230, 8%, 24%, 0.05);
+  --prism-selection-background: hsl(230, 1%, 90%);
+}
+
+/**
+ * https://github.com/prismjs/prism-themes/blob/v1.9.0/themes/prism-one-dark.css
+ */
+html.dark {
+  --prism-scheme: dark;
+
+  /* Colors */
+  --prism-foreground: hsl(220, 14%, 71%);
+  --prism-background: hsl(220, 13%, 18%);
+
+  /* Tokens */
+  --prism-comment: hsl(220, 10%, 40%);
+  --prism-string: hsl(95, 38%, 62%);
+  --prism-literal: hsl(29, 54%, 61%);
+  --prism-keyword: hsl(286, 60%, 67%);
+  --prism-function: hsl(348, 74%, 67%);
+  --prism-deleted: hsl(355, 65%, 65%);
+  --prism-class: hsl(29, 54%, 61%);
+  --prism-builtin: hsl(95, 38%, 62%);
+  --prism-property: hsl(355, 65%, 65%);
+  --prism-namespace: #db889a;
+  --prism-punctuation: hsl(220, 14%, 71%);
+  --prism-decorator: #bd8f8f;
+  --prism-operator: hsl(207, 82%, 66%);
+  --prism-number: var(--prism-literal);
+  --prism-boolean: var(--prism-literal);
+  --prism-variable: hsl(207, 82%, 66%);
+  --prism-constant: var(--prism-literal);
+  --prism-symbol: hsl(355, 65%, 65%);
+  --prism-interpolation: hsl(5, 48%, 51%);
+  --prism-selector: hsl(355, 65%, 65%);
+  --prism-keyword-control: var(--prism-keyword);
+  --prism-regex: var(--prism-string);
+  --prism-json-property: var(--prism-property);
+  --prism-inline-background: var(--prism-background);
+
+  /* Extension */
+  --prism-line-number: hsla(220, 14%, 71%, 0.15);
+  --prism-line-number-gutter: hsl(220, 14%, 45%);
+  --prism-line-highlight-background: hsla(220, 100%, 80%, 0.04);
+  --prism-selection-background: hsl(220, 13%, 28%);
+}
+
+/**
+ * https://github.com/antfu/prism-theme-vars/blob/v0.2.4/base.css
+ */
+:root {
+  /* Extension */
+  --prism-marker-color: var(--prism-foreground);
+  --prism-marker-opacity: 0.4;
+  --prism-marker-font-size: 0.8em;
+
+  /* Font */
+  --prism-font-size: 1em;
+  --prism-line-height: 1.5em;
+  --prism-font-family: monospace;
+  --prism-inline-font-size: var(--prism-font-size);
+  --prism-block-font-size: var(--prism-font-size);
+
+  /* Sizing */
+  --prism-tab-size: 2;
+
+  --prism-block-padding-x: 1em;
+  --prism-block-padding-y: 1em;
+  --prism-block-margin-x: 0;
+  --prism-block-margin-y: 0.5em;
+  --prism-block-radius: 0.3em;
+  --prism-inline-padding-x: 0.3em;
+  --prism-inline-padding-y: 0.1em;
+  --prism-inline-radius: 0.3em;
+
+  /* Token Styles */
+  --prism-comment-style: italic;
+  --prism-url-decoration: underline;
+}

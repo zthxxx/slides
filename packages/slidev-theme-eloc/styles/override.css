@@ -1,0 +1,167 @@
+:root {
+  --slidev-slide-container-background: white;
+  --slidev-code-font-size: 0.6em;
+  --slidev-code-line-height: 1.4;
+  --slidev-code-margin: 0;
+  --slidev-code-padding: 1em 1.2em;
+  --slidev-code-radius: 0.3em;
+  --slidev-controls-foreground: #333;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+#slide-container {
+  @apply flex justify-center items-center;
+}
+
+#slide-content {
+  @apply flex justify-center items-center;
+  background-color: var(--slidev-slide-container-background);
+}
+
+
+/**
+ * to override
+ * - https://github.com/slidevjs/slidev/blob/v0.34.3/packages/client/styles/layouts-base.css
+ * - https://github.com/slidevjs/themes/blob/@slidev/theme-default@v0.21.2/packages/theme-default/styles/layouts.css
+ */
+.slidev-layout {
+  @apply px-17.5 py-10 w-full h-full overflow-hidden;
+  @apply flex flex-col justify-center items-center place-self-center;
+  @apply font-light text-[40px] leading-[1.6];
+
+  --font-family: "Inter", "Roboto", sans-serif;
+  --code-font-family: "Roboto Mono", "Fira Code", "PT Mono", Menlo, monospace;
+  --quote-font-family: "Merriweather", serif;
+  font-family: var(--font-family);
+  font-feature-settings: 'calt', 'liga', 'case', 'ss02', 'ss03';
+
+  h1 { @apply text-[104px] leading-[1.4] }
+  h2 { @apply text-7xl leading-[1.4] }
+  h3 { @apply text-6xl leading-[1.4] }
+  h4 { @apply text-5xl leading-[1.6] }
+  h5 { @apply text-[40px] leading-[1.6] }
+
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold mx-0;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.8em;
+    margin-top: 0.2em;
+    font-family: var(--font-family);
+  }
+
+  h6 {
+    @apply font-normal text-3xl leading-[1.6];
+    letter-spacing: -0.02em;
+  }
+
+  a, a:hover {
+    @apply border-none text-[#27e];
+  }
+
+  a:hover {
+    @apply underline decoration-3;
+  }
+
+  ol, ul {
+    @apply my-10 pl-10;
+  }
+
+  ul {
+    list-style: disc;
+
+    ul {
+      list-style: circle;
+    }
+  }
+
+  li {
+    @apply mx-0 my-4 p-0 leading-[1.6] text-left;
+
+    & > ol,
+    & > ul {
+      @apply my-0;
+    }
+  }
+
+  p + ol,
+  p + ul {
+    @apply mt-0;
+  }
+
+  p,
+  h1 + p {
+    @apply my-10 leading-[1.6] opacity-100;
+  }
+
+  iframe {
+    @apply w-full h-full border-0;
+  }
+
+  blockquote {
+    @apply m-0 p-0 border-0 bg-transparent;
+    @apply text-[40px] text-inherit font-normal italic leading-[1.6];
+    font-family: var(--quote-font-family);
+
+    em {
+      @apply opacity-50;
+    }
+
+    :not(pre) > code {
+      /** recoup blockquote italic */
+      padding: 0 0.4em 0 0.25em;
+    }
+  }
+
+  kbd {
+    @apply box-content inline-block text-center;
+    margin: 0 0.1em;
+    padding: 0 0.3em 0.07em 0.3em;
+    min-width: 1em;
+    border: 0.025em solid #c6cbd1;
+    border-bottom-color: #959da5;
+    box-shadow: 0 0.075em 0 #959da5;
+    border-radius: 0.4em;
+    color: #444d56;
+    background-color: #fafbfc;
+    font-size: 1em;
+    line-height: 1.5;
+    font-family: monospace;
+  }
+
+  input[type="checkbox"] {
+    margin: 0 1em 0.3em 0.2em;
+    vertical-align: middle;
+    transform: scale(2);
+  }
+}
+
+p, img {
+  @apply max-w-full max-h-full;
+}
+
+.dark {
+  --slidev-controls-foreground: #ccc;
+
+  #slide-content {
+    background-color: var(--slidev-slide-container-background);
+  }
+
+  #slide-container {
+    --slidev-slide-container-background: black;
+  }
+
+  .slidev-layout {
+    kbd {
+      @apply text-gray-300;
+      background: hsl(220, 13%, 16%);
+    }
+
+    a, a:hover {
+      @apply text-[#49f];
+    }
+  }
+}

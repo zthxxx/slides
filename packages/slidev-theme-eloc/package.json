@@ -1,0 +1,62 @@
+{
+  "name": "slidev-theme-eloc",
+  "version": "1.0.0",
+  "keywords": [
+    "slidev-theme",
+    "slidev"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/zthxxx/slides/blob/master/packages/slidev-theme-eloc",
+  "homepage": "https://eloc-slidev.vercel.app",
+  "scripts": {
+    "dev": "slidev example.md --open",
+    "clean": "rimraf dist",
+    "build:example": "npm run clean && slidev build example.md",
+    "export": "slidev export example.md",
+    "screenshot": "slidev export example.md --format png",
+    "deploy": "npm run build:example && vercel --prod"
+  },
+  "files": [
+    "components",
+    "layouts",
+    "public",
+    "setup",
+    "styles",
+    "vite.config.ts",
+    "*.vue"
+  ],
+  "dependencies": {
+    "@slidev/types": "^0.34.3",
+    "@vueuse/core": "^8.7.5",
+    "codemirror-theme-vars": "^0.1.1",
+    "prism-theme-vars": "^0.2.3",
+    "prism-themes": "^1.9.0",
+    "theme-vitesse": "^0.4.10"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^0.34.3",
+    "postcss": "^8.4.14",
+    "rimraf": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "slidev": ">=0.30.0"
+  },
+  "// slidev theme meta": "https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/types.ts#L31",
+  "slidev": {
+    "colorSchema": "both",
+    "highlighter": "both",
+    "// slidev config": "https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts",
+    "defaults": {
+      "routerMode": "hash",
+      "aspectRatio": "16:10",
+      "// canvasWidth": "1280 * ((16:9) / (16:10))",
+      "canvasWidth": 1422.22,
+      "selectable": true,
+      "highlighter": "prism",
+      "fonts": {
+        "mono": "Fira Code"
+      }
+    }
+  }
+}

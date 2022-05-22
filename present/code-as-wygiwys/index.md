@@ -1,12 +1,5 @@
 ---
-# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
-routerMode: hash
-# 16:10
-aspectRatio: 1.6
-# 1280 / (16:10) * (16:9)
-canvasWidth: 1422
-selectable: true
-layout: default
+theme: eloc
 ---
 
 ## Code as <u>WYSIWYG</u>
@@ -21,7 +14,7 @@ BUT what you get **MAY NOT** be what you see
 
 ---
 
-<iframe 
+<iframe
   src="https://player.bilibili.com/player.html?aid=70927579&cid=122892471&page=1&high_quality=1"
   scrolling="no"
   border="0"
@@ -44,12 +37,12 @@ player.bilibili.com##DIV[class="bilibili-player-video-sendjumpbar"]
 
 ---
 
-<iframe 
+<iframe
   scrolling="no"
-  src="https://codepen.io/zthxxx/embed/YpbrVe?height=265&theme-id=light&default-tab=result" 
-  frameborder="no" 
-  allowtransparency="true" 
-  allowfullscreen="true" 
+  src="https://codepen.io/zthxxx/embed/YpbrVe?height=265&theme-id=light&default-tab=result"
+  frameborder="no"
+  allowtransparency="true"
+  allowfullscreen="true"
 />
 
 ---
@@ -146,7 +139,7 @@ class Layout {
     } else {
       // do something
     }
-    
+
     return (
       <Component preview={preview} />
     )
@@ -166,7 +159,7 @@ class Component {
     } else {
       // do something
     }
- 
+
     return <Chart preview={preview} />
   }
 }
@@ -214,10 +207,10 @@ class Chart {
 
 1. 职责不单一，多种状态 if 判断很面条
 2. 感觉抽象或模式不到位，
-   
+
    不符合「两种状态就是两块不耦合的多态」的直觉
-3. 状态多了不易于封闭修改 
-  
+3. 状态多了不易于封闭修改
+
    上面举例是 if else，实际因为历史原因已经很多 switch case
 4. 每层是对外暴露的 API，这种写法也会侵入使用者代码去做判断
 5. 没想到如何把多种状态暴露成不同的接口
@@ -230,12 +223,12 @@ class Chart {
 <br />
 用了大段的 switch 处理不同逻辑
 <br />
-[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L73-L197) 
+[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L73-L197)
 <br />
 <br />
 以及以及 if else 切换模式判断
 <br />
-[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L328-L375) 
+[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L328-L375)
 
 ---
 
@@ -243,12 +236,12 @@ class Chart {
 
 相对固定的 内部 模式依然可以用 switch
 <br />
-[OptionsDefaulter.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/OptionsDefaulter.js#L75-L117) 
+[OptionsDefaulter.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/OptionsDefaulter.js#L75-L117)
 <br />
 <br />
 不同模式 链式注册的写法
 <br />
-[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L510-L541) 
+[WebpackOptionsApply.js](https://github.com/webpack/webpack/blob/v4.41.2/lib/WebpackOptionsApply.js#L510-L541)
 <br />
 <br />
 (注册一定程度做了分离，但也
@@ -274,7 +267,7 @@ class Chart {
 
 ---
 
-## 稍微好点但有明显问题的 Case  eslint 
+## 稍微好点但有明显问题的 Case  eslint
 
 https://github.com/eslint/eslint/blob/v6.6.0/lib/rules/index.js
 

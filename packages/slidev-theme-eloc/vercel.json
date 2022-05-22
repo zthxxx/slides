@@ -1,0 +1,6 @@
+{
+  "alias": "eloc-slidev",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

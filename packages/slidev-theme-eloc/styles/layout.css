@@ -1,0 +1,14 @@
+.slidev-layout {
+  &.cover,
+  &.center,
+  &.intro {
+    @apply w-full h-full overflow-hidden;
+    @apply flex flex-col justify-center items-center place-self-center;
+  }
+}
+
+#slide-content .slidev-layout.end {
+  @apply w-full h-full text-3xl;
+  color: var(--prism-foreground);
+  background-color: var(--slidev-slide-container-background);
+}

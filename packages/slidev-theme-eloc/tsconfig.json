@@ -1,0 +1,57 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ESNext", "DOM"],
+    "noEmit": true,
+    "noEmitOnError": false,
+    "declaration": true,
+    "declarationMap": false,
+    "resolveJsonModule": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    // https://www.typescriptlang.org/tsconfig#strict
+    "strict": true,
+    // https://www.typescriptlang.org/tsconfig#strictFunctionTypes
+    "strictFunctionTypes": false,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    // https://www.typescriptlang.org/tsconfig#jsx
+    "jsx": "react-jsx",
+    "allowJs": true,
+    // https://www.typescriptlang.org/tsconfig#composite
+    "composite": false,
+    // https://www.typescriptlang.org/tsconfig#incremental
+    "incremental": false,
+    // https://www.typescriptlang.org/tsconfig#preserveWatchOutput
+    "preserveWatchOutput": true,
+    // https://www.typescriptlang.org/tsconfig#esModuleInterop
+    "esModuleInterop": true,
+    // https://www.typescriptlang.org/tsconfig#allowSyntheticDefaultImports
+    "allowSyntheticDefaultImports": true,
+    // https://www.typescriptlang.org/tsconfig#isolatedModules
+    "isolatedModules": true,
+    /**
+     * https://www.typescriptlang.org/tsconfig#useDefineForClassFields
+     * https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#the-usedefineforclassfields-flag-and-the-declare-property-modifier
+     */
+    "useDefineForClassFields": true,
+    // https://www.typescriptlang.org/tsconfig#downlevelIteration
+    "downlevelIteration": true,
+    "forceConsistentCasingInFileNames": true,
+  },
+  /**
+   * these options are overrides used only by ts-node
+   * https://github.com/TypeStrong/ts-node
+   */
+  "ts-node": {
+    // It is faster to skip typechecking.
+    // Remove if you want ts-node to do typechecking.
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "commonjs",
+    },
+  },
+}

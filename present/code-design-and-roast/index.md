@@ -1,12 +1,5 @@
 ---
-# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
-routerMode: hash
-# 16:10
-aspectRatio: 1.6
-# 1280 / (16:10) * (16:9)
-canvasWidth: 1422
-selectable: true
-layout: default
+theme: eloc
 ---
 
 # CODE ROAST
@@ -449,7 +442,7 @@ https://dribbble.com/shots/13788366
 
 ---
 
-<iframe 
+<iframe
   src="https://player.bilibili.com/player.html?aid=883238758&bvid=BV1HK4y1t7jD&cid=191303549&page=1&high_quality=1"
   scrolling="no"
   border="0"

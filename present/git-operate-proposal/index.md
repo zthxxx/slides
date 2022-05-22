@@ -1,12 +1,5 @@
 ---
-# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
-routerMode: hash
-# 16:10
-aspectRatio: 1.6
-# 1280 / (16:10) * (16:9)
-canvasWidth: 1422
-selectable: true
-layout: default
+theme: eloc
 ---
 
 # Git Operate Proposal
@@ -116,7 +109,7 @@ Vue
 
 <!-- 一步步演示刚才的 git flow 怎么来的 -->
 
-<iframe 
+<iframe
   src="https://git-school.github.io/visualizing-git/#free"
   scrolling="no"
   border="0"
