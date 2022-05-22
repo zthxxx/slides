@@ -1,0 +1,22 @@
+node_modules
+dist
+.site
+.vercel
+
+# misc
+.idea
+.DS_Store
+npm-debug.log*
+yarn-error.log
+
+# use pnpm-lock
+yarn.lock
+package-lock.json
+
+coverage
+
+*.log
+
+index.html
+.remote-assets
+components.d.ts

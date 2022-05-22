@@ -1,12 +1,5 @@
 ---
-# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
-routerMode: hash
-# 16:10
-aspectRatio: 1.6
-# 1280 / (16:10) * (16:9)
-canvasWidth: 1422
-selectable: true
-layout: default
+theme: eloc
 ---
 
 ## CLI 概览 (其一)
@@ -122,11 +115,11 @@ Terminal / 输入输出
 
 来到主机时代图形界面，没有这样的物理设备了，
 
----  
+---
 
 - 终端的概念变成了现在的虚拟终端，放在内核中
   <br/>
-  <small>(`Virtual Console` / `Terminal Emulator`)</small> 
+  <small>(`Virtual Console` / `Terminal Emulator`)</small>
   <br/>
   <br/>
 - 内核管理终端输入输出的部分统称 TTY
@@ -134,7 +127,7 @@ Terminal / 输入输出
   <small>(`teletype` / `Teletypewriter`)</small>
   <br/>
   <br/>
-- 接入到 TTY 的给用户用的 App 统称终端 
+- 接入到 TTY 的给用户用的 App 统称终端
   <br/>
   <small>(`Terminal`)</small>
 
@@ -160,7 +153,7 @@ Terminal / 输入输出
 
 TTY 负责控制字符的输入输出
 
-```ts
+```
                       +----------------+
                       |   TTY Driver   |
                       |      I/O       |
@@ -188,13 +181,13 @@ TTY 负责控制字符的输入输出
 ---
 
 
-```ts
+```
    Input    +--------------------------+    R/W     +------+
 ----------->|                          |<---------->| bash |
             |          tty/0           |  actived   +------+
 <-----------|                          |            +------+
    Output   | Foreground process group |<-----------| fish |
-            +--------------------------+     W      +------+  
+            +--------------------------+     W      +------+
 ```
 
 <style>
@@ -249,7 +242,7 @@ done
 
 ssh & pts
 
-```ts
+```
 +------------+              +------------+
 |            |              |            |
 |  Terminal  |------------->| ssh server |--------------------------+
@@ -288,7 +281,7 @@ PTS                       |   |        |   +-------+    |       +-------+
 
 - `/dev/pts/N` ssh 等外部连接会被分配到的 tty
 
-- `/proc/N/fd/N` 进程打开的文件描述符  
+- `/proc/N/fd/N` 进程打开的文件描述符
 
 - `/proc/self/fd/` 当前 tty 打开的文件
 
@@ -396,7 +389,7 @@ echo -e "${CSI}35;1mTitle of the Program ${CSI}0m"
 
 部分快捷键是 TTY 特性，[ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code#Terminal_output_sequences) 是 **终端** 特性，剩的再是 Shell 处理
 
-`stty -a` 
+`stty -a`
 
 ```bash
 speed 38400 baud; 35 rows; 120 columns;
@@ -468,15 +461,18 @@ Ref Pictures & Flow:
 - https://segmentfault.com/a/1190000016129862
 - https://segmentfault.com/a/1190000009082089
 
-
 ---
 
-<img
-  alt="zthxxx"
-  src="https://avatars.githubusercontent.com/u/15135943"
-  class="w-52 h-52 rounded-full border-1 border-gray-400"
-/>
+<p>
+  <a href="https://github.com/zthxxx" target="_blank" rel="noopener">
+    <img
+      alt="zthxxx"
+      src="https://avatars.githubusercontent.com/u/15135943"
+      class="w-52 h-52 rounded-full border-2 border-gray-300"
+    />
+  </a>
+</p>
 
-[![zthxxx](https://badgen.net/badge/github/%20zthxxx%20/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
+[![zthxxx](https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
 
 [ [jovial](https://github.com/zthxxx/jovial) · [zsh-history-enquirer](https://github.com/zthxxx/zsh-history-enquirer) · [midk](https://github.com/zthxxx/midk) ]

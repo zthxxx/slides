@@ -1,0 +1,42 @@
+@import './prism.css';
+
+/**
+ * to override
+ * - https://github.com/slidevjs/themes/blob/@slidev/theme-default@v0.21.2/packages/theme-default/styles/prism.css
+ */
+:not(pre) > code {
+  @apply font-bold;
+
+  padding: 0 0.25em;
+  margin: 0 0.1em;
+  border-radius: 0.3em;
+  line-height: 1.4;
+
+  background: var(--prism-inline-background);
+
+  &::before,
+  &::after {
+    @apply hidden;
+    content: '';
+  }
+}
+
+html:not(.dark) :not(pre) > code {
+  --prism-inline-background: #f2f2f2;
+}
+
+html.dark :not(pre) > code {
+  --prism-inline-background: #333;
+}
+
+
+pre:not(.slidev-code) {
+  margin: var(--prism-block-margin-y) var(--prism-block-margin-x);
+  font-family: var(--slidev-code-font-family);
+  padding: var(--slidev-code-padding);
+  font-size: var(--slidev-code-font-size);
+  line-height: var(--slidev-code-line-height);
+  border-radius: var(--slidev-code-radius);
+  background: var(--prism-background);
+  overflow: auto;
+}

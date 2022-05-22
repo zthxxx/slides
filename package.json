@@ -20,12 +20,11 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
-    "clean": "rm -rf .site"
+    "clean": "rm -rf index.html .site present/*/index.html present/*/dist"
   },
   "dependencies": {
     "@slidev/cli": "^0.34.3",
-    "@slidev/theme-default": "^0.21.2",
-    "prism-themes": "^1.9.0"
+    "slidev-theme-eloc": "workspace:*"
   },
   "devDependencies": {
     "zx": "^7.0.7"

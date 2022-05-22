@@ -1,12 +1,5 @@
 ---
-# https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts
-routerMode: hash
-# 16:10
-aspectRatio: 1.6
-# 1280 / (16:10) * (16:9)
-canvasWidth: 1422
-selectable: true
-layout: default
+theme: eloc
 ---
 
 ## A Glance at Git Merkle
@@ -47,7 +40,7 @@ the most familiar strange 'block chain'
 
 ### https://bitcoin.org/bitcoin.pdf
 
-Block Sign Chain / PoW / [Difficulty](https://learnmeabitcoin.com/beginners/difficulty) / Block Reward 
+Block Sign Chain / PoW / [Difficulty](https://learnmeabitcoin.com/beginners/difficulty) / Block Reward
 
 Smart Contract (eg. ETH) / IPO (eg. ETH)
 
@@ -67,9 +60,9 @@ Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ### Why is git considered a 'block chain'
 
-- similarity
-- hash block, signature
-- merkle
+hash block / signature / merkle
+
+<!-- similarity -->
 
 ---
 
@@ -129,9 +122,9 @@ Block Reward / Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ### The Essentially What Git Does
 
-- stores blobs for the files that have changed, 
-- updates the index, writes out trees, 
-- writes commit objects that reference the top-level trees and the commits. 
+- stores blobs for the files that have changed,
+- updates the index, writes out trees,
+- writes commit objects that reference the top-level trees and the commits.
 
 ---
 
@@ -232,14 +225,12 @@ fetch = +refs/heads/release-*:refs/remotes/origin/release-*
 # on dev
 git checkout master
 git pull
-```
 
-```bash
+
 git fetch origin +master:refs/heads/master
 git checkout master
-```
 
-```bash
+
 # or
 git fetch origin master
 git fetch . origin/master:master
@@ -277,12 +268,14 @@ git update-ref refs/heads/test-fetch-new-branch HEAD
 
 ---
 
-<img
-  alt="zthxxx"
-  src="https://avatars.githubusercontent.com/u/15135943"
-  class="w-52 h-52 rounded-full border-1 border-gray-400"
-/>
+<a href="https://github.com/zthxxx" target="_blank" rel="noopener">
+  <img
+    alt="zthxxx"
+    src="https://avatars.githubusercontent.com/u/15135943"
+    class="w-52 h-52 rounded-full border-2 border-gray-300"
+  />
+</a>
 
-[![zthxxx](https://badgen.net/badge/github/%20zthxxx%20/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
+[![zthxxx](https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
 
 [ [jovial](https://github.com/zthxxx/jovial) · [zsh-history-enquirer](https://github.com/zthxxx/zsh-history-enquirer) · [hexo-wikitten](https://github.com/zthxxx/hexo-theme-Wikitten) ]
