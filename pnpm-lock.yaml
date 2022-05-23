@@ -19,6 +19,7 @@ importers:
       '@slidev/types': ^0.34.3
       '@vueuse/core': ^8.7.5
       codemirror-theme-vars: ^0.1.1
+      playwright-chromium: ^1.24.1
       postcss: ^8.4.14
       prism-theme-vars: ^0.2.3
       prism-themes: ^1.9.0
@@ -32,7 +33,8 @@ importers:
       prism-themes: 1.9.0
       theme-vitesse: 0.4.10
     devDependencies:
-      '@slidev/cli': 0.34.3_postcss@8.4.14
+      '@slidev/cli': 0.34.3_tci2gkpbltein5tvv7h64tc26i
+      playwright-chromium: 1.24.1
       postcss: 8.4.14
       rimraf: 3.0.2
 
@@ -212,6 +214,83 @@ packages:
       - vue-template-compiler
       - vue-template-es2015-compiler
       - webpack
+    dev: false
+
+  /@slidev/cli/0.34.3_tci2gkpbltein5tvv7h64tc26i:
+    resolution: {integrity: sha512-uQCO/xiqYDPoD8njhzXc0oX0vjIRMjw37EKtFAIwhVw3bFRdVRUOfRjkp5HkIEz5jmbMvrkHwxdsgM4EqQ6pLg==}
+    engines: {node: '>=14.0.0'}
+    hasBin: true
+    peerDependencies:
+      playwright-chromium: ^1.10.0
+    peerDependenciesMeta:
+      playwright-chromium:
+        optional: true
+    dependencies:
+      '@antfu/utils': 0.5.2
+      '@hedgedoc/markdown-it-task-lists': 1.0.5_markdown-it@13.0.1
+      '@iconify-json/carbon': 1.1.6
+      '@iconify-json/ph': 1.1.2
+      '@slidev/client': 0.34.3_vite@2.9.14
+      '@slidev/parser': 0.34.3
+      '@slidev/types': 0.34.3
+      '@vitejs/plugin-vue': 2.3.3_vite@2.9.14+vue@3.2.37
+      '@vue/compiler-sfc': 3.2.37
+      cli-progress: 3.11.2
+      codemirror: 5.65.7
+      connect: 3.7.0
+      debug: 4.3.4
+      fast-glob: 3.2.11
+      fs-extra: 10.1.0
+      global-dirs: 3.0.0
+      import-from: 4.0.0
+      is-installed-globally: 0.4.0
+      jiti: 1.14.0
+      js-base64: 3.7.2
+      katex: 0.16.0
+      kolorist: 1.5.1
+      markdown-it: 13.0.1
+      markdown-it-footnote: 3.0.3
+      markdown-it-link-attributes: 4.0.0
+      monaco-editor: 0.33.0
+      nanoid: 4.0.0
+      open: 8.4.0
+      plantuml-encoder: 1.4.0
+      playwright-chromium: 1.24.1
+      postcss-nested: 5.0.6_postcss@8.4.14
+      prismjs: 1.28.0
+      prompts: 2.4.2
+      resolve: 1.22.1
+      resolve-from: 5.0.0
+      resolve-global: 1.0.0
+      shiki: 0.10.1
+      unocss: 0.42.1_vite@2.9.14
+      unplugin-icons: 0.14.7_ye7sw5nid2es3e4qmkjro6ozy4
+      unplugin-vue-components: 0.20.1_vite@2.9.14+vue@3.2.37
+      vite: 2.9.14
+      vite-plugin-remote-assets: 0.2.2_vite@2.9.14
+      vite-plugin-vue-markdown: 0.20.1_vite@2.9.14
+      vite-plugin-vue-server-ref: 0.2.4_vite@2.9.14+vue@3.2.37
+      vite-plugin-windicss: 1.8.7_vite@2.9.14
+      vue: 3.2.37
+      windicss: 3.5.6
+      yargs: 17.5.1
+    transitivePeerDependencies:
+      - '@babel/parser'
+      - '@nuxt/kit'
+      - '@svgr/core'
+      - '@unocss/webpack'
+      - '@vue/composition-api'
+      - esbuild
+      - less
+      - postcss
+      - rollup
+      - sass
+      - stylus
+      - supports-color
+      - vue-template-compiler
+      - vue-template-es2015-compiler
+      - webpack
+    dev: true
 
   /@slidev/client/0.34.3_vite@2.9.14:
     resolution: {integrity: sha512-9B/fQ4ydrEM2TxwXiwrm6NiGgCJepoltvvlvBKaDzvHIZofDd5wta4vk3vKA5fO2Bs8vcPi6rpPqiehBELYtxw==}
@@ -2086,6 +2165,21 @@ packages:
 
   /plantuml-encoder/1.4.0:
     resolution: {integrity: sha512-sxMwpDw/ySY1WB2CE3+IdMuEcWibJ72DDOsXLkSmEaSzwEUaYBT6DWgOfBiHGCux4q433X6+OEFWjlVqp7gL6g==}
+
+  /playwright-chromium/1.24.1:
+    resolution: {integrity: sha512-4dPVbwICijhEZ21zXMGu/CF+shWhcmARx3jNFlBUREKJhq9jwQDPRXploJkUQiKLZ69E63wfE5tx5P/bLLr7Tw==}
+    engines: {node: '>=14'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      playwright-core: 1.24.1
+    dev: true
+
+  /playwright-core/1.24.1:
+    resolution: {integrity: sha512-1RoSDe/oTQS1Ct7Pb8i+vcFKbKYpmVIBXk0IUiD8RvCUMnNl7EJF1OSQ9E8TZ5RYamWkW2Psir9e8Doyz1FnhQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
 
   /popmotion/11.0.3:
     resolution: {integrity: sha512-Y55FLdj3UxkR7Vl3s7Qr4e9m0onSnP8W7d/xQLsoJM40vs6UKHFdygs6SWryasTZYqugMjm3BepCF4CWXDiHgA==}
