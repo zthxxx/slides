@@ -1,6 +1,6 @@
 {
   "name": "slidev-theme-eloc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "keywords": [
     "slidev-theme",
     "slidev"
@@ -12,11 +12,14 @@
     "dev": "slidev example.md --open",
     "clean": "rimraf dist",
     "build:example": "npm run clean && slidev build example.md",
-    "export": "slidev export example.md",
-    "screenshot": "slidev export example.md --format png",
+    "export": "slidev export example.md --output export",
+    "screenshot": "slidev export example.md --output screenshot --format png",
     "deploy": "npm run build:example && vercel --prod"
   },
   "files": [
+    "README.md",
+    "CHANGELOG.md",
+    "example.md",
     "components",
     "layouts",
     "public",
@@ -35,6 +38,7 @@
   },
   "devDependencies": {
     "@slidev/cli": "^0.34.3",
+    "playwright-chromium": "^1.24.1",
     "postcss": "^8.4.14",
     "rimraf": "^3.0.2"
   },
@@ -49,9 +53,7 @@
     "// slidev config": "https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts",
     "defaults": {
       "routerMode": "hash",
-      "aspectRatio": "16:10",
-      "// canvasWidth": "1280 * ((16:9) / (16:10))",
-      "canvasWidth": 1422.22,
+      "canvasWidth": 1580,
       "selectable": true,
       "highlighter": "prism",
       "fonts": {
