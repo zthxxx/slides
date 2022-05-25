@@ -1,6 +1,7 @@
 {
   "name": "slidev-theme-eloc",
   "version": "1.0.1",
+  "description": "Focus on writing, present in a concise style.",
   "keywords": [
     "slidev-theme",
     "slidev"
@@ -12,8 +13,8 @@
     "dev": "slidev example.md --open",
     "clean": "rimraf dist",
     "build:example": "npm run clean && slidev build example.md",
-    "export": "slidev export example.md --output export",
-    "screenshot": "slidev export example.md --output screenshot --format png",
+    "export": "slidev export screenshot.md --output export",
+    "screenshot": "slidev export screenshot.md --output screenshot --format png",
     "deploy": "npm run build:example && vercel --prod"
   },
   "files": [

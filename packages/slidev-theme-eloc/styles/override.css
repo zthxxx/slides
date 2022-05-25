@@ -38,6 +38,11 @@
   font-family: var(--font-family);
   font-feature-settings: 'calt', 'liga', 'case', 'ss02', 'ss03';
 
+  /**
+   * screenshot box-shadow style
+   * @apply border-1 border-[#ddd] rounded-xl shadow-2xl transform scale-90;
+   */
+
   h1 { @apply text-[104px] leading-[1.4] }
   h2 { @apply text-7xl leading-[1.4] }
   h3 { @apply text-6xl leading-[1.4] }
