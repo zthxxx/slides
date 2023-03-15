@@ -14,7 +14,7 @@ const slideDirs = await glob('present/*', {
 
 echo``
 echo`[slides] ${green(`Clear last building files`)}`
-await $`rm -rf index.html .site present/*/index.html present/*/dist`
+await $`rm -rf .site present/*/dist`
 
 
 echo``

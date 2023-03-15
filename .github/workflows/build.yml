@@ -33,7 +33,7 @@ jobs:
       # https://github.com/pnpm/action-setup
       - uses: pnpm/action-setup@v2
         with:
-          version: 7.5.0
+          version: 8.6.6
 
       - name: Setup Node.js
         # https://github.com/actions/setup-node
@@ -49,7 +49,7 @@ jobs:
 
       - name: Install
         run: |
-          pnpm install
+          pnpm i --frozen-lockfile
 
       - name: Build site
         run: |

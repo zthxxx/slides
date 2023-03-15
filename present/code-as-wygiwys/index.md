@@ -186,17 +186,17 @@ class Chart {
 </div>
 
 
-<style scoped>
+<style>
   .slidev-layout {
     --slidev-code-font-size: 0.5em;
 
-    & &gt; .code-container {
+    .code-container {
       @apply flex flex-row justify-around items-stretch;
       @apply w-full py-4 rounded-xl;
       background: var(--prism-background);
       font-size: 0.9em;
 
-      & &gt; .separator {
+      .separator {
         @apply min-w-1px my-4 bg-gray-300
       }
     }
