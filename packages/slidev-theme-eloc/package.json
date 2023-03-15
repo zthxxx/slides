@@ -1,6 +1,6 @@
 {
   "name": "slidev-theme-eloc",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Focus on writing, present in a concise style.",
   "keywords": [
     "slidev-theme",
@@ -15,7 +15,7 @@
     "build:example": "npm run clean && slidev build example.md",
     "export": "slidev export screenshot.md --output export",
     "screenshot": "slidev export screenshot.md --output screenshot --format png",
-    "deploy": "npm run build:example && vercel --prod"
+    "deploy": "npm run build:example && vercel --cwd dist"
   },
   "files": [
     "README.md",
@@ -30,28 +30,29 @@
     "*.vue"
   ],
   "dependencies": {
-    "@slidev/types": "^0.34.3",
-    "@vueuse/core": "^8.7.5",
-    "codemirror-theme-vars": "^0.1.1",
-    "prism-theme-vars": "^0.2.3",
+    "@slidev/types": "^0.42.5",
+    "@vueuse/core": "^10.2.1",
+    "@vueuse/math": "^10.2.1",
+    "codemirror-theme-vars": "^0.1.2",
+    "prism-theme-vars": "^0.2.4",
     "prism-themes": "^1.9.0",
-    "theme-vitesse": "^0.4.10"
+    "theme-vitesse": "^0.7.2"
   },
   "devDependencies": {
-    "@slidev/cli": "^0.34.3",
-    "playwright-chromium": "^1.24.1",
-    "postcss": "^8.4.14",
-    "rimraf": "^3.0.2"
+    "@slidev/cli": "0.42.5",
+    "playwright-chromium": "1.35.1",
+    "postcss": "8.4.25",
+    "rimraf": "5.0.1"
   },
   "engines": {
     "node": ">=14.0.0",
     "slidev": ">=0.30.0"
   },
-  "// slidev theme meta": "https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/types.ts#L31",
+  "// slidev theme meta": "https://github.com/slidevjs/slidev/blob/v0.42.5/packages/types/src/types.ts#L31",
   "slidev": {
     "colorSchema": "both",
     "highlighter": "both",
-    "// slidev config": "https://github.com/slidevjs/slidev/blob/v0.34.3/packages/types/src/config.ts",
+    "// slidev config": "https://github.com/slidevjs/slidev/blob/v0.42.5/packages/types/src/config.ts",
     "defaults": {
       "routerMode": "hash",
       "canvasWidth": 1580,
