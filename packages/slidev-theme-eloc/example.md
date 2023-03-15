@@ -1,4 +1,5 @@
 ---
+# https://github.com/slidevjs/slidev/blob/v0.42.5/packages/types/src/config.ts
 theme: ./
 ---
 
@@ -58,7 +59,7 @@ Just change the theme in your slide's frontmatter
 
 ---
 
-Press <kbd><carbon-text-annotation-toggle/></kbd> to __edit me__ :)
+Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __edit me__ :)
 
 <div class="absolute bottom-14 left-85">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 254 262" class="w-[250px] h-[200px]">
@@ -125,7 +126,7 @@ Press <kbd><carbon-text-annotation-toggle/></kbd> to __edit me__ :)
 
 <!--
   bypass transform to scoped style in slidev
-  https://github.com/slidevjs/slidev/blob/v0.34.3/packages/slidev/node/plugins/markdown.ts#L188-L189
+  https://github.com/slidevjs/slidev/blob/v0.42.5/packages/slidev/node/plugins/markdown.ts#L197-L198
 -->
 <style no-scoped>
   #slide-content {
@@ -147,7 +148,7 @@ Press <kbd><carbon-text-annotation-toggle/></kbd> to __edit me__ :)
 
 [![zthxxx](https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
 
-[ [slidev-theme-eloc](https://github.com/zthxxx/jovial) · [eloc-slidev.vercel](https://eloc-slidev.vercel.app) ]
+[ [slidev-theme-eloc](https://github.com/zthxxx/slides/tree/master/packages/slidev-theme-eloc) · [eloc-slidev.vercel](https://eloc-slidev.vercel.app) ]
 
 ---
 
@@ -164,4 +165,4 @@ Press <kbd><carbon-text-annotation-toggle/></kbd> to __edit me__ :)
 
 [![amio](https://badgen.net/badge/github/amio/blue?icon=github&label&scale=2)](https://github.com/amio)
 
-[ [amio/eloc](https://github.com/zthxxx/jovial) · [eloc.vercel](https://eloc.vercel.app) ]
+[ [amio/eloc](https://github.com/amio/eloc) · [eloc.vercel](https://eloc.vercel.app) ]

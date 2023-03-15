@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.2](https://github.com/zthxxx/slides/compare/slidev-theme-eloc@1.0.1...slidev-theme-eloc@1.0.2) (2023-07-09)
+
+### chore
+
+Compatible with latest `@slidev/cli` (`v0.42.5`).
+
+### fix
+
+Fix links in example theme site.
+
+Fix shortcuts with `go home` and `go end` and `show editor` in `eloc` theme.
+
 
 ## [1.0.1](https://github.com/zthxxx/slides/compare/slidev-theme-eloc@1.0.0...slidev-theme-eloc@1.0.1) (2022-05-23)
 
