@@ -41,7 +41,7 @@
   "devDependencies": {
     "@slidev/cli": "0.42.5",
     "playwright-chromium": "1.35.1",
-    "postcss": "8.4.25",
+    "postcss": "8.4.31",
     "rimraf": "5.0.1"
   },
   "engines": {
