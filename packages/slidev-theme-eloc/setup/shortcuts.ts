@@ -12,11 +12,12 @@ import type {
 } from '@slidev/types'
 
 
-// https://github.com/slidevjs/slidev/blob/v0.42.5/packages/client/logic/drawings.ts#L19
+// https://github.com/slidevjs/slidev/blob/v0.49.29/packages/client/composables/useDrawings.ts#L23
 const drawingEnabled = useLocalStorage('slidev-drawing-enabled', false)
 
-// https://github.com/slidevjs/slidev/blob/v0.42.5/packages/client/state/index.ts#L27
+// https://github.com/slidevjs/slidev/blob/v0.49.29/packages/client/state/index.ts#L9
 const showOverview = useLocalStorage('slidev-show-overview', false)
+// https://github.com/slidevjs/slidev/blob/v0.49.29/packages/client/state/index.ts#31
 const showEditor = useLocalStorage('slidev-show-editor', false)
 
 const magicKeys = useMagicKeys()

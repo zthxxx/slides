@@ -1,5 +1,5 @@
 ---
-# https://github.com/slidevjs/slidev/blob/v0.42.5/packages/types/src/config.ts
+# https://github.com/slidevjs/slidev/blob/v0.49.29/packages/types/src/config.ts#L10
 theme: ./
 ---
 
@@ -126,7 +126,7 @@ Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __e
 
 <!--
   bypass transform to scoped style in slidev
-  https://github.com/slidevjs/slidev/blob/v0.42.5/packages/slidev/node/plugins/markdown.ts#L197-L198
+  https://github.com/slidevjs/slidev/blob/v0.49.29/packages/slidev/node/syntax/transform/in-page-css.ts#L15-L16
 -->
 <style no-scoped>
   #slide-content {

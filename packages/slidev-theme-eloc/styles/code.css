@@ -2,7 +2,7 @@
 
 /**
  * to override
- * - https://github.com/slidevjs/themes/blob/@slidev/theme-default@v0.21.2/packages/theme-default/styles/prism.css
+ * - https://github.com/slidevjs/themes/blob/@slidev/theme-default@v0.25.0/packages/theme-default/styles/prism.css
  */
 :not(pre) > code {
   @apply font-bold;

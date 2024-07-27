@@ -23,7 +23,7 @@
     "clean": "rm -rf index.html .site present/*/index.html present/*/dist"
   },
   "dependencies": {
-    "@slidev/cli": "0.42.5",
+    "@slidev/cli": "0.49.29",
     "slidev-theme-eloc": "workspace:*"
   },
   "devDependencies": {

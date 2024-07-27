@@ -4,7 +4,7 @@
 
 ### chore
 
-Compatible with latest `@slidev/cli` (`v0.42.5`).
+Compatible with `@slidev/cli` (`>= 0.42.0 <0.50.0`).
 
 ### fix
 
