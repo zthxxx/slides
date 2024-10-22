@@ -12,12 +12,14 @@ import type {
 } from '@slidev/types'
 
 
-// https://github.com/slidevjs/slidev/blob/v0.49.29/packages/client/composables/useDrawings.ts#L23
+// https://github.com/slidevjs/slidev/blob/v51.1.1/packages/client/composables/useDrawings.ts#L23
 const drawingEnabled = useLocalStorage('slidev-drawing-enabled', false)
 
-// https://github.com/slidevjs/slidev/blob/v0.49.29/packages/client/state/index.ts#L9
+// https://github.com/slidevjs/slidev/blob/v51.1.1/packages/client/state/storage.ts#L9
+// TODO import showOverview
 const showOverview = useLocalStorage('slidev-show-overview', false)
-// https://github.com/slidevjs/slidev/blob/v0.49.29/packages/client/state/index.ts#31
+
+// https://github.com/slidevjs/slidev/blob/v51.1.1/packages/client/state/storage.ts#L41
 const showEditor = useLocalStorage('slidev-show-editor', false)
 
 const magicKeys = useMagicKeys()
@@ -27,28 +29,29 @@ export default defineShortcutsSetup((nav: NavOperations, base: ShortcutOptions[]
   const { escape, tab, home, end, pageup, pagedown } = magicKeys
 
   return [
+    /**
+     * default shortcuts
+     * https://github.com/slidevjs/slidev/blob/v51.1.1/packages/client/setup/shortcuts.ts#L34
+     */
     ...base,
-
-    // { name: 'prev_page_key', key: and(pageup, not(showOverview)), fn: nav.prev, autoRepeat: true },
-    // { name: 'next_page_key', key: and(pagedown, not(showOverview)), fn: nav.next, autoRepeat: true },
 
     { name: 'goHome', key: and(home, not(showOverview)), fn: nav.goFirst },
     { name: 'goEnd', key: and(end, not(showOverview)), fn: nav.goLast },
 
     // NOT WORK with `showOverview` or `drawingEnabled` by trigger key escape
-    {
-      name: 'showEditor',
-      key: and(
-        tab,
-        not(showOverview),
-        not(drawingEnabled),
-      ),
-      fn: () => showEditor.value = true,
-    },
-    {
-      name: 'closeEditor',
-      key: and(escape, showEditor),
-      fn: () => showEditor.value = false,
-    },
+    // {
+    //   name: 'showEditor',
+    //   key: and(
+    //     tab,
+    //     not(showOverview),
+    //     not(drawingEnabled),
+    //   ),
+    //   fn: () => showEditor.value = true,
+    // },
+    // {
+    //   name: 'closeEditor',
+    //   key: and(escape, showEditor),
+    //   fn: () => showEditor.value = false,
+    // },
   ]
 })

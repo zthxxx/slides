@@ -9,6 +9,7 @@
   "license": "MIT",
   "repository": "https://github.com/zthxxx/slides/blob/master/packages/slidev-theme-eloc",
   "homepage": "https://eloc-slidev.vercel.app",
+  "type": "module",
   "scripts": {
     "dev": "slidev example.md --open",
     "clean": "rimraf dist",
@@ -30,34 +31,34 @@
     "*.vue"
   ],
   "dependencies": {
-    "@slidev/types": "^0.49.29",
-    "@vueuse/core": "^10.2.1",
-    "@vueuse/math": "^10.2.1",
+    "@slidev/types": "^51.1.1",
+    "@vueuse/core": "^12.7.0",
+    "@vueuse/math": "^12.7.0",
     "codemirror-theme-vars": "^0.1.2",
-    "prism-theme-vars": "^0.2.4",
+    "prism-theme-vars": "^0.2.5",
     "prism-themes": "^1.9.0",
-    "theme-vitesse": "^0.7.2"
+    "theme-vitesse": "^0.8.3"
   },
   "devDependencies": {
-    "@slidev/cli": "0.49.29",
-    "playwright-chromium": "1.35.1",
-    "postcss": "8.4.25",
-    "rimraf": "5.0.1"
+    "@slidev/cli": "51.1.1",
+    "playwright-chromium": "1.50.1",
+    "postcss": "8.5.2",
+    "rimraf": "6.0.1"
   },
   "engines": {
-    "node": ">=14.0.0",
-    "slidev": ">=0.30.0 <0.50.0"
+    "node": ">=20.0.0",
+    "slidev": ">=51.0.0"
   },
-  "// slidev theme meta": "https://github.com/slidevjs/slidev/blob/v0.49.29/packages/types/src/types.ts#L72",
+  "//": "Learn more: https://sli.dev/guide/write-theme.html",
+  "// slidev theme meta": "https://github.com/slidevjs/slidev/blob/v51.1.1/packages/types/src/types.ts#L73",
   "slidev": {
     "colorSchema": "both",
-    "highlighter": "both",
-    "// slidev config": "https://github.com/slidevjs/slidev/blob/v0.49.29/packages/types/src/config.ts#L10",
+    "highlighter": "shiki",
+    "// slidev config": "https://github.com/slidevjs/slidev/blob/v51.1.1/packages/parser/src/config.ts#L5",
     "defaults": {
-      "routerMode": "hash",
+      "routerMode": "history",
       "canvasWidth": 1580,
       "selectable": true,
-      "highlighter": "prism",
       "fonts": {
         "mono": "Fira Code"
       }

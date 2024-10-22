@@ -26,7 +26,7 @@ _— Oliver Goldsmith_
 
 ---
 
-`npm i slidev-theme-eloc`
+**`npm i slidev-theme-eloc`**
 
 ```yaml
 # slides.md

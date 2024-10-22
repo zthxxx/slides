@@ -19,3 +19,5 @@ coverage
 index.html
 .remote-assets
 components.d.ts
+
+.slidev

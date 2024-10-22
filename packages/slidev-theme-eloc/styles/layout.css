@@ -9,6 +9,15 @@
 
 #slide-content .slidev-layout.end {
   @apply w-full h-full text-3xl;
-  color: var(--prism-foreground);
+  color: var(--slidev-code-foreground);
   background-color: var(--slidev-slide-container-background);
 }
+
+/** make background color/image full screen */
+#slide-content:has(
+  .slidev-layout[data-background-color]:not([data-background-color=""]),
+  .slidev-layout[data-background-image]:not([data-background-image=""])
+) {
+  @apply overflow-visible;
+}
+

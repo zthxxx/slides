@@ -33,13 +33,13 @@ jobs:
       # https://github.com/pnpm/action-setup
       - uses: pnpm/action-setup@v2
         with:
-          version: 8.6.6
+          version: 9.6.0
 
       - name: Setup Node.js
         # https://github.com/actions/setup-node
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 22.x
           registry-url: https://registry.npmjs.org
           cache: 'pnpm'
 

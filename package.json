@@ -15,18 +15,21 @@
   },
   "homepage": "https://slides.zthxxx.me",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=20.0.0"
   },
+  "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
     "clean": "rm -rf index.html .site present/*/index.html present/*/dist"
   },
   "dependencies": {
-    "@slidev/cli": "0.49.29",
+    "@slidev/cli": "51.1.1",
     "slidev-theme-eloc": "workspace:*"
   },
   "devDependencies": {
-    "zx": "7.2.3"
+    "@slidev/theme-default": "^0.25.0",
+    "tsx": "^4.19.2",
+    "zx": "8.3.2"
   }
 }

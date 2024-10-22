@@ -193,7 +193,7 @@ class Chart {
     .code-container {
       @apply flex flex-row justify-around items-stretch;
       @apply w-full py-4 rounded-xl;
-      background: var(--prism-background);
+      background: var(--slidev-code-background);
       font-size: 0.9em;
 
       .separator {

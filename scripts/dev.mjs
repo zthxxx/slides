@@ -8,4 +8,4 @@ if (slide) {
   await cd(`present/${slide}`)
 }
 
-await $`slidev index.md --log info --open`
+await $`slidev --log info --open slides.md`

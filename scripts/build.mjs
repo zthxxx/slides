@@ -25,7 +25,7 @@ echo`[build] ${green(`found slides`)} ${yellow(`[
 
 echo``
 echo`[build] ${green(`Building index`)}`
-await $`slidev build --out .site index.md`
+await $`slidev build --out .site slides.md`
 
 
 for (let dir of slideDirs) {
@@ -35,8 +35,8 @@ for (let dir of slideDirs) {
   echo`[build] ${green(`Building slide ${yellow(slide)}`)}`
 
   await within(async () => {
-    await cd(dir)
-    await $`slidev build --base /${dir}/ index.md`
+    // https://sli.dev/guide/hosting#base
+    await $`slidev build --base /${dir}/ ${dir}/slides.md`
   })
 }
 

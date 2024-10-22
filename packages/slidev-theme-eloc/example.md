@@ -1,6 +1,8 @@
 ---
-# https://github.com/slidevjs/slidev/blob/v0.49.29/packages/types/src/config.ts#L10
+# https://github.com/slidevjs/slidev/blob/v51.1.1/packages/types/src/config.ts#L10
 theme: ./
+layout: default
+title: The `eloc` Theme for Slidev
 ---
 
 ## `eloc`
@@ -9,9 +11,9 @@ _the eloquence theme_
 
 ---
 
-[`eloc`](https://github.com/amio/eloc) <--> [`Slidev`](https://sli.dev/)
+## [`eloc`](https://github.com/amio/eloc) <--> [`Slidev`](https://sli.dev/)
 
-> a theme implementation of [eloc](https://github.com/amio/eloc) for [Slidev](https://sli.dev/)
+> A theme implementation of [eloc](https://github.com/amio/eloc) CLI for [Slidev](https://sli.dev/)
 
 ---
 
@@ -38,7 +40,7 @@ for presenters who
 
 ---
 
-`npm i slidev-theme-eloc`
+**`npm i slidev-theme-eloc`**
 
 ```yaml
 # slides.md
@@ -76,12 +78,11 @@ Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __e
 
 <style>
   .slidev-layout {
-    kbd {
-      @apply pl-[0.35em] pr-[0.18em];
-    }
-
     .slidev-icon {
       @apply align-middle;
+    }
+    kbd:has(> .slidev-icon:only-child) {
+      padding-inline: 0.2em 0.15em;
     }
   }
 </style>
@@ -90,15 +91,14 @@ Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __e
 
 ## Customization
 
-
-```css
+```markdown
 ### Write inline style within markdown
 
 <style>
   .slidev-layout {
     &::before {
       content: '';  background: center/cover url(...);
-      /* you can use full ability with Windi CSS  */
+      /* you can use full ability with UnoCSS  */
       @apply absolute block -z-1 w-screen h-screen min-w-full min-h-full;
     }
     pre { opacity: 0.8 }
@@ -112,7 +112,7 @@ Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __e
     filter: invert();
 
     pre {
-      @apply opacity-75;
+      @apply opacity-80;
     }
 
     &::before {
@@ -126,7 +126,7 @@ Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __e
 
 <!--
   bypass transform to scoped style in slidev
-  https://github.com/slidevjs/slidev/blob/v0.49.29/packages/slidev/node/syntax/transform/in-page-css.ts#L15-L16
+  https://github.com/slidevjs/slidev/blob/v51.1.1/packages/slidev/node/syntax/transform/in-page-css.ts#L15-L16
 -->
 <style no-scoped>
   #slide-content {
@@ -135,21 +135,57 @@ Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __e
 </style>
 
 ---
+background:
+  image: https://el-capitan.now.sh
+  invertContent: true
+---
 
-<p>
-  <a href="https://github.com/zthxxx" target="_blank" rel="noopener">
-    <img
-      alt="zthxxx"
-      src="https://avatars.githubusercontent.com/u/15135943"
-      class="w-52 h-52 rounded-full border-2 border-gray-300"
-    />
-  </a>
-</p>
+## Background
 
-[![zthxxx](https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
+Just change in slide's frontmatter, like:
 
-[ [slidev-theme-eloc](https://github.com/zthxxx/slides/tree/master/packages/slidev-theme-eloc) · [eloc-slidev.vercel](https://eloc-slidev.vercel.app) ]
+<div class="flex justify-center items-start gap-8">
 
+```yaml
+---
+background: https://el-capitan.now.sh
+---
+
+# or pure color
+
+---
+background: #999
+---
+```
+
+```yaml
+---
+background:
+  # `image: <image url> or <gradient>`
+  # or `color: <color>`
+  image: https://el-capitan.now.sh
+  dim: true  # dim color for image
+  # invert content color on background
+  invertContent: true
+---
+```
+
+</div>
+
+<style>
+  .slidev-layout {
+    pre {
+      @apply opacity-80;
+    }
+    p {
+      @apply mt-0;
+    }
+  }
+</style>
+
+---
+layout: two-cols
+class: flex flex-col justify-center items-center
 ---
 
 <p>
@@ -157,12 +193,39 @@ Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __e
     <img
       alt="amio"
       src="https://avatars.githubusercontent.com/u/215282"
-      class="w-52 h-52 rounded-full border-2 border-gray-300"
+      class="mb-2 w-52 h-52 rounded-full border-2 border-gray-300"
     />
   </a>
 </p>
 
-
 [![amio](https://badgen.net/badge/github/amio/blue?icon=github&label&scale=2)](https://github.com/amio)
 
-[ [amio/eloc](https://github.com/amio/eloc) · [eloc.vercel](https://eloc.vercel.app) ]
+[ [amio/eloc](https://github.com/amio/eloc) ]
+
+[ [eloc.vercel](https://eloc.vercel.app) ]
+
+::right::
+
+<p>
+  <a href="https://github.com/zthxxx" target="_blank" rel="noopener">
+    <img
+      alt="zthxxx"
+      src="https://avatars.githubusercontent.com/u/15135943"
+      class="mb-2 w-52 h-52 rounded-full border-2 border-gray-300"
+    />
+  </a>
+</p>
+
+[![zthxxx](https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
+
+[ [slidev-theme-eloc](https://www.npmjs.com/package/slidev-theme-eloc) ]
+
+[ [eloc-slidev.vercel](https://eloc-slidev.vercel.app) ]
+
+<style>
+  .slidev-layout {
+    p {
+      margin-block: 1rem;
+    }
+  }
+</style>

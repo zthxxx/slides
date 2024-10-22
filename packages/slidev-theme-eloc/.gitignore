@@ -20,5 +20,6 @@ coverage
 *.local
 
 index.html
+.vite-inspect
 .remote-assets
 components.d.ts
