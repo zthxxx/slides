@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/zthxxx/slides/compare/slidev-theme-eloc@1.0.2...slidev-theme-eloc@1.1.0) (2024-12-21)
+
+### chore
+
+Migrated to compatible with `@slidev/cli` version `^0.50.0 || ^51.0`.
+
+
 ## [1.0.2](https://github.com/zthxxx/slides/compare/slidev-theme-eloc@1.0.1...slidev-theme-eloc@1.0.2) (2023-07-09)
 
 ### chore

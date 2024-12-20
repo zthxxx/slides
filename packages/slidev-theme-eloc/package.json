@@ -1,6 +1,6 @@
 {
   "name": "slidev-theme-eloc",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Focus on writing, present in a concise style.",
   "keywords": [
     "slidev-theme",
@@ -33,11 +33,7 @@
   "dependencies": {
     "@slidev/types": "^51.1.1",
     "@vueuse/core": "^12.7.0",
-    "@vueuse/math": "^12.7.0",
-    "codemirror-theme-vars": "^0.1.2",
-    "prism-theme-vars": "^0.2.5",
-    "prism-themes": "^1.9.0",
-    "theme-vitesse": "^0.8.3"
+    "@vueuse/math": "^12.7.0"
   },
   "devDependencies": {
     "@slidev/cli": "51.1.1",

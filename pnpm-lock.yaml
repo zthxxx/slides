@@ -36,18 +36,6 @@ importers:
       '@vueuse/math':
         specifier: ^12.7.0
         version: 12.7.0(typescript@5.7.3)
-      codemirror-theme-vars:
-        specifier: ^0.1.2
-        version: 0.1.2
-      prism-theme-vars:
-        specifier: ^0.2.5
-        version: 0.2.5
-      prism-themes:
-        specifier: ^1.9.0
-        version: 1.9.0
-      theme-vitesse:
-        specifier: ^0.8.3
-        version: 0.8.3
     devDependencies:
       '@slidev/cli':
         specifier: 51.1.1
@@ -2508,9 +2496,6 @@ packages:
   prism-theme-vars@0.2.5:
     resolution: {integrity: sha512-/D8gBTScYzi9afwE6v3TC1U/1YFZ6k+ly17mtVRdLpGy7E79YjJJWkXFgUDHJ2gDksV/ZnXF7ydJ4TvoDm2z/Q==}
 
-  prism-themes@1.9.0:
-    resolution: {integrity: sha512-tX2AYsehKDw1EORwBps+WhBFKc2kxfoFpQAjxBndbZKr4fRmMkv47XN0BghC/K1qwodB1otbe4oF23vUTFDokw==}
-
   process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
 
@@ -2753,10 +2738,6 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
-
-  theme-vitesse@0.8.3:
-    resolution: {integrity: sha512-+H/p9fxfuP+qZHNeqNNFSehygzC2TfVelRY4rmRg6diX/L97JfMZOE3YHlLpOsm8/AFxc/n6E6MY3+Hkz3G96Q==}
-    engines: {vscode: ^1.43.0}
 
   time-span@5.1.0:
     resolution: {integrity: sha512-75voc/9G4rDIJleOo4jPvN4/YC4GRZrY8yy1uU4lwrB3XEQbWve8zXoO5No4eFrGcTAMYyoY67p8jRQdtA1HbA==}
@@ -6093,8 +6074,6 @@ snapshots:
 
   prism-theme-vars@0.2.5: {}
 
-  prism-themes@1.9.0: {}
-
   process-nextick-args@2.0.1: {}
 
   prompts@2.4.2:
@@ -6348,8 +6327,6 @@ snapshots:
       mkdirp: 1.0.4
       yallist: 4.0.0
     optional: true
-
-  theme-vitesse@0.8.3: {}
 
   time-span@5.1.0:
     dependencies:
