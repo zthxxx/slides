@@ -173,15 +173,16 @@ p, img {
   @apply max-w-full max-h-full;
 }
 
-.dark {
+html.dark, .dark {
   --slidev-controls-foreground: #ccc;
+  --slidev-code-background: hsl(0, 0%, 20%);
 
   #slide-content {
     background-color: var(--slidev-slide-container-background);
   }
 
   #slide-container {
-    --slidev-slide-container-background: black;
+    --slidev-slide-container-background: #121212;
   }
 
   .slidev-layout {

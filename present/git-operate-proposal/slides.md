@@ -1,5 +1,6 @@
 ---
 theme: eloc
+routerMode: hash
 ---
 
 # Git Operate Proposal

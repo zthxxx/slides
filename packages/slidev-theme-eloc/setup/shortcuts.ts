@@ -26,7 +26,7 @@ const magicKeys = useMagicKeys()
 
 
 export default defineShortcutsSetup((nav: NavOperations, base: ShortcutOptions[]) => {
-  const { escape, tab, home, end, pageup, pagedown } = magicKeys
+  const { escape, tab, home, end, shift, command, pageup, pagedown, meta, e } = magicKeys
 
   return [
     /**
@@ -42,15 +42,23 @@ export default defineShortcutsSetup((nav: NavOperations, base: ShortcutOptions[]
     // {
     //   name: 'showEditor',
     //   key: and(
-    //     tab,
-    //     not(showOverview),
+    //     shift,
+    //     meta,
+    //     e,
+    //     not(showEditor),
     //     not(drawingEnabled),
     //   ),
     //   fn: () => showEditor.value = true,
     // },
     // {
     //   name: 'closeEditor',
-    //   key: and(escape, showEditor),
+    //   key: and(
+    //     shift,
+    //     meta,
+    //     e,
+    //     showEditor,
+    //     not(drawingEnabled),
+    //   ),
     //   fn: () => showEditor.value = false,
     // },
   ]

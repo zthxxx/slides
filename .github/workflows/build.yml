@@ -25,10 +25,11 @@ jobs:
     steps:
       - name: Checkout
         # https://github.com/actions/checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # Number of commits to fetch. 0 indicates all history.
           fetch-depth: 1
+          lfs: true
 
       # https://github.com/pnpm/action-setup
       - uses: pnpm/action-setup@v2
@@ -57,7 +58,7 @@ jobs:
 
       - name: Deploy site
         if: ${{ github.ref == 'refs/heads/master' }}
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./.site

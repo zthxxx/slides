@@ -1,2 +1,3 @@
 packages:
   - 'packages/**'
+  - present/pipeline-in-rxjs

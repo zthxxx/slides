@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@rive-app/canvas':
+        specifier: ^2.26.3
+        version: 2.26.3
       '@slidev/cli':
         specifier: 51.1.1
         version: 51.1.1(@babel/parser@7.26.9)(@nuxt/kit@3.15.4)(@types/markdown-it@14.1.2)(@types/node@22.13.4)(@vue/compiler-sfc@3.5.13)(markdown-it-async@2.0.0)(playwright-chromium@1.50.1)(postcss@8.5.2)(rollup@4.34.7)(tsx@4.19.2)
@@ -18,6 +21,9 @@ importers:
       '@slidev/theme-default':
         specifier: ^0.25.0
         version: 0.25.0
+      rxjs:
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       tsx:
         specifier: ^4.19.2
         version: 4.19.2
@@ -49,6 +55,18 @@ importers:
       rimraf:
         specifier: 6.0.1
         version: 6.0.1
+
+  present/pipeline-in-rxjs:
+    dependencies:
+      '@slidev/cli':
+        specifier: 51.1.1
+        version: 51.1.1(@babel/parser@7.26.9)(@nuxt/kit@3.15.4)(@types/markdown-it@14.1.2)(@types/node@22.13.4)(@vue/compiler-sfc@3.5.13)(markdown-it-async@2.0.0)(playwright-chromium@1.50.1)(postcss@8.5.2)(rollup@4.34.7)(tsx@4.19.2)
+      rxjs:
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
+      slidev-theme-eloc:
+        specifier: workspace:*
+        version: link:../../packages/slidev-theme-eloc
 
 packages:
 
@@ -599,6 +617,9 @@ packages:
   '@polka/url@1.0.0-next.28':
     resolution: {integrity: sha512-8LduaNlMZGwdZ6qWrKlfa+2M4gahzFkprZiAt2TF8uS0qQgBizKXpXURqvTJ4WtmupWxaLqjRb2UCTe72mu+Aw==}
 
+  '@rive-app/canvas@2.26.3':
+    resolution: {integrity: sha512-u91nWyqDyTr1Ct3k5P1H+s0vHWP5HmcCFniWJhKeWP0gl/hX5hEQ2dMGrtt4s0WPucMbkZJBuxwMJrRkK6KaEQ==}
+
   '@rollup/pluginutils@5.1.4':
     resolution: {integrity: sha512-USm05zrsFxYLPdWWq+K3STlWiT/3ELn3RcV5hJMghpeAIhxfsUIg6mt12CBJBInWMV4VneoV7SfGv8xIwo2qNQ==}
     engines: {node: '>=14.0.0'}
@@ -706,6 +727,9 @@ packages:
   '@shikijs/core@2.4.1':
     resolution: {integrity: sha512-c7AkRsCpSVjKHsTwuvRVMEAdADq4Z1KoodcS4LaIqMzBTM0+Q572VRk1PIxtzaMtdiHlRPO6mH5iPdJoTV59mQ==}
 
+  '@shikijs/core@3.0.0':
+    resolution: {integrity: sha512-gSm3JQf2J2psiUn5bWokmZwnu5N0jfBtRps4CQ1B+qrFvmZCRAkMVoaxgl9qZgAFK5KisLAS3//XaMFVytYHKw==}
+
   '@shikijs/engine-javascript@2.4.1':
     resolution: {integrity: sha512-2DnVilsUCgA81lnxt67dEZf2C6hdRzDYIs7yG33yWQIjljAxlXi3MKt7n0BXKr6uT5sZ0JdtX/+Pq2FN31YVdQ==}
 
@@ -732,8 +756,14 @@ packages:
   '@shikijs/twoslash@2.4.1':
     resolution: {integrity: sha512-46upQ065EpircksLAXgALcrlXMtmV3dYrAiGFqbi+3WlhCY6piDF+ZSRQmCRNpdLwbsaTNtll1lDKe32tI2xDA==}
 
+  '@shikijs/twoslash@3.0.0':
+    resolution: {integrity: sha512-Il7XsIzbBLGV67i4yCoBDFvlMOuky1DpMyHgBjNjBu7gEw/DcmpoEEs1MwVH6Lk6fX4wXDhMQ+pDL2EwqzWqdQ==}
+
   '@shikijs/types@2.4.1':
     resolution: {integrity: sha512-fE73tqCjiHIDUq7SYU8i4d9TyOcJh2u2J8aQGqQs0KkFg6FbBEQoDiBASMM5Vxqag1VS58y+MHLBuSQmwtB4Og==}
+
+  '@shikijs/types@3.0.0':
+    resolution: {integrity: sha512-kh/xgZHxI6m9trVvPw+C47jyVHx190r0F5gkF+VO5vYB54UtcoPJe66dzZmK7GbJbzmtGEGbOwct/jsoPjjUqg==}
 
   '@shikijs/vitepress-twoslash@2.4.1':
     resolution: {integrity: sha512-iZim2X7aJNcKhiMvyG2E5ojqdwvKW0DzKpt3h0iwFhh4BLUUXecoJ9YiRyreg8wcrKkyHTle8wg1OgrYvIns9w==}
@@ -2605,6 +2635,9 @@ packages:
   rw@1.3.3:
     resolution: {integrity: sha512-PdhdWy89SiZogBLaw42zdeqtRJ//zFd2PgQavcICDUgJT5oW10QCRKbJ6bg4r0/UY2M6BWd5tkxuGFRvCkgfHQ==}
 
+  rxjs@8.0.0-alpha.14:
+    resolution: {integrity: sha512-oRCzFwbAMbo0+dVUeGUCCEf339mW7CESFvVDG3RTncD6yMtV2XoubFMpKEhBd2a9d04EpHl8QSz84/V/agG6bw==}
+
   safe-buffer@5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
 
@@ -3620,6 +3653,8 @@ snapshots:
 
   '@polka/url@1.0.0-next.28': {}
 
+  '@rive-app/canvas@2.26.3': {}
+
   '@rollup/pluginutils@5.1.4(rollup@4.34.7)':
     dependencies:
       '@types/estree': 1.0.6
@@ -3694,6 +3729,13 @@ snapshots:
       '@types/hast': 3.0.4
       hast-util-to-html: 9.0.4
 
+  '@shikijs/core@3.0.0':
+    dependencies:
+      '@shikijs/types': 3.0.0
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.4
+      hast-util-to-html: 9.0.4
+
   '@shikijs/engine-javascript@2.4.1':
     dependencies:
       '@shikijs/types': 2.4.1
@@ -3735,14 +3777,28 @@ snapshots:
       - supports-color
       - typescript
 
+  '@shikijs/twoslash@3.0.0(typescript@5.7.3)':
+    dependencies:
+      '@shikijs/core': 3.0.0
+      '@shikijs/types': 3.0.0
+      twoslash: 0.2.12(typescript@5.7.3)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
   '@shikijs/types@2.4.1':
+    dependencies:
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.4
+
+  '@shikijs/types@3.0.0':
     dependencies:
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
 
   '@shikijs/vitepress-twoslash@2.4.1(@nuxt/kit@3.15.4)(typescript@5.7.3)':
     dependencies:
-      '@shikijs/twoslash': 2.4.1(typescript@5.7.3)
+      '@shikijs/twoslash': 3.0.0(typescript@5.7.3)
       floating-vue: 5.2.2(@nuxt/kit@3.15.4)(vue@3.5.13(typescript@5.7.3))
       mdast-util-from-markdown: 2.0.2
       mdast-util-gfm: 3.1.0
@@ -6199,6 +6255,8 @@ snapshots:
       queue-microtask: 1.2.3
 
   rw@1.3.3: {}
+
+  rxjs@8.0.0-alpha.14: {}
 
   safe-buffer@5.1.2: {}
 

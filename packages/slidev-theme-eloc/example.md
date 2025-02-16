@@ -61,7 +61,7 @@ Just change the theme in your slide's frontmatter
 
 ---
 
-Click <kbd><carbon-text-annotation-toggle/></kbd> or Press <kbd>Tab</kbd> to __edit me__ :)
+Click <kbd><carbon-text-annotation-toggle/></kbd> to __edit me__ :)
 
 <div class="absolute bottom-14 left-85">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 254 262" class="w-[250px] h-[200px]">

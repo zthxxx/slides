@@ -24,11 +24,13 @@
     "clean": "rm -rf index.html .site present/*/index.html present/*/dist"
   },
   "dependencies": {
+    "@rive-app/canvas": "^2.26.3",
     "@slidev/cli": "51.1.1",
     "slidev-theme-eloc": "workspace:*"
   },
   "devDependencies": {
     "@slidev/theme-default": "^0.25.0",
+    "rxjs": "8.0.0-alpha.14",
     "tsx": "^4.19.2",
     "zx": "8.3.2"
   }

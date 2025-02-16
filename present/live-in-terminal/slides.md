@@ -1,5 +1,6 @@
 ---
 theme: eloc
+routerMode: hash
 ---
 
 <iframe

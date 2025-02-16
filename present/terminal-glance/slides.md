@@ -1,5 +1,6 @@
 ---
 theme: eloc
+routerMode: hash
 ---
 
 ## CLI 概览 (其一)

@@ -1,4 +1,11 @@
 import { $, cd, fs, glob, within, echo, chalk } from 'zx'
+import {
+  tap,
+  from,
+  merge,
+  lastValueFrom,
+  mergeMap,
+} from 'rxjs'
 
 const {
   yellowBright: yellow,
@@ -22,23 +29,23 @@ echo`[build] ${green(`found slides`)} ${yellow(`[
   ${slideDirs.join(',\n  ')}
 ]`)}`
 
+await lastValueFrom(
+  merge(
+    $`slidev build --out .site slides.md`,
 
-echo``
-echo`[build] ${green(`Building index`)}`
-await $`slidev build --out .site slides.md`
+    from(slideDirs).pipe(
+      mergeMap(dir => {
+        const slide = dir.replace('present/', '')
+        echo``
+        echo`[build] ${green(`Building slide ${yellow(slide)}`)}`
 
-
-for (let dir of slideDirs) {
-  const slide = dir.replace('present/', '')
-
-  echo``
-  echo`[build] ${green(`Building slide ${yellow(slide)}`)}`
-
-  await within(async () => {
-    // https://sli.dev/guide/hosting#base
-    await $`slidev build --base /${dir}/ ${dir}/slides.md`
-  })
-}
+        return $`slidev build --base /${dir}/ ${dir}/slides.md`
+      }),
+    )
+  ).pipe(
+    tap(processOutput => console.log(processOutput.toString())),
+  )
+)
 
 
 echo``
