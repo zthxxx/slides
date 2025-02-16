@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "slidev --log info --open"
+  },
+  "dependencies": {
+    "@slidev/cli": "51.1.1",
+    "rxjs": "8.0.0-alpha.14",
+    "slidev-theme-eloc": "workspace:*"
+  }
+}

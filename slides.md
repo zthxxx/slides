@@ -9,6 +9,7 @@ routerMode: hash
 <div class="scroll">
 
 <!-- `[title](/...)` with non-existent link only render as `<link>` by slidev which not show in slide -->
+- *2025.02* <a href="/present/pipeline-in-rxjs" target="_blank">Pipeline in `rxjs`</a>
 - *2022.05* [The `eloc` Theme for Slidev](https://eloc-slidev.vercel.app/)
 - *2020.09* <a href="/present/git-operate-proposal" target="_blank">Our Git Operate Proposal</a>
 - *2020.08* <a href="/present/code-design-and-roast" target="_blank">Graphic Design in Code Style</a>

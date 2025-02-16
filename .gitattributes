@@ -5,3 +5,4 @@
 *.mp4 filter=lfs diff=lfs merge=lfs -text
 *.avif filter=lfs diff=lfs merge=lfs -text
 *.woff2 filter=lfs diff=lfs merge=lfs -text
+*.riv filter=lfs diff=lfs merge=lfs -text
