@@ -109,7 +109,7 @@ const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
 ### 概念
 
 - 管道 / 管道模板
-- 发射源 / 发射源构造器
+- 输出源 / 输出源构造器
 - 传送入口
 
 ---
@@ -139,6 +139,8 @@ layout: two-cols
 ::right::
 
 但管道也可以包含逻辑的
+
+但输出只有一个出口
 
 ---
 layout: two-cols
@@ -333,14 +335,14 @@ layout: two-cols
 
 ::right::
 
-`observable` 发射源构造器 <br/>
-内部可产生数据， <br/>
-或从外部通信输出给管道
+`observable` 输出源的构造器 <br/>
+- 可内部产生数据
+- 或从外部拿数据输输出
 
 ```ts {all}{lines:true}
 import { Observable } from 'rxjs'
 
-// observable$ 只是 “发射源构造器”
+// observable$ 只是 “输出源构造器”
 const observable$ = new Observable<Value>((subscriber) => {
   for (let i = 0; i < 10; i++) {
     subscriber.next(i)
@@ -348,12 +350,11 @@ const observable$ = new Observable<Value>((subscriber) => {
   subscriber.complete()
 })
 
-// subscribe 时，发射源才被构造器创建出来
+// subscribe 时，输出源才被构造器创建出来
 observable$.subscribe()
 observable$.subscribe()
 observable$.subscribe()
 ```
-
 
 ---
 layout: two-cols
@@ -488,7 +489,7 @@ layout: two-cols
 
 <RiveCanvas
   class='w-[700px] h-[800px]'
-  artboard='嵌套管道模板'
+  artboard='switchMap'
 />
 
 ::right::
@@ -500,9 +501,9 @@ layout: two-cols
   *(一个管道完了才会开始下一个管道，都会执行)*
 - `mergeMap`: 并行，穿插输出 <br/>
   *(多个管道可以同时输出)*
-- `switchMap`: 竞速，新的优先，优先处理最新任务  <br/>
+- `switchMap`: 抢占打断，新的优先，优先处理新任务  <br/>
   *(旧的管道没有完成，就直接移动走切换成新的管道)*
-- `exhaustMap`: 占用，必须完成旧的，请勿打扰模式 <br/>
+- `exhaustMap`: 请勿打扰，占用时不接受输入 <br/>
   *(没有完成时来新的管道直接被丢弃)*
 
 <style>
@@ -584,4 +585,3 @@ Cases:
 - 搜索请求竞速
 - 指标收集多个阶段依赖
 - 网络请求 react-query 能力
-

@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<{
     | 'map 管道'
     | 'Subject'
     | '管道模板'
-    | '嵌套管道模板'
+    | 'switchMap'
     | string;
   stateMachines?: string | string[];
   autoplay?: boolean;
