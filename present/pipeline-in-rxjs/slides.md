@@ -19,6 +19,8 @@ routerMode: hash
 换一种简单直观的理解方式来理解 rxjs 的概念、管道的理念，
 
 最终帮助大家在项目中实际使用 rxjs 的能力落地开发代码。
+
+PS: 为啥用 Slidev 的形式？  因为需要展示代码高亮，以及最初想做交互性的动画
 -->
 
 ---
@@ -77,13 +79,13 @@ import { tap, map, fromEvent, switchMap, takeUntil } from 'rxjs'
 
 const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
   switchMap(down => {
-    const origin = element.position()
+    const origin = element.getBoundingClientRect()
     return fromEvent<PointerEvent>(document, 'pointermove').pipe(
+      takeUntil(fromEvent(document, 'pointerup')),
       map(move => ({
         left: move.clientX - down.clientX + origin.left,
         top: move.clientY - down.clientY + origin.top,
       })),
-      takeUntil(fromEvent(document, 'pointerup')),
     )
   }),
 ).subscribe(position => {
@@ -97,7 +99,7 @@ const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
 
 ---
 
-#### 不管之前有没有接触过 `rxjs`， <br/> 忘掉之前网上听说的内容，让我们换一个角度重新理解。
+#### 不管之前有没有接触过 `rxjs`， <br/> 忘掉之前网上听说的内容，让我们换个视角重新理解。
 
 
 ---
@@ -139,8 +141,6 @@ layout: two-cols
 ::right::
 
 但管道也可以包含逻辑的
-
-但输出只有一个出口
 
 ---
 layout: two-cols
@@ -273,8 +273,7 @@ layout: two-cols
 ::right::
 
 完整的"一根"管道是包含输入的 <br/>
-`subject$` 是管道的输入， <br/>
-是特殊的「`传送入口`」
+例如`subject$` 作为管道的输入 <br/>
 
 ```ts {*}{lines:true}
 import { Subject, tap, filter, map } from 'rxjs'
@@ -303,9 +302,10 @@ layout: two-cols
 
 ::right::
 
-完整的"一根"管道是包含输入的 <br/>
-`subject$` 是管道的输入， <br/>
-是特殊的「`传送入口`」
+
+<small>普通管道只有一个出口，</small>
+<small>只能连一个管道</small>
+`subject$` 是特殊的「`传送入口`」，一对多输出
 
 ```ts {all|3,13}{lines:true}
 import { Subject, tap, filter, map } from 'rxjs'
@@ -336,8 +336,7 @@ layout: two-cols
 ::right::
 
 `observable` 输出源的构造器 <br/>
-- 可内部产生数据
-- 或从外部拿数据输输出
+从内部产生数据，或从外部拿数据输输出
 
 ```ts {all}{lines:true}
 import { Observable } from 'rxjs'
@@ -431,20 +430,22 @@ manager.emit('name', ...);
       font-size: 2rem;
     }
 
-    :deep(.col-left) {
-      width: 600px;
-    }
-    :deep(.col-right) {
-      width: 800px;
-      left: -60px;
-      position: relative;
+    :deep() {
+      .col-left {
+        width: 600px;
+      }
+      .col-right {
+        width: 800px;
+        left: -60px;
+        position: relative;
+      }
     }
   }
 </style>
 
 ---
 
-### 异步时序性消息的拓扑编排
+### 异步 时序性消息 的 拓扑编排
 
 <div class="flex justify-around items-center flex-row">
 ```mermaid {scale: 1}
@@ -457,15 +458,14 @@ graph LR
     C --> F
     E --> F
 ```
+
 ```mermaid  {scale: 1}
 sequenceDiagram
-    participant Client
-    participant Server
-    Note over Client,Server: 竞态：后发先到
-    Client->>Server: 请求 A (先发送)
-    Client->>Server: 请求 B (后发送)
-    Server-->>Client: 响应 B (先返回)
-    Server-->>Client: 响应 A (后返回)
+    Client ->>+ Backend: Request ①
+    Client ->>+ Backend: Request ②
+    Backend ->>- Client: Response ②
+    Note over Client: 后发先到
+    Backend ->>- Client: Response ①
 ```
 </div>
 
@@ -516,13 +516,15 @@ layout: two-cols
       font-size: 80%;
     }
 
-    :deep(.col-left) {
-      width: 600px;
-    }
-    :deep(.col-right) {
-      width: 800px;
-      left: -60px;
-      position: relative;
+    :deep() {
+      .col-left {
+        width: 600px;
+      }
+      .col-right {
+        width: 800px;
+        left: -60px;
+        position: relative;
+      }
     }
   }
 </style>
@@ -555,18 +557,20 @@ url: https://rxjsmarbles.dev/switchMap
 
 ---
 
+再回头读这段代码
+
 ```ts
 import { tap, map, fromEvent, switchMap, takeUntil } from 'rxjs'
 
 const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
   switchMap(down => {
-    const origin = element.position()
+    const origin = element.getBoundingClientRect()
     return fromEvent<PointerEvent>(document, 'pointermove').pipe(
+      takeUntil(fromEvent(document, 'pointerup')),
       map(move => ({
         left: move.clientX - down.clientX + origin.left,
         top: move.clientY - down.clientY + origin.top,
       })),
-      takeUntil(fromEvent(document, 'pointerup')),
     )
   }),
 ).subscribe(position => {
@@ -574,14 +578,42 @@ const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
 })
 ```
 
-<!-- 再回头读这段代码 -->
-
+<!-- 从元素身上按下开始进入拖拽阶段 -->
 
 ---
 
-Cases:
+### 异步 时序性消息 的 拓扑编排
 
-- 拖拽交互+安全区
-- 搜索请求竞速
-- 指标收集多个阶段依赖
-- 网络请求 react-query 能力
+
+- 连续事件多次触发的处理
+- 把事件按依赖关系显式声明
+- 把状态机聚合在管道内部
+
+→ 代码结构与业务流程更加一致
+
+
+
+<style>
+  .slidev-layout {
+    :deep() {
+      .col-left {
+        @apply pl-20;
+      }
+
+      .col-left, .col-right {
+        height: 580px;
+      }
+    }
+  }
+</style>
+
+<!--
+我们通常说的「状态管理」包括了对数据值的管理、以及对「状态机」状态流转的管理，
+前者(数据值)不属于 rxjs 管道范畴，而后者(状态机)则是 rxjs 管道的经典应用场景
+
+管道是状态机的集合，把状态转换和逻辑封装在管道内部
+-->
+
+---
+src: ./cases.md
+---

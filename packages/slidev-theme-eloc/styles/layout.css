@@ -5,6 +5,10 @@
     @apply w-full h-full overflow-hidden;
     @apply flex flex-col justify-center items-center place-self-center;
   }
+
+  .col-header {
+    @apply w-fit mx-auto;
+  }
 }
 
 #slide-content .slidev-layout.end {
