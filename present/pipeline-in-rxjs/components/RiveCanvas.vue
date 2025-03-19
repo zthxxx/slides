@@ -1,9 +1,9 @@
 <template>
-  <canvas ref="canvasEl"></canvas>
+  <canvas ref="canvasEl" @dblclick="handleDoubleClick"></canvas>
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef, onMounted, onUnmounted } from 'vue'
+import { useTemplateRef, onMounted, onUnmounted } from 'vue'
 import { Rive, RiveFile } from '@rive-app/canvas'
 import { loadRiveFile } from './rive'
 
@@ -30,7 +30,17 @@ const props = withDefaults(defineProps<{
 })
 
 const canvasEl = useTemplateRef('canvasEl')
-const riveInstance = ref<Rive | null>(null)
+let riveInstance: Rive | null = null
+
+const handleDoubleClick = () => {
+  if (!riveInstance) return
+
+  if (riveInstance.isPlaying) {
+    riveInstance.pause()
+  } else {
+    riveInstance.play()
+  }
+}
 
 const renderRive = async () => {
   if (!canvasEl.value) {
@@ -41,21 +51,21 @@ const renderRive = async () => {
     return
   }
 
-  if (riveInstance.value) {
-    riveInstance.value.resizeDrawingSurfaceToCanvas()
+  if (riveInstance) {
+    riveInstance.resizeDrawingSurfaceToCanvas()
     return
   }
 
   const riveFile: RiveFile = await loadRiveFile(props.src)
   /** https://rive.app/docs/runtimes/web/web-js */
-  riveInstance.value = new Rive({
+  riveInstance = new Rive({
     riveFile: riveFile,
     canvas: canvasEl.value,
     autoplay: props.autoplay,
     artboard: props.artboard,
     stateMachines: props.stateMachines,
     onLoad: () => {
-      riveInstance.value?.resizeDrawingSurfaceToCanvas()
+      riveInstance?.resizeDrawingSurfaceToCanvas()
     },
   })
 }
@@ -63,14 +73,14 @@ const renderRive = async () => {
 onMounted(renderRive)
 
 onUnmounted(() => {
-  if (riveInstance.value) {
+  if (riveInstance) {
     try {
       // which may trigger error that cause the slide to stuck
-      riveInstance.value.cleanup()
+      riveInstance.cleanup()
     } catch (error) {
       console.error(error)
     }
-    riveInstance.value = null
+    riveInstance = null
   }
 })
 </script>

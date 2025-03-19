@@ -21,7 +21,6 @@ routeAlias: '元素选中拖拽交互'
 layout: two-cols-header
 ---
 
-
 ```mermaid {scale: 1}
 stateDiagram-v2
     direction LR
@@ -54,9 +53,8 @@ const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
       })),
     )
   }),
-).subscribe(position => {
-  setPosition(position)
-})
+  tap(position => setPosition(position)),
+).subscribe()
 ```
 
 
@@ -91,7 +89,7 @@ element.addEventListener('pointerdown', onPointerDown)
   .slidev-layout {
     padding-inline: 1em;
     gap: 1em;
-    --slidev-code-font-size: 0.4em;
+    --slidev-code-font-size: 0.45em;
 
     :deep() {
       .col-left, .col-right {
@@ -101,256 +99,25 @@ element.addEventListener('pointerdown', onPointerDown)
   }
 </style>
 
-
 ---
-
-### Popover 反复 hover 中的更新时机
-
-`rxjs` / no `rxjs` 写法对比 →
-
----
-layout: two-cols
----
-
-
-```ts
-/**
- * 单元格来回 hover 防止 Popover 重复更新
- *
- * - 在 canvas 表格单元格 cell 中 hover 事件会随鼠标移动多次触发
- * - hover/leave 单元格 cell 时，过一段延迟出现/取消 popover
- *   实现 mouseEnterDelay mouseLeaveDelay 延迟时间
- * - 来回移出再移入 cell 后，如果最终 cell 位置没有变化，则不需要更新
- */
-updateCellHoverPopover(
-  { get, set, meta },
-  cellHoverPopover?: CellPopover,
-) {
-  const { cellHoverPopover$ } = get();
-  const { interactSubscriptions } = meta;
-
-  interactSubscriptions.cellHoverPopover ??= cellHoverPopover$
-    .pipe(
-      distinctUntilChanged((上次的, 新的) => {
-        // 使同一个 cell 内移动不要重置 debounce
-        return !hasCellChanged(上次的, 新的);
-      }),
-      debounceTime(200),
-      filter(新的 => {
-        const 上次的 = get().cellHoverPopover;
-        return hasCellChanged(上次的, 新的);
-      }),
-      tap(新的 => {
-        set({ cellHoverPopover: 新的 });
-      }),
-    )
-    .subscribe();
-
-  cellHoverPopover$.next(cellHoverPopover);
-}
-
-```
-
-::right::
-
-```ts
-/**
- * 单元格来回 hover 防止 Popover 重复更新
- *
- * - 表格 canvas 中 hover 事件会随鼠标移动多次触发，此处内部判断是否变化过单元格
- * - hover/leave cell 时，过一段延迟出现/取消 popover
- *   实现 mouseEnterDelay mouseLeaveDelay 延迟时间
- * - 来回移出再移入后，如果最终单元格位置没有变化，则不需要更新
- */
-updateCellHoverPopover(
-  { get, set, meta },
-  cellHoverPopover?: CellPopover,
-) {
-  // 创建防抖函数，每次延迟 200ms 后检查待处理值与当前状态
-  meta.cellHoverPopoverDebounce ?? = _.debounce(
-    () => {
-      const 上次的 = get().cellHoverPopover
-      // 仅在当前状态与待处理值不同时更新
-      if (hasCellChanged(上次的, cellHoverPopover)) {
-        set({ cellHoverPopover: state.lastEmitted })
-      }
-    },
-    200,
-  )
-
-  const 上次的 = get().cellHoverPopover;
-  // 使同一个 cell 内移动不要重置 debounce
-  if (!hasCellChanged(上次的, cellHoverPopover)) {
-    return
-  }
-
-  meta.cellHoverPopoverDebounce(cellHoverPopover)
-}
-```
-
-<style>
-  .slidev-layout {
-    padding-inline: 1em;
-    gap: 1em;
-    --slidev-code-font-size: 0.4em;
-
-    pre {
-      height: 820px;
-    }
-  }
-</style>
-
----
-
-
-### 输入搜索时，接口请求竞速
 
 <div class="flex justify-around items-center flex-row">
-```mermaid {scale: 1}
-sequenceDiagram
-    Client ->>+ Backend: Request ①
-    Client ->>+ Backend: Request ②
-    Backend ->>- Client: Response ②
-    Note over Client: 后发先到
-    Backend ->>- Client: Response ①
-```
-```mermaid  {scale: 1}
-sequenceDiagram
-    Client ->>+ Backend: Request ①
-    Client ->>+ Backend: Request ②
-    Backend ->>- Client: Response ②
-    Note over Client: 后发先到
-    Backend --x- Client: Response ①
-    Note over Client: 竞态拦截
-```
+
+<RiveCanvas
+  class='w-[1000px] h-[600px]'
+  artboard='takeUntil'
+/>
+
+<div>
+
+`takeUntil`
+- 本来开着管道
+- 来了一个信号，<br/>就关闭管道
+
 </div>
 
+</div>
 
----
-layout: two-cols
----
-
-```ts
-/**
- * 输入搜索时，接口请求竞速处理
- * 避免后发先到导致显示错误
- */
-
-const input$ = useMemo(() => new Subject<InputEvent>(), )
-
-useSubscription(() => {
-  return input$.pipe(
-    map(e => e.target.value.trim()),
-    debounceTime(300),
-    distinctUntilChanged(),
-    switchMap(input => fetchSearchResult(input)),
-    tap(result => setSearchResult(result)),
-    catchError(error => console.error(error)),
-  )
-})
-
-return {
-  onInputChange: useCallback((e: InputEvent) =>  input$.next(e), []),
-}
-
-/*******************************************************************/
-
-function useSubscription<T>(
-  creator: () => Observable<T>,
-  deps?: any[] = [],
-) {
-  useEffect(() => {
-    const stream$ = creator();
-    const subscription = stream$.subscribe();
-
-    return () => subscription.unsubscribe();
-  }, deps);
-}
-```
-
-::right::
-
-```ts
-/**
- * 输入搜索时，接口请求竞速处理
- * 避免后发先到导致显示错误
- */
-
-// 保存当前的 AbortController
-const abortControllerRef = useRef<AbortController | null>(null);
-// 用于判断是否有值改变
-const previousInput = useRef('');
-
-// 定义带有取消功能的搜索结果获取函数类型
-type SearchResultFetcher = (
-  input: string,
-  signal: AbortSignal
-) => Promise<SearchResult>;
-
-const debouncedSearch = useCallback(
-  _.debounce((input: string) => {
-    // 如果有正在进行的请求，取消它
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // 创建新的 AbortController
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    // 使用 AbortSignal 发起请求
-    fetchSearchResult(input, controller.signal)
-      .then(result => {
-        // 只有当前 controller 仍然是最新的才更新结果
-        if (abortControllerRef.current === controller) {
-          setSearchResult(result);
-        }
-      })
-      .catch(error => {
-        // 忽略因为取消导致的错误
-        if (error.name !== 'AbortError') {
-          console.error(error);
-        }
-      })
-      .finally(() => {
-        // 清理已完成的 controller
-        if (abortControllerRef.current === controller) {
-          abortControllerRef.current = null;
-        }
-      });
-  }, 300),
-  []
-)
-
-const onInputChange = useCallback(
-  (e: InputEvent) => {
-    const input = e.target.value.trim();
-    if (input === previousInput.current) return;
-    previousInput.current = input;
-    debouncedSearch(input);
-  },
-  [debouncedSearch]
-);
-
-return { onInputChange };
-```
-
-<style>
-  .slidev-layout {
-    padding-inline: 1em;
-    gap: 1em;
-    --slidev-code-font-size: 0.4em;
-
-    pre {
-      height: 820px;
-    }
-  }
-</style>
-
-<!--
-得益于管道是有 next 和 complete 两种状态的，
-`fetchSearchResult` 内部还能封装「接口期间被打断会取消接口」的能力，promise 就没这么方便了
--->
 
 ---
 
@@ -473,13 +240,403 @@ const 请求高亮展示内容 = usePersistCallback(() => {
   .slidev-layout {
     padding-inline: 1em;
     gap: 1em;
-    --slidev-code-font-size: 0.4em;
+    --slidev-code-font-size: 0.45em;
 
     pre {
       height: 820px;
     }
   }
 </style>
+
+
+---
+
+### Popover 反复 hover 中的更新时机
+
+```mermaid {scale: 1.2}
+stateDiagram-v2
+    direction LR
+
+    Hover1: Hover
+    Hover2: Hover
+    UpdatePopover1: UpdatePopover
+    UpdatePopover2: UpdatePopover
+    CheckChange1: CheckChange
+    CheckChange2: CheckChange
+
+    Hover1 --> UpdatePopover1
+
+    Hover2 --> CheckChange1
+    CheckChange1 --> Debounce
+    Debounce --> CheckChange2
+    CheckChange2 --> UpdatePopover2
+```
+
+---
+layout: two-cols
+---
+
+
+```ts
+/**
+ * 单元格来回 hover 防止 Popover 重复更新
+ *
+ * - 在 canvas 表格单元格 cell 中 hover 事件会随鼠标移动多次触发
+ * - hover/leave 单元格 cell 时，过一段延迟出现/取消 popover
+ *   实现 mouseEnterDelay mouseLeaveDelay 延迟时间
+ * - 来回移出再移入 cell 后，如果最终 cell 位置没有变化，则不需要更新
+ */
+updateCellHoverPopover(
+  { get, set, meta },
+  cellHoverPopover?: CellPopover,
+) {
+  const { cellHoverPopover$ } = get()
+  const { interactSubscriptions } = meta
+
+  interactSubscriptions.cellHoverPopover ??= cellHoverPopover$
+    .pipe(
+      distinctUntilChanged((上次的, 新的) => {
+        // 使同一个 cell 内移动不要重置 debounce
+        return !hasCellChanged(上次的, 新的)
+      }),
+      debounceTime(200),
+      filter(新的 => {
+        const 上次的 = get().cellHoverPopover
+        return hasCellChanged(上次的, 新的)
+      }),
+      tap(新的 => {
+        set({ cellHoverPopover: 新的 })
+      }),
+    )
+    .subscribe()
+
+  cellHoverPopover$.next(cellHoverPopover)
+}
+
+```
+
+::right::
+
+```ts
+/**
+ * 单元格来回 hover 防止 Popover 重复更新
+ *
+ * - 表格 canvas 中 hover 事件会随鼠标移动多次触发，此处内部判断是否变化过单元格
+ * - hover/leave cell 时，过一段延迟出现/取消 popover
+ *   实现 mouseEnterDelay mouseLeaveDelay 延迟时间
+ * - 来回移出再移入后，如果最终单元格位置没有变化，则不需要更新
+ */
+updateCellHoverPopover(
+  { get, set, meta },
+  cellHoverPopover?: CellPopover,
+) {
+  // 创建防抖函数，每次延迟 200ms 后检查待处理值与当前状态
+  meta.cellHoverPopoverDebounce ?? = _.debounce(
+    () => {
+      const 上次的 = get().cellHoverPopover
+      // 仅在当前状态与待处理值不同时更新
+      if (hasCellChanged(上次的, cellHoverPopover)) {
+        set({ cellHoverPopover: state.lastEmitted })
+      }
+    },
+    200,
+  )
+
+  const 上次的 = get().cellHoverPopover
+  // 使同一个 cell 内移动不要重置 debounce
+  if (!hasCellChanged(上次的, cellHoverPopover)) {
+    return
+  }
+
+  meta.cellHoverPopoverDebounce(cellHoverPopover)
+}
+```
+
+<style>
+  .slidev-layout {
+    padding-inline: 1em;
+    gap: 1em;
+    --slidev-code-font-size: 0.45em;
+
+    pre {
+      height: 820px;
+    }
+  }
+</style>
+
+<!--
+核心是两步检查 + debounce，
+当然你完全可以自己写一个 debounce 函数，但一般我们会用 lodash 的 debounce，为了方便；
+
+这也是对 rxjs 的用法 -- 它就是个 utils ，有相同的需求，方便用就用它；
+-->
+
+---
+
+
+### 输入搜索时，接口请求竞速
+
+<div class="flex justify-around items-center flex-row">
+```mermaid {scale: 1}
+sequenceDiagram
+    Client ->>+ Backend: Request ①
+    Client ->>+ Backend: Request ②
+    Backend ->>- Client: Response ②
+    Note over Client: 后发先到
+    Backend ->>- Client: Response ①
+```
+```mermaid  {scale: 1}
+sequenceDiagram
+    Client ->>+ Backend: Request ①
+    Client ->>+ Backend: Request ②
+    Backend ->>- Client: Response ②
+    Note over Client: 后发先到
+    Backend --x- Client: Response ①
+    Note over Client: 竞态拦截
+```
+</div>
+
+
+---
+layout: two-cols
+---
+
+```ts
+/**
+ * 输入搜索时，接口请求竞速处理
+ * 避免后发先到导致显示错误
+ */
+
+const input$ = useMemo(() => new Subject<InputEvent>(), )
+
+useSubscription(() => {
+  return input$.pipe(
+    map(e => e.target.value.trim()),
+    debounceTime(300),
+    distinctUntilChanged(),
+    switchMap(input => fetchSearchResult(input)),
+    tap(result => setSearchResult(result)),
+    catchError(error => console.error(error)),
+  )
+})
+
+return {
+  onInputChange: useCallback((e: InputEvent) =>  input$.next(e), []),
+}
+
+/*******************************************************************/
+
+function useSubscription<T>(
+  creator: () => Observable<T>,
+  deps?: any[] = [],
+) {
+  useEffect(() => {
+    const stream$ = creator()
+    const subscription = stream$.subscribe()
+
+    return () => subscription.unsubscribe()
+  }, deps)
+}
+```
+
+::right::
+
+```ts
+/**
+ * 输入搜索时，接口请求竞速处理
+ * 避免后发先到导致显示错误
+ */
+
+// 保存当前的 AbortController
+const abortControllerRef = useRef<AbortController | null>(null)
+// 用于判断是否有值改变
+const previousInput = useRef('')
+
+// 定义带有取消功能的搜索结果获取函数类型
+type SearchResultFetcher = (
+  input: string,
+  signal: AbortSignal
+) => Promise<SearchResult>
+
+const debouncedSearch = useCallback(
+  _.debounce((input: string) => {
+    // 如果有正在进行的请求，取消它
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    // 创建新的 AbortController
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
+    // 使用 AbortSignal 发起请求
+    fetchSearchResult(input, controller.signal)
+      .then(result => {
+        // 只有当前 controller 仍然是最新的才更新结果
+        if (abortControllerRef.current === controller) {
+          setSearchResult(result)
+        }
+      })
+      .catch(error => {
+        // 忽略因为取消导致的错误
+        if (error.name !== 'AbortError') {
+          console.error(error)
+        }
+      })
+      .finally(() => {
+        // 清理已完成的 controller
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null
+        }
+      })
+  }, 300),
+  []
+)
+
+const onInputChange = useCallback(
+  (e: InputEvent) => {
+    const input = e.target.value.trim()
+    if (input === previousInput.current) return
+    previousInput.current = input
+    debouncedSearch(input)
+  },
+  [debouncedSearch]
+)
+
+return { onInputChange }
+```
+
+<style>
+  .slidev-layout {
+    padding-inline: 1em;
+    gap: 1em;
+    --slidev-code-font-size: 0.45em;
+
+    pre {
+      height: 820px;
+    }
+  }
+</style>
+
+<!--
+得益于管道是有 next 和 complete 两种状态的，
+`fetchSearchResult` 内部还能封装「接口期间被打断会取消接口」的能力，promise 就没这么方便了
+-->
+
+
+
+---
+
+|          | 一次性                    | 多次值                                 |
+|----------|--------------------------|---------------------------------------|
+| &nbsp; 使用者拉取 | function <br/> <small>(立即执行)</small> | iterator  <br/> <small>(惰性执行)</small>             |
+| &nbsp; 生产者推送 | promise <br/> <small>(立即执行)</small>  | callback <br/> event-emitter <br/> **rxjs pipe** <br/> <small>(惰性执行)</small> |
+
+<style>
+  .slidev-layout {
+    table {
+      @apply table-auto border-collapse border border-gray-100 w-full;
+
+      th,
+      td {
+        @apply border border-gray-500 px-4 py-2;
+      }
+    }
+  }
+</style>
+
+<!--
+特地小写首字母是指我们讨论的都是「实例」的概念，而非 class 定义
+
+例如 管道与 Observable、Generator 与 Iterator 的概念
+-->
+
+
+---
+
+<div class="w-full max-h-[800px] grid grid-cols-2 grid-rows-2 gap-8 [&_pre]:h-full">
+
+```ts
+function getData(): string {
+  // 被动生产，一次性
+  return ...
+}
+
+// 使用者拉取，一次性
+const result = getData()
+```
+
+```ts
+function* dataGenerator() {
+  // 被动生产，多次
+  yield ...
+  yield ...
+}
+
+const iterator = dataGenerator()
+
+// 使用者拉取，多次
+const result1 = iterator.next().value
+const result2 = iterator.next().value
+```
+
+```ts
+async function getDataPromise() {
+  return new Promise((resolve) => {
+    // 主动生产，一次性
+    ...
+  })
+}
+
+getDataPromise()
+  .then((value) => {
+    // 接收推送，一次性
+    ...
+  })
+```
+
+```ts
+// 主动推送，多次
+manager.emit('copy', { data: ... })
+element.dispatchEvent(CopyEvent, { data: ... })
+typing$.next({ data: ... })
+
+// 接收推送，多次
+trigger.on('copy', (data) => { ... })
+trigger.addEventListener('click', (data) => { ... })
+$typing.pipe(...).subscribe()
+```
+
+</div>
+
+
+<style>
+  .slidev-layout {
+    --slidev-code-font-size: 0.5em;
+  }
+</style>
+
+---
+
+|            | 生产者                       | 消费者                        |
+|------------|-----------------------------|------------------------------|
+| 拉取 &nbsp; | **被动的:** 当被请求时产生数据  | **主动的:** 决定何时请求数据     |
+| 推送 &nbsp; | **主动的:** 按自己的节奏产生数据 | **被动的:** 对收到的数据做出反应 |
+
+
+<style>
+  .slidev-layout {
+    table {
+      @apply table-auto border-collapse border border-gray-100 w-full;
+
+      th,
+      td {
+        @apply border border-gray-500 px-4 py-2;
+      }
+    }
+  }
+</style>
+
 
 ---
 
@@ -516,16 +673,13 @@ useSubscription(() => {
     tap(input => setCurrentInput(input)),
     // 如果有 composition，则期间不用再响应输入，等待 composition 结束
     exhaustMap(input => {
-      if (composition$.value) {
+      if (!composition$.value) {
         return of(input)
       }
       return composition$.pipe(
         // takeWhile：当条件为 true 时保持管道流通，条件为 false 时关闭管道
-        //    第二个参数 inclusive 表示关闭管道时是否发出最后一个值
         takeWhile(isComposition => isComposition),
-        filter(() => false),
-        // 结束的时始终抛出最新值
-        endWith(input$.value),
+        map(() => input$.value),
       )
     }),
     tap((input) => handleChange?.(input)),
@@ -609,13 +763,18 @@ return {
   .slidev-layout {
     padding-inline: 1em;
     gap: 1em;
-    --slidev-code-font-size: 0.4em;
+    --slidev-code-font-size: 0.45em;
 
     pre {
       height: 820px;
     }
   }
 </style>
+
+<!--
+Firefox 浏览器中，composition 事件触发时机与 Chrome 不同，有兼容性要求写法会有不同，
+但是作为示例的代码，这里只先简化展示
+-->
 
 ---
 
@@ -650,7 +809,7 @@ function useColumnResize() {
       startWith(false),
       shareReplay(1)
     ),
-  [dragStart$, dragEnd$]);
+  [])
 
   // 处理鼠标悬停在列边界时的效果
   useSubscription(() => {
@@ -668,22 +827,22 @@ function useColumnResize() {
       }),
       distinctUntilChanged(),
       tap(columnLeft => store.dispatch.setColumnResizeLineLeft(columnLeft)),
-    );
-  });
+    )
+  })
 
   useSubscription(() => {
     // 处理列宽调整拖拽
     return dragStart$.pipe(
       switchMap(() => {
-        const mouseMove$ = fromEvent<MouseEvent>(document, 'mousemove');
+        const mouseMove$ = fromEvent<MouseEvent>(document, 'mousemove')
 
         // 处理拖拽中的调整线移动
         const resizeDragging$ = mouseMove$.pipe(
           tap(event => {
-            const tableBoundingLeft = store.dispatch.getTableBoundingClientRect().left || 0;
-            store.dispatch.setColumnResizeLineLeft(event.clientX - tableLeft);
+            const tableBoundingLeft = store.dispatch.getTableBoundingClientRect().left || 0
+            store.dispatch.setColumnResizeLineLeft(event.clientX - tableLeft)
           })
-        );
+        )
 
         // 处理拖拽结束的列宽更新
         const resizeComplete$ = dragEnd$.pipe(
@@ -691,40 +850,40 @@ function useColumnResize() {
           skipUntil(mouseMove$),
           take(1),
           tap(({ columnKey, width }) => {
-            store.dispatch.updateColumnsWidth({ columnKey, width });
-            store.dispatch.setColumnResizeLineLeft(-1);
+            store.dispatch.updateColumnsWidth({ columnKey, width })
+            store.dispatch.setColumnResizeLineLeft(-1)
           })
-        );
+        )
 
         return resizeDragging$.pipe(
           takeUntil(resizeComplete$)
-        );
+        )
       })
-    );
-  });
+    )
+  })
 
   const onColumnResizeStart = usePersistCallback(() => {
-    dragStart$.next(null);
-  });
+    dragStart$.next(null)
+  })
 
   const onColumnResizeEnd = usePersistCallback(
     (col: Column, width: number) => {
       dragEnd$.next({
         columnKey: col.id!,
         width: width,
-      });
+      })
     },
-  );
+  )
 
   const onMoveOnTable = usePersistCallback((args: TableMouseEventArgs) => {
-    tableHeaderHover$.next(args);
-  });
+    tableHeaderHover$.next(args)
+  })
 
   return {
     onColumnResizeStart,
     onColumnResizeEnd,
     onMoveOnTable,
-  };
+  }
 }
 ```
 
@@ -739,50 +898,50 @@ function useColumnResize() {
  * - 在松手释放拖拽结束后，才触发列宽更新
  */
 function useColumnResize() {
-  const [isResizing, setIsResizing] = useState(false);
-  const [hasMouseMoved, setHasMouseMoved] = useState(false);
+  const [isResizing, setIsResizing] = useState(false)
+  const [hasMouseMoved, setHasMouseMoved] = useState(false)
 
   // 使用 useRef 存储事件处理函数引用
   const eventHandlersRef = useRef({
     mousemove: null
-  });
+  })
 
   // 处理鼠标悬停在列边界时的效果
   const onMoveOnTable = usePersistCallback((args) => {
     // 仅在非调整状态下处理悬停
     if (!isResizing) {
-      const canResize = checkIsOnColumnEdge(args);
+      const canResize = checkIsOnColumnEdge(args)
 
       if (canResize) {
-        const columnLeft = calculateColumnLeft(args);
-        store.dispatch.setColumnResizeLineLeft(columnLeft);
+        const columnLeft = calculateColumnLeft(args)
+        store.dispatch.setColumnResizeLineLeft(columnLeft)
       }
     }
-  });
+  })
 
   // 开始调整列宽
   const onColumnResizeStart = usePersistCallback(() => {
-    setIsResizing(true);
-    setHasMouseMoved(false);
+    setIsResizing(true)
+    setHasMouseMoved(false)
 
     // 创建鼠标移动事件处理函数
     const handleMouseMove = (event) => {
-      setHasMouseMoved(true);
-      const tableBoundingLeft = store.dispatch.getTableBoundingClientRect().left || 0;
-      store.dispatch.setColumnResizeLineLeft(event.clientX - tableBoundingLeft);
-    };
+      setHasMouseMoved(true)
+      const tableBoundingLeft = store.dispatch.getTableBoundingClientRect().left || 0
+      store.dispatch.setColumnResizeLineLeft(event.clientX - tableBoundingLeft)
+    }
 
     // 保存到 ref 中并添加事件监听器
-    eventHandlersRef.current.mousemove = handleMouseMove;
-    document.addEventListener('mousemove', handleMouseMove);
-  });
+    eventHandlersRef.current.mousemove = handleMouseMove
+    document.addEventListener('mousemove', handleMouseMove)
+  })
 
   // 结束调整列宽
   const onColumnResizeEnd = usePersistCallback((col, width) => {
     // 移除全局鼠标事件监听
     if (eventHandlersRef.current.mousemove) {
-      document.removeEventListener('mousemove', eventHandlersRef.current.mousemove);
-      eventHandlersRef.current.mousemove = null;
+      document.removeEventListener('mousemove', eventHandlersRef.current.mousemove)
+      eventHandlersRef.current.mousemove = null
     }
 
     // 只有当鼠标真正移动过，才更新列宽
@@ -790,29 +949,29 @@ function useColumnResize() {
       store.dispatch.updateColumnsWidth({
         columnKey: col.id,
         width: width
-      });
+      })
     }
 
     // 隐藏调整线
-    store.dispatch.setColumnResizeLineLeft(-1);
-    setIsResizing(false);
-  });
+    store.dispatch.setColumnResizeLineLeft(-1)
+    setIsResizing(false)
+  })
 
   // 当组件卸载时清理事件监听
   useEffect(() => {
     return () => {
       if (eventHandlersRef.current.mousemove) {
-        document.removeEventListener('mousemove', eventHandlersRef.current.mousemove);
-        eventHandlersRef.current.mousemove = null;
+        document.removeEventListener('mousemove', eventHandlersRef.current.mousemove)
+        eventHandlersRef.current.mousemove = null
       }
-    };
-  }, []);
+    }
+  }, [])
 
   return {
     onColumnResizeStart,
     onColumnResizeEnd,
     onMoveOnTable
-  };
+  }
 }
 ```
 
@@ -820,7 +979,7 @@ function useColumnResize() {
   .slidev-layout {
     padding-inline: 1em;
     gap: 1em;
-    --slidev-code-font-size: 0.4em;
+    --slidev-code-font-size: 0.45em;
 
     pre {
       height: 820px;

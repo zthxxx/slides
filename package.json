@@ -24,7 +24,7 @@
     "clean": "rm -rf index.html .site present/*/index.html present/*/dist"
   },
   "dependencies": {
-    "@rive-app/canvas": "^2.26.3",
+    "@rive-app/canvas": "^2.26.4",
     "@slidev/cli": "51.1.1",
     "slidev-theme-eloc": "workspace:*"
   },

@@ -72,6 +72,15 @@ layout: two-cols
   }
 </style>
 
+
+<!--
+TODO:
+  - 为现有动画增加管道出入连线
+  - `takeUntil` 从中间往上下炸管道的过程动画演示
+  - 过几个常用常用操作符的动画演示
+  - 「解耦 <-> 隔离」一章的代码 case
+-->
+
 ---
 
 ```ts
@@ -88,9 +97,8 @@ const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
       })),
     )
   }),
-).subscribe(position => {
-  setPosition(position)
-})
+  tap(position => setPosition(position)),
+).subscribe()
 ```
 
 <!--
@@ -395,8 +403,8 @@ subject$.subscribe(...)
 subject$.next(...)
 
 const manager = new EventEmitter()
-manager.on('name', ...);
-manager.emit('name', ...);
+manager.on('typing', ...);
+manager.emit('typing', ...);
 ```
 
 ---
@@ -405,22 +413,31 @@ layout: two-cols
 
 
 ```ts
-const subject$ = new Subject<Value>()
-subject$.subscribe(...)
-subject$.next(...)
+const typing$ = new Subject<Value>()
+const copy$ = new Subject<Value>()
+
+typing$.subscribe(...)
+typing$.next(...)
+
+copy$.subscribe(...)
+copy$.next(...)
+
 
 const manager = new EventEmitter()
-manager.on('name', ...);
-manager.emit('name', ...);
+manager.on('typing', ...);
+manager.emit('typing', ...);
+
+manager.on('copy', ...);
+manager.emit('copy', ...);
 ```
 
 ::right::
 
-- 目前基本一样，因为还没接触到核心的**异步编排**
-- `Subject` 也是 Topic 的概念，<br/>
-  表示这个 `Subject` 传入的东西应该是属于这个主题限制的，<br/>
-  `Subject` 通过引用在上层集中管理
-- 而 `EventEmitter` 是通过字符串集中管理事件
+- 因为还没接触到核心的**异步编排**，目前能力基本一样，只有写法的区别
+- `Subject` 这个词是指 Topic 的概念，<br/>
+  表示这个 `Subject` 传入的东西应该是属于这个 **主题** 限制的 <br/>
+- `EventEmitter` 是通过字符串集中管理事件 <br/>
+  `Subject` 通过引用在上层集中管理 <br/>
 - 管道是状态机的集合，把状态转换和逻辑封装在管道内部
 
 
@@ -573,9 +590,8 @@ const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
       })),
     )
   }),
-).subscribe(position => {
-  setPosition(position)
-})
+  tap(position => setPosition(position)),
+).subscribe()
 ```
 
 <!-- 从元素身上按下开始进入拖拽阶段 -->
@@ -590,7 +606,6 @@ const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
 - 把状态机聚合在管道内部
 
 → 代码结构与业务流程更加一致
-
 
 
 <style>
@@ -617,3 +632,29 @@ const subscriber = fromEvent<PointerEvent>(element, 'pointerdown').pipe(
 ---
 src: ./cases.md
 ---
+
+---
+
+# 隔离 &nbsp; <--> &nbsp; 解耦
+
+---
+
+
+隔离是把脏逻辑包裹起来放在一起，外层不去碰它，但还是依赖它
+
+解耦是已经有个中间层在处理，将上下相互之间已经不直接引用依赖
+
+都只依赖接口定义
+
+---
+
+解耦必然需要引入组合，
+
+由顶层/容器做依赖关联/注入，将上下实际组合在一起
+
+---
+
+对于 `rxjs` 使用来说，隔离用的更多点
+
+用管道划分步骤，一步步拆分逻辑，最终将负责逻辑和链路分解
+
