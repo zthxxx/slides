@@ -3,35 +3,57 @@ theme: eloc
 routerMode: hash
 ---
 
-## A Glance at Git Merkle
+## A Glance at Git
 
-the most familiar strange 'block chain'
+The 'blockchain' you are most familiar with
 
 ---
 
 ### TOC
 
-- Merkle Tree
+- Block chain Merkle Tree
 - Why is git not considered a 'block chain'
 - Git Workspace / Data Structure
-- Porcelain & Plumbing / Low-level Usage
-- Playground
+- Low-level Usage (Porcelain & Plumbing)
+- merge / squash / rebase / subtree
+- Useful configuration
 
 ---
 
 ![base-merkle-tree](/images/merkle-tree.png)
 
+[Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree)
+
+<style>
+  .slidev-layout {
+    p {
+      margin-block: 0;
+    }
+    img {
+      width: 1000px;
+    }
+  }
+</style>
+
+<!-- 区块链的背后是 Merkle hash 树 -->
+
 ---
 
 ![git-merkle](/images/git-merkle-tree-full.png)
+
+<!-- 而这和 git 是一样的 -->
 
 ---
 
 ![bitcoin-block-chain-thum](/images/bitcoin-block-chain-thum.png)
 
+<!-- 再看区块链「链」的组成 -->
+
 ---
 
 ![bitcoin-block](/images/bitcoin-block.png)
+
+<!-- 每个 block 里面就是 Merkle tree -->
 
 ---
 
@@ -55,7 +77,7 @@ Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ---
 
-### [Why is git not considered a 'block chain'](https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain)
+### [Why is git **NOT** considered a 'block chain'](https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain)
 
 ---
 
@@ -79,13 +101,24 @@ Block Reward / Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ![git-merkle](/images/git-merkle-tree-full.png)
 
+<!-- 再看这个树，具体的 merkle tree 在哪儿 -->
+
 ---
 
 ![git-merkle-block](/images/git-merkle-tree-block.png)
 
+<!--
+这就是这棵树了，我们马上讲到
+-->
+
 ---
 
 ![git-workspace](/images/git-workspace.png)
+
+<!--
+这次的主题范围里，先不聊往下的 git push 到 remote repository，
+也不聊 stash area 的概念，
+-->
 
 ---
 
@@ -114,7 +147,7 @@ Block Reward / Smart Contract (eg. ETH) / IPO (eg. ETH)
     @apply flex justify-center items-center;
 
     img {
-      @apply max-w-4/5;
+      @apply max-w-3/5 max-h-4/5;
     }
   }
 </style>
@@ -123,15 +156,18 @@ Block Reward / Smart Contract (eg. ETH) / IPO (eg. ETH)
 
 ### The Essentially What Git Does
 
-- stores blobs for the files that have changed,
-- updates the index, writes out trees,
-- writes commit objects that reference the top-level trees and the commits.
+- stores **blobs** for the **files** that have changed,
+- updates the **index**, writes out **trees**,
+- writes **commit** objects that reference the top-level **trees** and the commits.
 
 ---
 
 ### [Plumbing & Porcelain](https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain)
 
 ```bash
+# Porcelain: user-friendly commands
+# Plumbing: low-level commands
+
 git cat-file # provide content or type info for repository objects
 git hash-object # compute hash and creates a blob from a file
 git update-index # register files in the working tree to the index
@@ -157,7 +193,7 @@ git update-index --add --cacheinfo 100644 ${blob_hash} README.md
 
 tree_hash=$(git write-tree)
 
-commit_hash=$(echo 'docs: update README' | git commit-tree ${tree_hash} -p 'HEAD^{commit}')
+commit_hash=$(git commit-tree ${tree_hash} -p 'HEAD^{commit}' -m 'docs: update README')
 
 git update-ref refs/heads/master ${commit_hash}
 ## echo ${commit_hash} > .git/refs/heads/master
@@ -170,7 +206,7 @@ git update-index --add --cacheinfo 100644 \
   $(git hash-object -w README.md) README.md
 
 git update-ref refs/heads/master $(
-  echo 'use commit-tree' | git commit-tree $(git write-tree) -p 'HEAD^{commit}'
+  git commit-tree $(git write-tree) -p 'HEAD^{commit}' -m 'use commit-tree'
 )
 ```
 
@@ -202,22 +238,6 @@ git read-tree HEAD^{tree}
 
 git read-tree HEAD^{tree}
 git checkout-index -f -a
-```
-
----
-
-git fetch remote src:dst
-
-```bash
-370bac699cfe2eeee6517991ed8c1dcaef50bf39
-master
-heads/master
-origin/master
-
-fetch = +refs/heads/master:refs/remotes/origin/master
-fetch = +refs/heads/release-*:refs/remotes/origin/release-*
-
-# `+` means force update
 ```
 
 ---
@@ -255,7 +275,7 @@ git update-ref refs/heads/test-fetch-new-branch HEAD
 
 ### [git-block-playground](https://docs.google.com/presentation/d/1sbYcDZV-_3a_1Yw9WxMiJZFgQJo6ZlD47Y-8lmKowFM/edit?usp=sharing)
 
-(all those commit diagrams above are drawn in the playground)
+(merge / rebase / squash / subtree)
 
 ---
 

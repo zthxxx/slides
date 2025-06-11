@@ -1,0 +1,93 @@
+# Usage: https://taskfile.dev/usage/
+# Schema Reference: https://taskfile.dev/reference/schema
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+#
+# Note:
+#   - To override variables when calling another task,
+#     you need to pass the variable with `vars` key everytime.
+#   - shell command run in [`gosh`](https://github.com/mvdan/sh) shell,
+#     interpreter with bash support
+---
+
+version: '3'
+
+# https://taskfile.dev/usage/#set-and-shopt
+set: [pipefail]
+shopt: [globstar]
+
+silent: false
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list-all
+
+  watch:
+    desc: watch .git tree
+    vars:
+        dir: '{{default "simple" .CLI_ARGS}}'
+    cmds:
+        - watch --differences tree examples/{{.dir}}/.git
+
+  init:
+    desc: initialize the examples
+    cmds:
+      - rm -rf examples
+      - mkdir -p examples/simple examples/lfs
+      - |
+        cd examples/simple
+        git init 2>/dev/null 1>/dev/null
+        rm -rf .git/hooks
+        echo 'Example' > README.md
+      - |
+        cd examples/lfs
+        git init 2>/dev/null 1>/dev/null
+        rm -rf .git/hooks
+        git lfs install
+        git lfs track "*.png"
+        git add --all
+        git commit -m 'chore: init examples'
+
+
+  step.1:
+    desc: git add README.md
+    dir: examples/simple
+    cmds:
+      - |
+        blob_hash=$(git hash-object -w README.md)
+        git update-index --add --cacheinfo 100644 ${blob_hash} README.md
+
+  step.2:
+    desc: |
+      git commit -m 'docs: update README'
+    dir: examples/simple
+    cmds:
+      - |
+        tree_hash=$(git write-tree)
+        commit_hash=$(git commit-tree ${tree_hash} -m 'docs: update README')
+        git update-ref refs/heads/master ${commit_hash}
+
+  clean-lfs:
+    desc: git clean and prune for lfs/
+    dir: examples/lfs
+    silent: true
+    cmds:
+      - |
+        git reset --hard HEAD
+        git clean -fd
+        git prune
+        git lfs prune
+
+  step.3.1:
+    desc: |
+      git add not-a.png with git-lfs
+    dir: examples/lfs
+    cmds:
+      - task: clean-lfs
+      - echo 'some data' > not-a.png
+      - git status
+      - git add --all
+      - git status
+      - git diff --cached
+
