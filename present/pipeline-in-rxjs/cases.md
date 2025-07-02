@@ -113,6 +113,7 @@ element.addEventListener('pointerdown', onPointerDown)
 `takeUntil`
 - 本来开着管道
 - 来了一个信号，<br/>就关闭管道
+- 整个管道<br/>从上到下都炸掉
 
 </div>
 
@@ -971,6 +972,125 @@ function useColumnResize() {
     onColumnResizeStart,
     onColumnResizeEnd,
     onMoveOnTable
+  }
+}
+```
+
+<style>
+  .slidev-layout {
+    padding-inline: 1em;
+    gap: 1em;
+    --slidev-code-font-size: 0.45em;
+
+    pre {
+      height: 820px;
+    }
+  }
+</style>
+
+---
+
+### 接口轮询
+
+```mermaid {scale: 1}
+graph LR
+  Params --> API --> Output
+  API --> Interval
+  Interval --> API
+```
+
+
+---
+layout: two-cols
+---
+
+```ts
+/**
+ * 接口轮询
+ * - 调用 queryStatus 时请求接口
+ * - 如果接口返回非完成状态 (创建中、接口报错)，则继续轮询请求
+ * - 如果接口返回有轮询间隔时间，使用该时间做下一次轮询
+ * - 如果接口没返回时间/或报错，使用默认时间做下一次轮询
+ */
+class Service {
+  public async queryStatus(params: DAO.QueryStatusRequest): Promise<DAO.QueryStatusResponse> {
+    return firstValueFrom(
+      from(defer(() => API.queryStatus(params))).pipe(
+        takeUntil(this.pollAbort$),
+        map(data => {
+          if (data.status !== Success) {
+            throw data.intervalMS
+          }
+          return data
+        }),
+        retry({
+          delay: (caught: unknown) => {
+            return timer(
+              (typeof caught === 'number')
+                ? caught
+                : 1000
+            )
+          },
+        }),
+      ),
+    )
+  }
+
+  @preDestroy()
+  protected preDestroy() {
+    this.pollAbort$.next()
+  }
+}
+```
+
+::right::
+
+```ts
+/**
+ * 接口轮询
+ * - 调用 queryStatus 时请求接口
+ * - 如果接口返回非完成状态 (创建中、接口报错)，则继续轮询请求
+ * - 如果接口返回有轮询间隔时间，使用该时间做下一次轮询
+ * - 如果接口没返回时间/或报错，使用默认时间做下一次轮询
+ */
+class Service {
+  private timeId: ReturnType<typeof setTimeout> | null = null
+
+  public async queryStatus(params: DAO.QueryStatusRequest): Promise<DAO.QueryStatusResponse> {
+    return new Promise<DAO.QueryStatusProgressResponse>((resolve, reject) => {
+      const poll = async () => {
+        let interval = 1000
+        try {
+          // 调用后端接口
+          const response = await API.queryStatus(params)
+          // 检查接口返回结果
+          if (response.status === Success) {
+            // 成功时终止轮询，resolve Promise
+            resolve(response)
+            return
+          }
+          // 未创建成功，继续轮询，用后端返回的轮询间隔时间（默认1秒）
+          interval = response.intervalMS ?? 1000
+        }
+        catch (error) {
+          interval = 1000
+        }
+        if (this.timeId) {
+          clearTimeout(this.timeId)
+          this.timeId = null
+        }
+        // 设定下一次轮询
+        this.timeId = setTimeout(poll, interval)
+      }
+      // 启动第一次轮询
+      poll()
+    })
+  }
+  @preDestroy()
+  protected preDestroy() {
+    if (this.timeId) {
+      clearTimeout(this.timeId)
+    }
   }
 }
 ```

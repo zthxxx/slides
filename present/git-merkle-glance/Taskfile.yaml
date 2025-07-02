@@ -33,14 +33,16 @@ tasks:
   init:
     desc: initialize the examples
     cmds:
-      - rm -rf examples
-      - mkdir -p examples/simple examples/lfs
       - |
+        rm -rf examples/simple
+        mkdir -p examples/simple
         cd examples/simple
         git init 2>/dev/null 1>/dev/null
         rm -rf .git/hooks
         echo 'Example' > README.md
       - |
+        rm -rf examples/lfs
+        mkdir -p examples/lfs
         cd examples/lfs
         git init 2>/dev/null 1>/dev/null
         rm -rf .git/hooks
@@ -48,6 +50,7 @@ tasks:
         git lfs track "*.png"
         git add --all
         git commit -m 'chore: init examples'
+      - task: init:commits
 
 
   step.1:
@@ -91,3 +94,31 @@ tasks:
       - git status
       - git diff --cached
 
+  init:commits:
+    desc: initialize commits example
+    cmds:
+      - |
+        rm -rf examples/commits
+        mkdir -p examples/commits
+        cd examples/commits
+        git init 2>/dev/null 1>/dev/null
+        git add --all
+        for i in {1..5}; do
+          echo "C${i}" > C${i}.md
+          git add --all
+          git commit -m "C${i}"
+        done
+        git switch -C feat
+
+        for i in {A..E}; do
+          echo "C-${i}" > C-${i}.md
+          git add --all
+          git commit -m "C-${i}"
+        done
+
+        git switch master
+        for i in {6..10}; do
+          echo "C${i}" > C${i}.md
+          git add --all
+          git commit -m "C${i}"
+        done
