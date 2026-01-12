@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "slidev": {
+      "source": "slidevjs/slidev",
+      "sourceType": "github",
+      "skillPath": "skills/slidev/SKILL.md",
+      "computedHash": "a495cfada5d3b29c66c2fbbccb4ef9887d6b12bd7e440d100deea89e529c1a7b"
+    }
+  }
+}

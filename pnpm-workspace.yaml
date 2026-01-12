@@ -1,3 +1,11 @@
 packages:
-  - 'packages/**'
-  - present/pipeline-in-rxjs
+  - packages/**
+  - present/*
+
+catalog:
+  '@rive-app/canvas': 2.37.5
+  '@slidev/cli': 52.15.0
+  '@slidev/theme-default': 0.25.0
+  rxjs: 8.0.0-alpha.14
+  tsx: 4.21.0
+  zx: 8.3.2
