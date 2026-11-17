@@ -22,3 +22,6 @@ components.d.ts
 
 .slidev
 *.pdf
+
+.logs/
+.playwright-cli/
