@@ -11,5 +11,3 @@ htop
 less
 git
 neovim
-nodejs
-python3

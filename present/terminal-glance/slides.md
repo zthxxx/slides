@@ -10,7 +10,7 @@ Terminal / 输入输出
 <!--
 - 本系列想把每天都在用、却说不清的几个概念讲明白：Terminal、TTY、Shell，以及它们和进程怎么协作。
 - 「其一」只讲输入输出：一个按键从键盘到屏幕走过的完整路径。
-- 演示用的是页面里直接运行的真实 Linux 内核（unkernel，Alpine 3.24 riscv64），预装 zsh + jovial、bash、tmux、htop、node、python、git、nvim，不需要联网；会后每个人打开这个页面都能自己重做一遍。
+- 演示用的是页面里直接运行的真实 Linux 内核（unkernel，Alpine 3.24 riscv64），预装 zsh + jovial、bash、tmux、htop、git、less、nvim，不需要联网；会后每个人打开这个页面都能自己重做一遍。
 -->
 
 ---

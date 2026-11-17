@@ -88,6 +88,6 @@ The last three rows compensate for ghostty-web 0.4.0 behavior; re-check them whe
 | unkernel needs WebAssembly JSPI | Chrome / Edge 137+, Firefox 153+, Safari 27+. Other browsers get a message in the terminal. |
 | `unkernel` is pinned to a prerelease (`0.1.0-261117-0e4b2ec`) | Upgrade deliberately; rebuild the image with it (image.md). |
 | One kernel per thread | Never call `createKernel` outside `kernel.ts`. |
-| Guest memory: unkernel's default (512 MiB on desktops, 256 MiB on phones) | Enough for node, python and nvim; writes to the disk also live in memory. |
-| No network in the guest | `apk add`, `git clone` and `npm install` fail on the page; preinstall in the image instead. |
+| Guest memory: unkernel's default (512 MiB on desktops, 256 MiB on phones) | Enough for the deck's tools; writes to the disk also live in memory. |
+| No network in the guest | `apk add` and `git clone` fail on the page; preinstall in the image instead. |
 | `vite.config.ts` excludes `unkernel` from dependency pre-bundling | The SDK loads `unkernel-alpine.wasm` relative to its own module URL. |

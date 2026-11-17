@@ -52,11 +52,23 @@ errors=$(SHELL=/bin/zsh tmux -L provision -f /dev/null new-session -d -x 80 -y 2
 tmux -L provision kill-server 2>/dev/null || true
 [ -z "$errors" ] || fail "tmux printed errors for ~/.config/tmux/tmux.conf: $errors"
 
-step "zinit: clone zinit and jovial"
+step "zinit: clone zinit and jovial, nothing else"
 zsh -i -c exit </dev/null
-plugins="$XDG_DATA_HOME/zinit/plugins"
-[ -d "$plugins/zthxxx---jovial" ] || fail "zinit did not install zthxxx/jovial"
-ls "$plugins"
+zinit_home="$XDG_DATA_HOME/zinit"
+# Exactly the plugins ~/.zshrc loads; `_local---zinit` is zinit's own completion.
+installed=$(ls "$zinit_home/plugins" | grep -vx '_local---zinit' | tr '\n' ' ')
+[ "$installed" = "zthxxx---jovial " ] ||
+	fail "zinit installed [$installed], expected only zthxxx---jovial (the plugins ~/.zshrc loads)"
+# oh-my-zsh libs and plugins would arrive as snippet files. zinit itself only creates the empty
+# snippets/OMZ::plugins directory and a `plugins` link to it (zinit.zsh, .zinit-prepare-home).
+snippets=$(find "$zinit_home/snippets" -type f 2>/dev/null)
+[ -z "$snippets" ] || fail "zinit snippet files present: $snippets"
+ls -A "$zinit_home" "$zinit_home/plugins"
+
+step "no unwanted tools pulled in as dependencies"
+for cmd in node python3 zoxide; do
+	! command -v "$cmd" >/dev/null || fail "$cmd is installed ($(command -v "$cmd")), the image must not ship it"
+done
 
 step "offline start: no network, no errors"
 ip link set eth0 down 2>/dev/null || true
@@ -75,8 +87,8 @@ EOF
 cat /etc/terminal-glance-image
 
 step "clean caches"
-rm -rf /var/cache/apk/* /var/cache/kw-apk "$HOME/.cache" "$HOME/.npm" "$HOME/.wget-hsts" \
-	"$HOME/.zsh_history" "$HOME/.ash_history" "$HOME/.python_history" "$HOME/.lesshst" \
+rm -rf /var/cache/apk/* /var/cache/kw-apk "$HOME/.cache" "$HOME/.wget-hsts" \
+	"$HOME/.zsh_history" "$HOME/.ash_history" "$HOME/.lesshst" \
 	"$XDG_DATA_HOME/zinit/zinit.git/.git/FETCH_HEAD" /tmp/* 2>/dev/null || true
 find "$XDG_DATA_HOME/zinit" -name '*.zwc.old' -delete 2>/dev/null || true
 

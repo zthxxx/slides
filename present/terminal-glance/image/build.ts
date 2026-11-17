@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Builds the guest disk image the deck boots with: zsh + jovial, bash, tmux, htop, git, less,
- * neovim, node and python preinstalled on unkernel's Alpine, so the page needs no network.
+ * Builds the guest disk image the deck boots with: zsh + jovial, bash, tmux, htop, git, less
+ * and neovim preinstalled on unkernel's Alpine, so the page needs no network.
  *
  *   bun image/build.ts [--force]      (or `pnpm build:image` in present/terminal-glance)
  *

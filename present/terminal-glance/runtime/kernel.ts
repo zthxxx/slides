@@ -4,7 +4,7 @@ import { openImageDisk } from './disk'
 
 /**
  * The page's only Linux VM: unkernel's bundled kernel and Alpine 3.24 riscv64 initramfs,
- * plus the preinstalled-tools disk built by `image/` (zsh + jovial, bash, node, python, git, ...).
+ * plus the preinstalled-tools disk built by `image/` (zsh + jovial, bash, tmux, htop, git, less, neovim).
  * Its /init finds the disk by the label `kwdata` and makes / an overlay of the initramfs and the disk.
  * There is no network; the guest's writes stay in memory, so every page load starts from the same machine.
  * Every terminal session is a pty spawned on it.

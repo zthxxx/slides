@@ -1,6 +1,6 @@
 # The guest image
 
-The deck's Linux has zsh (jovial theme), bash, tmux, htop, git, less, neovim, node and python preinstalled.
+The deck's Linux has zsh (jovial theme), bash, tmux, htop, git, less and neovim preinstalled.
 They are installed when the image is built, so the page needs no network and no proxy.
 
 ## What the image is
@@ -55,7 +55,7 @@ pnpm build:image            # skips when public/linux/manifest.json has the same
 pnpm build:image --force    # rebuild anyway, e.g. to pick up newer packages
 ```
 
-About a minute on a laptop: about 55 s provisioning, then 2 s packing.
+About a minute on a laptop: about 50 s provisioning, then 2 s packing.
 
 The input hash covers every file under `image/` and the installed `unkernel` version.
 Packages come from the live Alpine 3.24 repositories and zinit clones jovial from its default branch, so two builds with the same hash can differ.
@@ -68,12 +68,13 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 2. Enables Alpine's community repository and `apk add --no-cache` everything in `packages.txt`.
 3. Copies `rootfs/` over `/` and sets root's shell to `/bin/zsh`.
 4. Checks tmux: the `tmux-256color` terminfo entry exists (`default-terminal` in the config) and the config loads without errors.
-5. Runs `zsh -i`: zinit clones itself and jovial.
-6. Takes the network down and starts `zsh -i` again; any stderr output fails the build, so the page starts offline cleanly.
-7. Compiles the completion dump, writes `/etc/terminal-glance-image` (input hash, unkernel version, lower image id, build time).
-8. Removes apk, npm and shell caches, histories and temporary files.
-9. `fstrim /data`: the driver turns discards into zeros, so freed blocks become zero chunks that are not published.
-10. Removes the overlay's boot markers (`attempts`, `safe`), so the first boot on the page is a clean one.
+5. Runs `zsh -i`: zinit clones itself and jovial. The build fails unless zinit's plugins are exactly the ones `.zshrc` loads (`zthxxx---jovial`, plus zinit's own `_local---zinit`) and no snippet file (where oh-my-zsh libs and plugins would land) exists.
+6. Fails if `node`, `python3` or `zoxide` came in as a dependency of another package.
+7. Takes the network down and starts `zsh -i` again; any stderr output fails the build, so the page starts offline cleanly.
+8. Compiles the completion dump, writes `/etc/terminal-glance-image` (input hash, unkernel version, lower image id, build time).
+9. Removes apk and shell caches, histories and temporary files.
+10. `fstrim /data`: the driver turns discards into zeros, so freed blocks become zero chunks that are not published.
+11. Removes the overlay's boot markers (`attempts`, `safe`), so the first boot on the page is a clean one.
 
 ## Shell and tmux configuration
 
@@ -83,7 +84,7 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 | `rootfs/root/.config/tmux/tmux.conf` | [zthxxx/tmux-config `tmux.conf`](https://github.com/zthxxx/tmux-config/blob/main/tmux.conf) | Every plugin is left out (TPM, resurrect, continuum, treemux). |
 
 Each file's header records the upstream commit it was taken from.
-zsh plugins are kept out on purpose: under the in-browser VM each plugin adds to the time before the first prompt, which is now about 0.5 s.
+zsh plugins and oh-my-zsh are kept out on purpose: under the in-browser VM each of them adds to the time before the first prompt, which is now about 0.5 s. Packages that only serve another use (node, python, zoxide) are left out too, to keep the download small.
 The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S l` to split right.
 
 ## The published format
@@ -100,7 +101,7 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
   "chunkSize": 1048576,
   "encoding": "gzip",
   "chunks": { "<index>": "chunks/<first 16 hex of sha256(raw chunk)>.gz" },
-  "stats": { "nonZeroChunks": 179, "uniqueChunks": 179, "rawBytes": 187695104, "compressedBytes": 61302446 }
+  "stats": { "nonZeroChunks": 81, "uniqueChunks": 81, "rawBytes": 84934656, "compressedBytes": 23776873 }
 }
 ```
 
@@ -117,13 +118,13 @@ Figures from the current package list:
 
 | Measure | Size |
 | --- | --- |
-| Installed by apk | 142 MiB |
-| Overlay upper in the guest (zinit and jovial 8 MiB of it) | 156 MiB |
-| Non-zero data | 179 chunks, 179 MiB |
-| Published (gzip) | **58.5 MiB** |
-| Downloaded to reach the first prompt | about 6 MiB (23 chunks) |
+| Installed by apk | 51 MiB |
+| Overlay upper in the guest (zinit and jovial 8 MiB of it) | 61 MiB |
+| Non-zero data | 81 chunks, 81 MiB |
+| Published (gzip) | **22.7 MiB** |
+| Downloaded to reach the first prompt | about 5 MiB (22 chunks) |
 
-The page downloads chunks only when the guest reads inside them: a viewer who never runs `node` never downloads node.
+The page downloads chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.
 
 ## Changing the image
