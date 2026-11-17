@@ -1,0 +1,16 @@
+{
+  "extends": "@zthxxx/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "allowImportingTsExtensions": true,
+  },
+  "include": [
+    "present",
+    "scripts",
+  ],
+  "exclude": [
+    "**/node_modules/*",
+    "**/dist/*",
+    "**/coverage/*",
+  ],
+}

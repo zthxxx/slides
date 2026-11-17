@@ -1,8 +1,6 @@
-> Note: `CLAUDE.md` is a symlink to `AGENTS.md` — edit `AGENTS.md`.
-
 ## Commands
 
-Package manager is **pnpm** (v9.6.0 in CI), Node **>=20** (CI uses 22.x).
+Package manager is **pnpm** (v9.6.0 in CI), Node **>=22**.
 
 - `pnpm dev` — serve the root index deck (`slides.md`) with HMR.
 - `pnpm dev <slide-name>` — serve a single deck under `present/<slide-name>/slides.md`. The positional arg is parsed by `zx` in `scripts/dev.mjs` and `cd`s into that directory before invoking `slidev`.

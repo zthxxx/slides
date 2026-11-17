@@ -31,15 +31,17 @@
     "*.vue"
   ],
   "dependencies": {
-    "@slidev/types": "^51.1.1",
-    "@vueuse/core": "^12.7.0",
-    "@vueuse/math": "^12.7.0"
+    "@slidev/types": ">=52.0.0",
+    "@vueuse/core": "^15.0.0",
+    "@vueuse/math": "^15.0.0"
   },
   "devDependencies": {
-    "@slidev/cli": "51.1.1",
-    "playwright-chromium": "1.50.1",
-    "postcss": "8.5.2",
-    "rimraf": "6.0.1"
+    "@slidev/cli": "catalog:",
+    "@zthxxx/tsconfig": "catalog:",
+    "playwright-chromium": "catalog:",
+    "postcss": "catalog:",
+    "rimraf": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=20.0.0",

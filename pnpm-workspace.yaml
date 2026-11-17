@@ -3,9 +3,14 @@ packages:
   - present/*
 
 catalog:
-  '@rive-app/canvas': 2.37.5
-  '@slidev/cli': 52.15.0
+  '@rive-app/canvas': 2.51.0
+  '@slidev/cli': 53.1.0
   '@slidev/theme-default': 0.25.0
+  '@types/bun': 1.4.4
+  '@zthxxx/tsconfig': 1.1.0
+  typescript: 7.0.2
+  playwright-chromium: 1.50.1
+  postcss: 8.5.2
+  rimraf: 6.0.1
   rxjs: 8.0.0-alpha.14
-  tsx: 4.21.0
   zx: 8.3.2
