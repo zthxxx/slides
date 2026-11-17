@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useIsSlideActive, useNav, useSlideContext } from '@slidev/client'
 import { computed, inject, useTemplateRef, watch } from 'vue'
-import { shellDemoKey, terminalAccent } from '../runtime/demo'
+import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
 import { useLinux } from '../runtime/kernel'
 import { serveRelayedSteps } from '../runtime/relay'
 import { playStep, sessionKey, useShellSession } from '../runtime/session'
@@ -48,7 +48,8 @@ const accent = computed(() => terminalAccent(demo?.terminals ?? [props.name], pr
 
 const title = computed(() => {
   const pts = session?.pts.value
-  return pts === undefined ? props.name.toUpperCase() : `${props.name.toUpperCase()} · /dev/pts/${pts}`
+  const parts = [namesTerminals(demo) && props.name.toUpperCase(), pts !== undefined && `/dev/pts/${pts}`]
+  return parts.filter(Boolean).join(' · ')
 })
 
 const status = computed(() => {
@@ -93,7 +94,7 @@ const status = computed(() => {
   gap: 0.8rem;
   padding: 0.45rem 0.9rem;
   background: #1e1f29;
-  font-family: "Fira Code", Menlo, monospace;
+  font-family: "Hack Nerd Font Mono", Menlo, monospace;
   font-size: 15px;
   line-height: 1.4;
 }
@@ -135,12 +136,45 @@ const status = computed(() => {
   align-items: center;
   justify-content: center;
   color: #6272a4;
-  font-family: "Fira Code", Menlo, monospace;
+  font-family: "Hack Nerd Font Mono", Menlo, monospace;
   font-size: 18px;
 }
 </style>
 
 <style>
+/* The terminal font, served from public/fonts/hack-nerd-font-mono/ (see its README.md). */
+@font-face {
+  font-family: "Hack Nerd Font Mono";
+  src: url("/fonts/hack-nerd-font-mono/HackNerdFontMono-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Hack Nerd Font Mono";
+  src: url("/fonts/hack-nerd-font-mono/HackNerdFontMono-Bold.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Hack Nerd Font Mono";
+  src: url("/fonts/hack-nerd-font-mono/HackNerdFontMono-Italic.woff2") format("woff2");
+  font-weight: normal;
+  font-style: italic;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Hack Nerd Font Mono";
+  src: url("/fonts/hack-nerd-font-mono/HackNerdFontMono-BoldItalic.woff2") format("woff2");
+  font-weight: bold;
+  font-style: italic;
+  font-display: block;
+}
+
 /* The element ghostty-web renders into: it makes it the focusable, contenteditable input of the terminal. */
 .shell-session {
   width: 100%;

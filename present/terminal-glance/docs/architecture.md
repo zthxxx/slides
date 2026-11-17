@@ -12,6 +12,7 @@ components/               Vue views; know about Slidev (render context, active s
    ShellDemo.vue          a demo: stacked terminals + numbered steps; provides the terminal names
    Terminal.vue           one terminal window; adopts its session's element when its slide is active
    ShellStep.vue          one step button; plays here, or relays from the presenter window
+   diagrams/              SVG diagrams for tty drivers, foreground groups and SSH; shared light/dark styles
    │
 runtime/                  plain TypeScript; no templates
    session.ts             ShellSession = one pty + one emulator; registry by slide and name; step playback
@@ -53,7 +54,7 @@ When the manifest is missing (a fresh checkout without `pnpm build:image`), the 
 
 ### Steps
 
-`ShellStep` → `playStep(page, to, step)` (`session.ts`): waits until the terminals the text refers to run, resolves `{a.pts}` / `{a.pid}`, then types into the target pty: keys at once, text one character every 24 ms, Enter last. Steps on one terminal queue behind each other.
+`ShellStep` → `playStep(page, to, step)` (`session.ts`): waits until the terminals the text refers to run, resolves `{a.pts}` / `{a.pid}`, then types into the target pty on the schedule `typingPlan` (`steps.ts`) computes: keys at once with a pause of up to 80 ms before the next input, text at up to 12 ms per character, a line break as Enter, Enter last. The input schedule spans at most 1.2 s: longer text is typed faster, and characters due in the same 16 ms frame go out in one write. Steps on one terminal queue behind each other; shell execution time is outside this typing budget.
 
 In the presenter window the button posts `{ page, to, step }` on a `BroadcastChannel`; the slide window, which runs Linux, plays it.
 
@@ -71,10 +72,16 @@ Only Slidev's `slide` render context outside print mode runs Linux. The presente
 | URLs and OSC 8 links underline on hover; Cmd-click / Ctrl-click opens them in a new tab (a plain click opens nothing, as in Ghostty) | ghostty-web |
 | Cursor position reports (`ESC [ 6 n`) | ghostty-web |
 | Background / foreground color queries (OSC 10/11) and primary device attributes (`ESC [ c`) | `QueryResponder` in `emulator.ts`; jovial asks both when zsh starts and would otherwise wait out a timeout |
-| Correct link hit-testing and crisp text inside Slidev's `transform: scale()` | `emulator.ts` scales the host by the inverse of the slide scale and the font by the scale, so the emulator works at real screen size; it re-measures 150 ms after a window resize |
+| Hack Nerd Font Mono, line height 1 | Local WOFF2 faces declared in `Terminal.vue`, loaded before the renderer measures the font; `emulator.ts` replaces `CanvasRenderer.measureFont()` to use a row height of one font size, rounded to whole screen CSS pixels |
+| Correct link hit-testing and crisp text inside Slidev's `transform: scale()` | `emulator.ts` cancels the slide scale on the host, fits whole-pixel cell widths and aligns the canvas origin to device pixels; it re-fits 150 ms after a window resize and re-aligns after transitions |
+| Canvas resolution follows display changes and browser zoom | `emulator.ts` watches the resolution media query, updates the renderer's device-pixel ratio and fits again; ghostty-web resizes its backing store on the next render |
 | Keys typed into the terminal never turn the slide | `emulator.ts` stops `keydown` propagation on the terminal's host; Slidev does not count ghostty-web's contenteditable input as typing |
 
-The last three rows compensate for ghostty-web 0.4.0 behavior; re-check them when upgrading it.
+The terminal's font starts at 18 slide pixels and adjusts with the slide scale so character widths are whole screen CSS pixels. Counter-scaling puts pointer coordinates and renderer cells in the same coordinate space. A final scale correction limits residual scaling from rounded CSS transform values, and an offset places the canvas origin on a whole device pixel. The canvas uses `image-rendering: pixelated` so the compositor preserves its already-antialiased device pixels through Slidev’s transform chain.
+
+Hack's ascent and descent together exceed one em. The custom baseline keeps box-drawing strokes connected at line height 1; letter descenders may extend by about one pixel into the next row. Font files, upstream version and metrics are recorded in [the font README](../public/fonts/hack-nerd-font-mono/README.md).
+
+The renderer adaptations depend on ghostty-web **0.4.0**: [`dist/index.d.ts`](../node_modules/ghostty-web/dist/index.d.ts) declares `CanvasRenderer` and its private DPR field; [`dist/ghostty-web.js`](../node_modules/ghostty-web/dist/ghostty-web.js) implements `measureFont`, `renderLine`, canvas resizing and DPR use. Re-check these methods and the query/keyboard behavior above when upgrading the package.
 
 ## Keyboard and focus
 

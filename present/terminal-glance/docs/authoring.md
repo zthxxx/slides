@@ -6,7 +6,8 @@ Both components are auto-registered from `components/`.
 ```md
 <ShellDemo terminals="a b">
   <ShellStep to="a" run="tty" />
-  <ShellStep to="b" run="echo ok > /dev/pts/{a.pts}" />
+  <ShellStep to="b" run="printf ok > /dev/pts/{a.pts}" />
+  <ShellStep to="a" keys="⏎" />
   <ShellStep to="a" keys="^C" />
   <ShellStep to="a" keys="^C" run="stty icanon" />
   <ShellStep run="secret" />
@@ -31,8 +32,21 @@ A step is sent in this order: `keys`, then `type`, then `run` followed by Enter.
 | --- | --- |
 | `to` | Target terminal name. Default: the first terminal of the demo. |
 | `keys` | Space-separated keys sent as pressed, e.g. `"^C"`, `"^S l"`, `"↑ ⏎"`. Named keys are in `KEY_BYTES` (`runtime/steps.ts`); anything else is sent literally. |
-| `type` | Text typed character by character, without Enter (input for a running program, or a half-typed line). |
-| `run` | A command line typed character by character, then Enter. |
+| `type` | Text typed as a person would, without a final Enter (input for a running program, or a half-typed line). |
+| `run` | A command typed as a person would, then Enter. A line break in the text is typed as Enter, so a multi-line command goes in line by line through the shell's continuation prompt. `run=""` presses Enter only. |
+
+The typing schedule spans at most 1.2 s: up to 12 ms per character for short text, faster for long text, and up to 80 ms after each pressed key before the next input. Shell execution time is outside this budget.
+
+The terminal-name badge on a step (`A`, `B`) and the name in a terminal's title bar appear only when the demo has more than one terminal.
+
+A multi-line command is written with real line breaks inside the attribute; the indentation is typed as written:
+
+```md
+  <ShellStep to="a" run="for i in {1..10}; do
+  echo $i
+  sleep 1
+done" />
+```
 
 `{a.pts}` and `{a.pid}` in `type` / `run` become terminal `a`'s pty number and its shell's pid when the step plays. The button shows the resolved value once the terminal runs.
 

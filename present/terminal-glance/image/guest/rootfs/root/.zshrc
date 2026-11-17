@@ -2,8 +2,8 @@
 #
 # Source: https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc
 #   (fetched at jovial c258f5f, release v2.6.1)
-# Changed: only the jovial theme is loaded. The example's ohmyzsh libs and
-#   plugins, zsh-history-enquirer, fast-syntax-highlighting, zsh-completions
+# Changed: only the jovial theme and fast-syntax-highlighting are loaded. The
+#   example's ohmyzsh libs and plugins, zsh-history-enquirer, zsh-completions
 #   and zsh-autosuggestions are left out: under the in-browser VM each of them
 #   adds to the time before the first prompt. Everything kept is upstream's.
 #
@@ -61,3 +61,9 @@ autoload -Uz _zinit
 
 
 zinit light-mode depth=1 multisrc='*.plugin.zsh' for zthxxx/jovial
+
+
+## https://github.com/zdharma-continuum/fast-syntax-highlighting
+zinit light-mode depth=1 wait lucid for \
+    atinit="ZINIT[COMPINIT_OPTS]=-C" \
+        zdharma-continuum/fast-syntax-highlighting

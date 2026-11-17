@@ -1,4 +1,4 @@
-import { FitAddon, init, Terminal } from 'ghostty-web'
+import { CanvasRenderer, FitAddon, init, Terminal } from 'ghostty-web'
 
 /**
  * The terminal emulator a shell session renders into: ghostty-web, Ghostty's VT parser compiled to WebAssembly
@@ -31,8 +31,10 @@ export interface TerminalEmulator {
   blur: () => void
 }
 
-const FONT_FAMILY = '"Fira Code", Menlo, Monaco, Consolas, monospace'
-/** In slide pixels (the 1580 px wide canvas of the eloc theme). */
+/** Served from public/fonts/hack-nerd-font-mono/ (see its README.md), declared in components/Terminal.vue. */
+const FONT_NAME = 'Hack Nerd Font Mono'
+const FONT_FAMILY = `"${FONT_NAME}", Menlo, monospace`
+/** In slide pixels (the 1580 px wide canvas of the eloc theme); the exact size is fitted to whole-pixel cells. */
 const FONT_SIZE = 18
 
 const THEME = {
@@ -66,6 +68,69 @@ function loadGhostty(): Promise<void> {
   return loading
 }
 
+let fontLoading: Promise<void> | undefined
+
+/** The terminal font's regular and bold faces (the prompt and the syntax highlighting use bold); the renderer measures it when it opens. */
+function loadFont(): Promise<void> {
+  fontLoading ??= Promise.all([
+    document.fonts.load(`${FONT_SIZE}px "${FONT_NAME}"`),
+    document.fonts.load(`bold ${FONT_SIZE}px "${FONT_NAME}"`),
+  ]).then(() => {}, () => {})
+  return fontLoading
+}
+
+/** The font's advance width per pixel of font size (0.602 for Hack); measured once the font is loaded. */
+let advancePerPixel: number | undefined
+
+function measureAdvance(fontSize: number): number {
+  const context = document.createElement('canvas').getContext('2d')!
+  context.font = `${fontSize}px ${FONT_FAMILY}`
+  return context.measureText('M').width
+}
+
+/**
+ * The font size for a slide scale: as close to FONT_SIZE on screen as possible, adjusted so one character is a whole
+ * number of pixels wide. Cells then sit on whole pixels, and box-drawing lines (`─`) join without gaps.
+ */
+function fontSizeFor(scale: number): number {
+  advancePerPixel ??= measureAdvance(100) / 100
+  const cellWidth = Math.max(1, Math.round(FONT_SIZE * scale * advancePerPixel))
+  return cellWidth / advancePerPixel
+}
+
+interface CellMetrics {
+  width: number
+  height: number
+  baseline: number
+}
+
+/**
+ * Line height 1: a row is as tall as the font size, rounded to whole pixels. ghostty-web 0.4.0 has no line-height
+ * option; its renderer derives the cell from the ink of "M" in `measureFont()`, which its constructor and every font
+ * change call, so that method is replaced here for every renderer.
+ *
+ * Hack's line box (ascent 0.928 em + descent 0.236 em) is taller than 1 em. The baseline sits so that a glyph spanning
+ * the whole line box (`│ ╭ ╰`, tmux borders) covers its own row from top to bottom: rows are repainted one at a time,
+ * and each repaint fills its row's background over whatever a neighbor drew into it, so vertical strokes must not rely
+ * on overlapping into the next row to join. Letters keep their ascenders inside the row; descenders may reach up to a
+ * pixel into the row below.
+ * Source: ghostty-web@0.4.0 `dist/ghostty-web.js` (`CanvasRenderer.measureFont`, `renderLine`).
+ */
+const rendererPrototype = CanvasRenderer.prototype as unknown as {
+  measureFont: (this: { fontSize: number, fontFamily: string }) => CellMetrics
+}
+rendererPrototype.measureFont = function () {
+  const context = document.createElement('canvas').getContext('2d')!
+  context.font = `${this.fontSize}px ${this.fontFamily}`
+  const glyph = context.measureText('M')
+  const height = Math.max(1, Math.round(this.fontSize))
+  return {
+    width: Math.max(1, Math.round(glyph.width)),
+    height,
+    baseline: Math.min(height, Math.ceil(height - glyph.fontBoundingBoxDescent)),
+  }
+}
+
 export function createEmulator(): TerminalEmulator {
   return new GhosttyEmulator()
 }
@@ -74,7 +139,6 @@ class GhosttyEmulator implements TerminalEmulator {
   #terminal: Terminal | undefined
   #fitAddon = new FitAddon()
   #host: HTMLElement | undefined
-  #scale = 1
   #pending: Array<Uint8Array | string> = []
   #queries = new QueryResponder(reply => this.#dataListeners.forEach(listener => listener(reply)))
   #dataListeners: Array<(data: string) => void> = []
@@ -94,17 +158,14 @@ class GhosttyEmulator implements TerminalEmulator {
 
   async open(host: HTMLElement): Promise<void> {
     // The renderer measures its cell size from the font when it opens.
-    await Promise.all([
-      loadGhostty(),
-      document.fonts.load(`${FONT_SIZE}px "Fira Code"`).catch(() => {}),
-    ])
+    await Promise.all([loadGhostty(), loadFont()])
     this.#host = host
-    this.#scale = slideScale(host)
-    applyCounterScale(host, this.#scale)
+    const scale = slideScale(host)
+    applyCounterScale(host, scale)
 
     const terminal = new Terminal({
       fontFamily: FONT_FAMILY,
-      fontSize: FONT_SIZE * this.#scale,
+      fontSize: fontSizeFor(scale),
       cursorBlink: true,
       scrollback: 5000,
       theme: THEME,
@@ -113,6 +174,8 @@ class GhosttyEmulator implements TerminalEmulator {
     terminal.onData(data => this.#dataListeners.forEach(listener => listener(data)))
     terminal.onResize(size => this.#resizeListeners.forEach(listener => listener(size)))
     terminal.open(host)
+    // ghostty-web 0.4.0's canvas is still resampled by Slidev's transform chain after scale cancellation.
+    host.querySelector('canvas')!.style.imageRendering = 'pixelated'
     this.#terminal = terminal
     // Focus sits on the host, a contenteditable div, which Slidev does not count as typing, and ghostty-web
     // stops only the keys it encodes itself: without this, a space typed into the shell also turns the slide.
@@ -127,6 +190,10 @@ class GhosttyEmulator implements TerminalEmulator {
       clearTimeout(settle)
       settle = setTimeout(() => this.fit(), 150)
     })
+    // A slide transition moves the terminal after it was fitted; align it again where it comes to rest.
+    for (const type of ['transitionend', 'animationend'])
+      document.addEventListener(type, () => this.#alignToDevicePixels(), { capture: true, passive: true })
+    this.#watchDevicePixelRatio()
   }
 
   async write(data: Uint8Array | string): Promise<void> {
@@ -153,12 +220,54 @@ class GhosttyEmulator implements TerminalEmulator {
       return
 
     const scale = slideScale(host)
-    if (scale !== this.#scale) {
-      this.#scale = scale
-      applyCounterScale(host, scale)
-      terminal.options.fontSize = FONT_SIZE * scale
-    }
+    // A new font size makes ghostty-web clear the selection and redraw: set it only when the cell width changes.
+    const fontSize = fontSizeFor(scale)
+    if (fontSize !== terminal.options.fontSize)
+      terminal.options.fontSize = fontSize
+    applyCounterScale(host, scale)
     this.#fitAddon.fit()
+    this.#alignToDevicePixels()
+  }
+
+  /**
+   * Make the canvas map 1:1 onto device pixels: the counter-scale must cancel the slide's scale exactly (a residual
+   * like 0.9999 resamples every pixel), and the canvas origin must sit on a whole device pixel.
+   */
+  #alignToDevicePixels(): void {
+    const host = this.#host
+    const canvas = host?.querySelector('canvas')
+    if (!host || !canvas?.offsetWidth)
+      return
+
+    canvas.style.transform = ''
+    // The computed transforms the scale is read from are serialized with 6 significant digits; the canvas's
+    // on-screen width against its CSS width gives the residual exactly.
+    const residual = canvas.getBoundingClientRect().width / canvas.offsetWidth
+    if (Number.isFinite(residual) && Math.abs(residual - 1) > 1e-7)
+      applyCounterScale(host, slideScale(host) * residual)
+
+    const ratio = window.devicePixelRatio || 1
+    const { left, top } = canvas.getBoundingClientRect()
+    const dx = (Math.round(left * ratio) - left * ratio) / ratio
+    const dy = (Math.round(top * ratio) - top * ratio) / ratio
+    // Under the counter-scale the canvas is in screen pixels, so this shift is in screen pixels too.
+    if (Math.abs(dx) > 1e-4 || Math.abs(dy) > 1e-4)
+      canvas.style.transform = `translate(${dx}px, ${dy}px)`
+  }
+
+  /**
+   * ghostty-web reads devicePixelRatio once, when its renderer is created. Moving the window to another display or
+   * zooming the page changes it; its render loop resizes the canvas backing store once the renderer's value differs.
+   */
+  #watchDevicePixelRatio(): void {
+    const query = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+    query.addEventListener('change', () => {
+      const renderer = this.#terminal?.renderer as unknown as { devicePixelRatio: number } | undefined
+      if (renderer)
+        renderer.devicePixelRatio = window.devicePixelRatio
+      this.fit()
+      this.#watchDevicePixelRatio()
+    }, { once: true })
   }
 
   focus(): void {
@@ -176,12 +285,20 @@ class GhosttyEmulator implements TerminalEmulator {
  * the wrong cells, and its canvas is drawn at the unscaled size and blurs when enlarged.
  * The host is therefore scaled back by the inverse, enlarged by the same factor, with the font enlarged to match:
  * the emulator then sits in an untransformed coordinate space at the real screen size.
+ *
+ * The scale is the product of the ancestors' computed transforms: a ratio of rendered to layout width
+ * (offsetWidth is rounded to whole pixels) is off by up to 0.1 %, which the canvas then shows resampled.
  */
 function slideScale(host: HTMLElement): number {
-  const container = host.parentElement
-  if (!container?.offsetWidth)
-    return 1
-  return Math.round(container.getBoundingClientRect().width / container.offsetWidth * 1000) / 1000
+  let scale = 1
+  for (let node = host.parentElement; node; node = node.parentElement) {
+    const transform = getComputedStyle(node).transform
+    if (transform && transform !== 'none') {
+      const matrix = new DOMMatrixReadOnly(transform)
+      scale *= Math.hypot(matrix.a, matrix.b)
+    }
+  }
+  return scale
 }
 
 function applyCounterScale(host: HTMLElement, scale: number): void {

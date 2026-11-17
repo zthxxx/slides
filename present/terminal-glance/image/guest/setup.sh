@@ -52,13 +52,15 @@ errors=$(SHELL=/bin/zsh tmux -L provision -f /dev/null new-session -d -x 80 -y 2
 tmux -L provision kill-server 2>/dev/null || true
 [ -z "$errors" ] || fail "tmux printed errors for ~/.config/tmux/tmux.conf: $errors"
 
-step "zinit: clone zinit and jovial, nothing else"
-zsh -i -c exit </dev/null
+step "zinit: clone zinit and the plugins ~/.zshrc loads, nothing else"
+# burst runs the turbo (wait) loads now instead of after the first prompt, so they are cloned too.
+zsh -i -c '@zinit-scheduler burst' </dev/null
 zinit_home="$XDG_DATA_HOME/zinit"
 # Exactly the plugins ~/.zshrc loads; `_local---zinit` is zinit's own completion.
 installed=$(ls "$zinit_home/plugins" | grep -vx '_local---zinit' | tr '\n' ' ')
-[ "$installed" = "zthxxx---jovial " ] ||
-	fail "zinit installed [$installed], expected only zthxxx---jovial (the plugins ~/.zshrc loads)"
+expected="zdharma-continuum---fast-syntax-highlighting zthxxx---jovial "
+[ "$installed" = "$expected" ] ||
+	fail "zinit installed [$installed], expected [$expected] (the plugins ~/.zshrc loads)"
 # oh-my-zsh libs and plugins would arrive as snippet files. zinit itself only creates the empty
 # snippets/OMZ::plugins directory and a `plugins` link to it (zinit.zsh, .zinit-prepare-home).
 snippets=$(find "$zinit_home/snippets" -type f 2>/dev/null)
@@ -72,7 +74,7 @@ done
 
 step "offline start: no network, no errors"
 ip link set eth0 down 2>/dev/null || true
-errors=$(zsh -i -c exit 2>&1 </dev/null >/dev/null) || fail "zsh -i failed offline: $errors"
+errors=$(zsh -i -c '@zinit-scheduler burst' 2>&1 </dev/null >/dev/null) || fail "zsh -i failed offline: $errors"
 [ -z "$errors" ] || fail "zsh -i printed errors offline: $errors"
 # The completion dump compiled ahead, so the first terminal skips that work.
 zsh -c 'for f in ~/.zcompdump*(N); do [[ $f == *.zwc ]] || zcompile "$f"; done'

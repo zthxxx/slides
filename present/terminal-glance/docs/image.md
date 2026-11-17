@@ -55,7 +55,7 @@ pnpm build:image            # skips when public/linux/manifest.json has the same
 pnpm build:image --force    # rebuild anyway, e.g. to pick up newer packages
 ```
 
-About a minute on a laptop: about 50 s provisioning, then 2 s packing.
+About 1.5 minutes on a laptop: 50 to 80 s provisioning, then 2 s packing.
 
 The input hash covers every file under `image/` and the installed `unkernel` version.
 Packages come from the live Alpine 3.24 repositories and zinit clones jovial from its default branch, so two builds with the same hash can differ.
@@ -68,7 +68,7 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 2. Enables Alpine's community repository and `apk add --no-cache` everything in `packages.txt`.
 3. Copies `rootfs/` over `/` and sets root's shell to `/bin/zsh`.
 4. Checks tmux: the `tmux-256color` terminfo entry exists (`default-terminal` in the config) and the config loads without errors.
-5. Runs `zsh -i`: zinit clones itself and jovial. The build fails unless zinit's plugins are exactly the ones `.zshrc` loads (`zthxxx---jovial`, plus zinit's own `_local---zinit`) and no snippet file (where oh-my-zsh libs and plugins would land) exists.
+5. Runs `zsh -i -c '@zinit-scheduler burst'`: zinit clones itself, jovial and fast-syntax-highlighting (a turbo `wait` load, which `burst` runs at once). The build fails unless zinit's plugins are exactly the ones `.zshrc` loads (`zthxxx---jovial`, `zdharma-continuum---fast-syntax-highlighting`, plus zinit's own `_local---zinit`) and no snippet file (where oh-my-zsh libs and plugins would land) exists.
 6. Fails if `node`, `python3` or `zoxide` came in as a dependency of another package.
 7. Takes the network down and starts `zsh -i` again; any stderr output fails the build, so the page starts offline cleanly.
 8. Compiles the completion dump, writes `/etc/terminal-glance-image` (input hash, unkernel version, lower image id, build time).
@@ -80,11 +80,11 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 
 | File | Source | Changed |
 | --- | --- | --- |
-| `rootfs/root/.zshrc` | jovial [`examples/zinit.zshrc`](https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc) | Loads only the jovial theme through zinit; every other plugin and ohmyzsh lib is left out. |
+| `rootfs/root/.zshrc` | jovial [`examples/zinit.zshrc`](https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc) | Loads the jovial theme and fast-syntax-highlighting through zinit; every other plugin and ohmyzsh lib is left out. |
 | `rootfs/root/.config/tmux/tmux.conf` | [zthxxx/tmux-config `tmux.conf`](https://github.com/zthxxx/tmux-config/blob/main/tmux.conf) | Every plugin is left out (TPM, resurrect, continuum, treemux). |
 
 Each file's header records the upstream commit it was taken from.
-zsh plugins and oh-my-zsh are kept out on purpose: under the in-browser VM each of them adds to the time before the first prompt, which is now about 0.5 s. Packages that only serve another use (node, python, zoxide) are left out too, to keep the download small.
+Under the in-browser VM each zsh plugin adds to the time before the first prompt, so the image loads only the two the talk needs: the theme, and syntax highlighting to make typed commands readable. fast-syntax-highlighting loads in zinit's turbo mode, after the first prompt, which appears in 0.6 to 0.9 s. Packages the demos do not use (node, python, zoxide) are left out to keep the download small.
 The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S l` to split right.
 
 ## The published format
@@ -101,7 +101,7 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
   "chunkSize": 1048576,
   "encoding": "gzip",
   "chunks": { "<index>": "chunks/<first 16 hex of sha256(raw chunk)>.gz" },
-  "stats": { "nonZeroChunks": 81, "uniqueChunks": 81, "rawBytes": 84934656, "compressedBytes": 23776873 }
+  "stats": { "nonZeroChunks": 86, "uniqueChunks": 86, "rawBytes": 90177536, "compressedBytes": 25205673 }
 }
 ```
 
@@ -119,10 +119,10 @@ Figures from the current package list:
 | Measure | Size |
 | --- | --- |
 | Installed by apk | 51 MiB |
-| Overlay upper in the guest (zinit and jovial 8 MiB of it) | 61 MiB |
-| Non-zero data | 81 chunks, 81 MiB |
-| Published (gzip) | **22.7 MiB** |
-| Downloaded to reach the first prompt | about 5 MiB (22 chunks) |
+| Overlay upper in the guest (zinit and its two plugins 10 MiB of it) | 63 MiB |
+| Non-zero data | 86 chunks, 86 MiB |
+| Published (gzip) | **24.0 MiB** |
+| Downloaded to reach the first prompt | about 6 MiB (26 chunks) |
 
 The page downloads chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.

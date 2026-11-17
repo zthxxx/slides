@@ -15,3 +15,8 @@ export function terminalAccent(terminals: readonly string[], name: string): stri
   const index = Math.max(terminals.indexOf(name), 0)
   return TERMINAL_ACCENTS[index % TERMINAL_ACCENTS.length]
 }
+
+/** Terminal names are shown only where they tell terminals apart: a demo with more than one. */
+export function namesTerminals(demo: ShellDemoContext | undefined): boolean {
+  return (demo?.terminals.length ?? 1) > 1
+}

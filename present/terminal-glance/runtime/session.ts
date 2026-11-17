@@ -1,14 +1,11 @@
 import type { Pty, PtyEnd } from 'unkernel/web'
-import type { SessionField, StepChunk, StepInput } from './steps'
+import type { SessionField, StepInput, TimedWrite } from './steps'
 import { ref, shallowReactive } from 'vue'
 import { createEmulator } from './emulator'
 import { useLinux } from './kernel'
-import { referencedSessions, resolveSessionRefs, stepChunks } from './steps'
+import { referencedSessions, resolveSessionRefs, stepChunks, typingPlan } from './steps'
 
 export type SessionStatus = 'idle' | 'starting' | 'running' | 'failed'
-
-const TYPING_DELAY_MS = 24
-const KEY_PAUSE_MS = 160
 
 /**
  * One shell on its own pty of the shared VM, shown by one terminal emulator.
@@ -52,20 +49,17 @@ export class ShellSession {
     return this.#starting
   }
 
-  /** Type the chunks into the shell, after any steps still being typed. */
-  play(chunks: StepChunk[]): Promise<void> {
+  /** Play the writes into the shell on their schedule, after any steps still being typed. */
+  play(writes: TimedWrite[]): Promise<void> {
     const typing = this.#typing.then(async () => {
       const pty = await this.start()
-      for (const chunk of chunks) {
-        if (!chunk.typed) {
-          await pty.write(chunk.text)
-          await sleep(KEY_PAUSE_MS)
-          continue
-        }
-        for (const char of chunk.text) {
-          await pty.write(char)
-          await sleep(TYPING_DELAY_MS)
-        }
+      // Timed from the start rather than between writes, so a slow write does not stretch the step.
+      const start = performance.now()
+      for (const { at, text } of writes) {
+        const wait = start + at - performance.now()
+        if (wait > 0)
+          await sleep(wait)
+        await pty.write(text)
       }
     })
     this.#typing = typing.catch(() => {})
@@ -155,11 +149,11 @@ export async function playStep(page: number, to: string, step: StepInput): Promi
   await Promise.all(referenced.map(name => useShellSession(sessionKey(page, name)).start()))
 
   const lookup = sessionFields(page)
-  await useShellSession(sessionKey(page, to)).play(stepChunks({
+  await useShellSession(sessionKey(page, to)).play(typingPlan(stepChunks({
     keys: step.keys,
     type: step.type && resolveSessionRefs(step.type, lookup),
     run: step.run && resolveSessionRefs(step.run, lookup),
-  }))
+  })))
 }
 
 function sleep(ms: number): Promise<void> {

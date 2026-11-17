@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSlideContext } from '@slidev/client'
 import { computed, inject, ref } from 'vue'
-import { shellDemoKey, terminalAccent } from '../runtime/demo'
+import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
 import { relayStep } from '../runtime/relay'
 import { describeStepText, playStep } from '../runtime/session'
 import { splitKeys } from '../runtime/steps'
@@ -49,7 +49,7 @@ function play(event: MouseEvent) {
 <template>
   <li class="shell-step" :class="{ played }">
     <button :disabled="!clickable" :title="text" @click="play">
-      <span class="shell-step-target" :style="{ backgroundColor: accent }">{{ target.toUpperCase() }}</span>
+      <span v-if="namesTerminals(demo)" class="shell-step-target" :style="{ backgroundColor: accent }">{{ target.toUpperCase() }}</span>
       <span class="shell-step-input">
         <kbd v-for="key in keys" :key="key">{{ key }}</kbd>
         <code v-if="text">{{ text }}</code>
