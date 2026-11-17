@@ -1,6 +1,6 @@
 # The guest image
 
-The deck's Linux has zsh (jovial theme), bash, tmux, htop, git, less and neovim preinstalled.
+The deck's Linux has zsh (jovial theme), bash, tmux, htop, git, less, bat and neovim preinstalled.
 They are installed when the image is built, so the page needs no network and no proxy.
 
 ## What the image is
@@ -32,7 +32,7 @@ image/
   guest/              Mounted read-only at /provision inside the build VM.
     setup.sh          Runs in the guest (busybox ash): apk, login shell, checks, zinit, cleanup, zero free blocks.
     packages.txt      apk packages, one per line.
-    rootfs/           Copied over / : root's .zshrc and .config/tmux/tmux.conf.
+    rootfs/           Copied over / : shell/tmux config, demo commands and /root/hello.sh.
 ```
 
 Outputs, all gitignored:
@@ -67,6 +67,7 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 1. Checks that `/` is the overlay on the kwdata disk.
 2. Enables Alpine's community repository and `apk add --no-cache` everything in `packages.txt`.
 3. Copies `rootfs/` over `/` and sets root's shell to `/bin/zsh`.
+   Checks `bat --version`, the demo scripts' syntax and bat's ability to render the sample file.
 4. Checks tmux: the `tmux-256color` terminfo entry exists (`default-terminal` in the config) and the config loads without errors.
 5. Runs `zsh -i -c '@zinit-scheduler burst'`: zinit clones itself, jovial and fast-syntax-highlighting (a turbo `wait` load, which `burst` runs at once). The build fails unless zinit's plugins are exactly the ones `.zshrc` loads (`zthxxx---jovial`, `zdharma-continuum---fast-syntax-highlighting`, plus zinit's own `_local---zinit`) and no snippet file (where oh-my-zsh libs and plugins would land) exists.
 6. Fails if `node`, `python3` or `zoxide` came in as a dependency of another package.
@@ -85,7 +86,15 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 
 Each file's header records the upstream commit it was taken from.
 Under the in-browser VM each zsh plugin adds to the time before the first prompt, so the image loads only the two the talk needs: the theme, and syntax highlighting to make typed commands readable. fast-syntax-highlighting loads in zinit's turbo mode, after the first prompt, which appears in 0.6 to 0.9 s. Packages the demos do not use (node, python, zoxide) are left out to keep the download small.
-The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S l` to split right.
+The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S l` to split right. Root's `.zshrc` adds `/usr/local/bin` to `PATH` so the demo commands are available by name.
+
+## Terminal protocol demos
+
+`terminal-colors` (`rootfs/usr/local/bin/terminal-colors`) queries the terminal with OSC 11 and prints the reply as both escaped bytes and an RGB value. It opens `/dev/tty`, saves the terminal settings, disables echo and canonical input while consuming the reply, and restores the saved settings on exit or interruption. It accepts BEL and ST terminators and gives up after two seconds.
+
+`bat --paging=never --theme=auto /root/hello.sh` detects the terminal's current colors each time it runs. Alpine 3.24 installs **bat 0.26.1**; its [`src/theme.rs`](https://github.com/sharkdp/bat/blob/v0.26.1/src/theme.rs) uses terminal-colorsaurus 1.0.1 to send OSC 10/11 queries and a DA1 sentinel. The [`--theme` help](https://github.com/sharkdp/bat/blob/v0.26.1/src/bin/bat/clap_app.rs) distinguishes `auto` (query when stdout is a terminal), `auto:always` (also query when redirected), and `auto:system` (macOS system preference). Use `auto` for this guest.
+
+`agent-status-demo` (`rootfs/usr/local/bin/agent-status-demo`) sends OSC 7501 reports for `working`, `blocked` and `done`. Press Enter at `blocked` to continue; the final `done` state remains visible. It is a protocol demo, with no Coding Agent or network service. The sequence format follows botmux `cb8ff44b2`, `src/utils/program-status-parser.ts`.
 
 ## The published format
 
@@ -101,7 +110,7 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
   "chunkSize": 1048576,
   "encoding": "gzip",
   "chunks": { "<index>": "chunks/<first 16 hex of sha256(raw chunk)>.gz" },
-  "stats": { "nonZeroChunks": 86, "uniqueChunks": 86, "rawBytes": 90177536, "compressedBytes": 25205673 }
+  "stats": { "nonZeroChunks": 91, "uniqueChunks": 91, "rawBytes": 95420416, "compressedBytes": 28411938 }
 }
 ```
 
@@ -118,11 +127,10 @@ Figures from the current package list:
 
 | Measure | Size |
 | --- | --- |
-| Installed by apk | 51 MiB |
-| Overlay upper in the guest (zinit and its two plugins 10 MiB of it) | 63 MiB |
-| Non-zero data | 86 chunks, 86 MiB |
-| Published (gzip) | **24.0 MiB** |
-| Downloaded to reach the first prompt | about 6 MiB (26 chunks) |
+| Installed by apk | 56 MiB |
+| Overlay upper in the guest (zinit and its two plugins 10 MiB of it) | 68 MiB |
+| Non-zero data | 91 chunks, 91 MiB |
+| Published (gzip) | **27.1 MiB** |
 
 The page downloads chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.

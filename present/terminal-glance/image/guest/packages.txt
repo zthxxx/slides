@@ -9,5 +9,6 @@ bash
 tmux
 htop
 less
+bat
 git
 neovim

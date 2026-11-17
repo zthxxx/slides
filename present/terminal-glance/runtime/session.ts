@@ -1,5 +1,6 @@
 import type { Pty, PtyEnd } from 'unkernel/web'
 import type { SessionField, StepInput, TimedWrite } from './steps'
+import type { ProgramStatus } from './program-status'
 import { ref, shallowReactive } from 'vue'
 import { createEmulator } from './emulator'
 import { useLinux } from './kernel'
@@ -12,6 +13,7 @@ export type SessionStatus = 'idle' | 'starting' | 'running' | 'failed'
  * The pty is spawned the first time the terminal is shown, so pty numbers follow the order slides are visited.
  */
 export class ShellSession {
+  readonly programStatus = ref<ProgramStatus>()
   readonly status = ref<SessionStatus>('idle')
   readonly pts = ref<number>()
   readonly pid = ref<number>()
@@ -27,6 +29,7 @@ export class ShellSession {
   constructor(readonly key: string) {
     this.host.className = 'shell-session'
     this.terminal.onData(data => void this.#pty?.write(data))
+    this.terminal.onProgramStatus(status => this.programStatus.value = status)
     this.terminal.onResize(({ cols, rows }) => this.#pty?.resize(cols, rows))
   }
 
@@ -93,6 +96,7 @@ export class ShellSession {
 
   /** A shell that exits (`exit`, ^D on an empty line) is replaced, so a slip mid-talk never leaves a dead terminal. */
   #ended(end: PtyEnd): void {
+    this.programStatus.value = undefined
     this.#pty = undefined
     if (end.type !== 'exit' && end.type !== 'signal') {
       this.#failed(new Error('Linux has stopped; reload the page to boot it again.'))

@@ -43,6 +43,12 @@ grep -qx /bin/zsh /etc/shells || echo /bin/zsh >> /etc/shells
 sed -i -e 's#^\(root:[^:]*:0:0:[^:]*:[^:]*:\).*$#\1/bin/zsh#' /etc/passwd
 grep '^root:' /etc/passwd
 
+step "bat and terminal query demo"
+bat --version
+bash -n /usr/local/bin/terminal-colors
+sh -n /usr/local/bin/agent-status-demo
+bat --paging=never --theme=auto --color=never /root/hello.sh >/dev/null
+
 step "tmux: the config loads, and its default-terminal has a terminfo entry"
 [ -e /usr/share/terminfo/t/tmux-256color ] || [ -e /etc/terminfo/t/tmux-256color ] ||
 	fail "no terminfo for tmux-256color (default-terminal in ~/.config/tmux/tmux.conf)"

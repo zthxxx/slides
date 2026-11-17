@@ -1,4 +1,9 @@
-import { CanvasRenderer, FitAddon, init, Terminal } from 'ghostty-web'
+import type { ProgramStatus } from './program-status'
+import { CanvasRenderer, FitAddon, Ghostty, Terminal } from 'ghostty-web'
+import { watch } from 'vue'
+import { terminalAppearance, TERMINAL_THEMES } from './appearance'
+import { themedGhostty } from './palette'
+import { ProgramStatusObserver } from './program-status'
 
 /**
  * The terminal emulator a shell session renders into: ghostty-web, Ghostty's VT parser compiled to WebAssembly
@@ -25,6 +30,7 @@ export interface TerminalEmulator {
   /** Keyboard input, pastes and replies to terminal queries, to send to the pty. */
   onData: (listener: (data: string) => void) => void
   onResize: (listener: (size: { cols: number, rows: number }) => void) => void
+  onProgramStatus: (listener: (status: ProgramStatus | undefined) => void) => void
   /** Fit the grid to the host's container; a hidden container is left alone. */
   fit: () => void
   focus: () => void
@@ -37,34 +43,11 @@ const FONT_FAMILY = `"${FONT_NAME}", Menlo, monospace`
 /** In slide pixels (the 1580 px wide canvas of the eloc theme); the exact size is fitted to whole-pixel cells. */
 const FONT_SIZE = 18
 
-const THEME = {
-  background: '#272936',
-  foreground: '#f8f8f2',
-  cursor: '#f8f8f2',
-  selectionBackground: '#44475a',
-  black: '#21222c',
-  red: '#ff5555',
-  green: '#50fa7b',
-  yellow: '#f1fa8c',
-  blue: '#bd93f9',
-  magenta: '#ff79c6',
-  cyan: '#8be9fd',
-  white: '#f8f8f2',
-  brightBlack: '#6272a4',
-  brightRed: '#ff6e6e',
-  brightGreen: '#69ff94',
-  brightYellow: '#ffffa5',
-  brightBlue: '#d6acff',
-  brightMagenta: '#ff92df',
-  brightCyan: '#a4ffff',
-  brightWhite: '#ffffff',
-}
-
-let loading: Promise<void> | undefined
+let loading: Promise<Ghostty> | undefined
 
 /** ghostty-web's WebAssembly module, inlined in its bundle, loaded once per page. */
-function loadGhostty(): Promise<void> {
-  loading ??= init()
+function loadGhostty(): Promise<Ghostty> {
+  loading ??= Ghostty.load()
   return loading
 }
 
@@ -143,6 +126,11 @@ class GhosttyEmulator implements TerminalEmulator {
   #queries = new QueryResponder(reply => this.#dataListeners.forEach(listener => listener(reply)))
   #dataListeners: Array<(data: string) => void> = []
   #resizeListeners: Array<(size: { cols: number, rows: number }) => void> = []
+  #programStatusListeners: Array<(status: ProgramStatus | undefined) => void> = []
+  #programStatus = new ProgramStatusObserver({
+    reply: reply => this.#dataListeners.forEach(listener => listener(reply)),
+    onStatus: status => this.#programStatusListeners.forEach(listener => listener(status)),
+  })
 
   get cols(): number {
     return this.#terminal?.cols ?? 80
@@ -158,17 +146,18 @@ class GhosttyEmulator implements TerminalEmulator {
 
   async open(host: HTMLElement): Promise<void> {
     // The renderer measures its cell size from the font when it opens.
-    await Promise.all([loadGhostty(), loadFont()])
+    const [ghostty] = await Promise.all([loadGhostty(), loadFont()])
     this.#host = host
     const scale = slideScale(host)
     applyCounterScale(host, scale)
 
     const terminal = new Terminal({
+      ghostty: themedGhostty(ghostty, () => terminalAppearance.value),
       fontFamily: FONT_FAMILY,
       fontSize: fontSizeFor(scale),
       cursorBlink: true,
       scrollback: 5000,
-      theme: THEME,
+      theme: TERMINAL_THEMES[terminalAppearance.value],
     })
     terminal.loadAddon(this.#fitAddon)
     terminal.onData(data => this.#dataListeners.forEach(listener => listener(data)))
@@ -177,6 +166,15 @@ class GhosttyEmulator implements TerminalEmulator {
     // ghostty-web 0.4.0's canvas is still resampled by Slidev's transform chain after scale cancellation.
     host.querySelector('canvas')!.style.imageRendering = 'pixelated'
     this.#terminal = terminal
+    watch(terminalAppearance, mode => {
+      // ghostty-web@0.4.0 `dist/ghostty-web.js`: options.theme only warns; setTheme updates the canvas renderer.
+      terminal.renderer!.setTheme(TERMINAL_THEMES[mode])
+      const view = terminal as unknown as {
+        wasmTerm: Parameters<CanvasRenderer['render']>[0]
+        viewportY: number
+      }
+      terminal.renderer!.render(view.wasmTerm, true, view.viewportY, terminal)
+    }, { flush: 'sync' })
     // Focus sits on the host, a contenteditable div, which Slidev does not count as typing, and ghostty-web
     // stops only the keys it encodes itself: without this, a space typed into the shell also turns the slide.
     host.addEventListener('keydown', event => event.stopPropagation())
@@ -197,6 +195,7 @@ class GhosttyEmulator implements TerminalEmulator {
   }
 
   async write(data: Uint8Array | string): Promise<void> {
+    this.#programStatus.scan(data)
     this.#queries.scan(data)
     // Parsing is synchronous; ghostty-web's write callback would wait for the next animation frame and cap a flood at one chunk per frame.
     if (this.#terminal)
@@ -211,6 +210,10 @@ class GhosttyEmulator implements TerminalEmulator {
 
   onResize(listener: (size: { cols: number, rows: number }) => void): void {
     this.#resizeListeners.push(listener)
+  }
+
+  onProgramStatus(listener: (status: ProgramStatus | undefined) => void): void {
+    this.#programStatusListeners.push(listener)
   }
 
   fit(): void {
@@ -357,7 +360,8 @@ const QUERY_MAX_LENGTH = Math.max(...QUERIES.map(query => query.length))
 function answer([, osc, terminator]: RegExpMatchArray): string {
   if (!osc)
     return '\x1B[?62;22c' // Ghostty's own DA1: VT220 with ANSI color.
-  const color = osc === '10' ? THEME.foreground : THEME.background
+  const theme = TERMINAL_THEMES[terminalAppearance.value]
+  const color = osc === '10' ? theme.foreground : theme.background
   return `\x1B]${osc};${xtermColor(color)}${terminator}`
 }
 

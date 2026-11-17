@@ -39,6 +39,10 @@ The typing schedule spans at most 1.2 s: up to 12 ms per character for short tex
 
 The terminal-name badge on a step (`A`, `B`) and the name in a terminal's title bar appear only when the demo has more than one terminal.
 
+Each terminal title bar has a shared dark/light toggle. The preference persists across reloads, separately from Slidev's page theme; see [architecture](./architecture.md#shared-terminal-appearance). For the color-query demo, run `terminal-colors`, switch theme and run it again. Run bat again to demonstrate application-selected syntax colors; reinitialize jovial with `exec zsh` when testing its startup detection.
+
+`agent-status-demo` emits root OSC 7501 reports and waits for Enter at `blocked`. The title bar shows the latest report. Mark this as a simulated Agent: the script demonstrates protocol bytes and terminal behavior without a model service.
+
 A multi-line command is written with real line breaks inside the attribute; the indentation is typed as written:
 
 ```md

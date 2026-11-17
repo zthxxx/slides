@@ -1,0 +1,41 @@
+#!/bin/bash
+# OSC 11 query/reply framing: xterm control sequences, OSC dynamic colors.
+# https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Operating-System-Commands
+set -eu
+
+exec {tty}<>/dev/tty
+saved=$(stty -g <&"$tty")
+restore() {
+  stty "$saved" <&"$tty"
+  exec {tty}>&-
+}
+trap restore EXIT
+trap 'exit 130' INT
+trap 'exit 129' HUP
+trap 'exit 143' TERM
+
+# Replies arrive on the input stream; consume them while the shell is waiting.
+stty -echo -icanon min 1 time 0 <&"$tty"
+printf '\033]11;?\033\\' >&"$tty"
+reply=''
+previous=''
+deadline=$((SECONDS + 2))
+for ((i = 0; i < 96; i++)); do
+  remaining=$((deadline - SECONDS))
+  if ((remaining <= 0)) || ! IFS= read -r -N 1 -t "$remaining" -u "$tty" char; then
+    printf 'No complete OSC 11 reply within 2 seconds\n' >&2
+    exit 1
+  fi
+  reply+=$char
+  if [[ "$char" == $'\a' || ( "$previous" == $'\e' && "$char" == '\' ) ]]; then
+    printf 'OSC 11 response: %q\n' "$reply"
+    color=${reply#$'\e]11;'}
+    color=${color%$'\a'}
+    color=${color%$'\e\\'}
+    printf 'Background: %s\n' "$color"
+    exit 0
+  fi
+  previous=$char
+done
+printf 'OSC 11 reply exceeded 96 bytes\n' >&2
+exit 1

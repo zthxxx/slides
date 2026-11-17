@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useIsSlideActive, useNav, useSlideContext } from '@slidev/client'
 import { computed, inject, useTemplateRef, watch } from 'vue'
+import { terminalAppearance, TERMINAL_THEMES, toggleTerminalAppearance } from '../runtime/appearance'
 import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
 import { useLinux } from '../runtime/kernel'
 import { serveRelayedSteps } from '../runtime/relay'
@@ -45,6 +46,15 @@ watch(screen, (element, _, onCleanup) => {
 }, { immediate: true })
 
 const accent = computed(() => terminalAccent(demo?.terminals ?? [props.name], props.name))
+const titleAccent = computed(() => terminalAppearance.value === 'light' ? `color-mix(in srgb, ${accent.value}, black 45%)` : accent.value)
+const theme = computed(() => TERMINAL_THEMES[terminalAppearance.value])
+const programStatus = computed(() => session?.programStatus.value)
+const appearanceLabel = computed(() => `Switch all terminals to ${terminalAppearance.value === 'dark' ? 'light' : 'dark'} mode`)
+
+function toggleAppearance(event: MouseEvent) {
+  toggleTerminalAppearance()
+  ;(event.currentTarget as HTMLButtonElement).blur()
+}
 
 const title = computed(() => {
   const pts = session?.pts.value
@@ -62,11 +72,29 @@ const status = computed(() => {
 </script>
 
 <template>
-  <figure class="terminal-window">
+  <figure
+    class="terminal-window"
+    :data-terminal-appearance="terminalAppearance"
+    :style="{ '--terminal-background': theme.background, '--terminal-foreground': theme.foreground }"
+  >
     <header class="terminal-bar">
       <span class="terminal-dots"><i /><i /><i /></span>
-      <span class="terminal-title" :style="{ color: accent }">{{ title }}</span>
+      <span class="terminal-title" :style="{ color: titleAccent }">{{ title }}</span>
       <span class="terminal-status">{{ status }}</span>
+      <span
+        v-if="programStatus"
+        class="terminal-program-status"
+        :data-program-state="programStatus.state"
+        title="Latest OSC 7501 report; this does not check whether the process is alive"
+        aria-live="polite"
+      >{{ programStatus.app ? `${programStatus.app} · ` : '' }}{{ programStatus.state }}{{ programStatus.progress !== undefined ? ` ${programStatus.progress}%` : '' }}</span>
+      <button class="terminal-appearance" type="button" :aria-label="appearanceLabel" :title="appearanceLabel" @click="toggleAppearance">
+        <svg v-if="terminalAppearance === 'dark'" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" />
+        </svg>
+        <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" /></svg>
+      </button>
     </header>
     <div v-if="live" ref="screen" class="terminal-screen" />
     <div v-else class="terminal-screen terminal-stand-in">
@@ -84,7 +112,8 @@ const status = computed(() => {
   margin: 0;
   overflow: hidden;
   border-radius: 0.6rem;
-  background: #272936;
+  background: var(--terminal-background);
+  color: var(--terminal-foreground);
   box-shadow: 0 0.6rem 1.6rem rgb(0 0 0 / 0.25);
 }
 
@@ -121,6 +150,58 @@ const status = computed(() => {
 .terminal-status {
   margin-left: auto;
   color: #6272a4;
+}
+
+.terminal-appearance {
+  display: grid;
+  place-items: center;
+  padding: 0.2rem;
+  border: 0;
+  border-radius: 0.25rem;
+  color: #c9cbd8;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover { background: rgb(255 255 255 / 0.12) }
+  &:focus-visible { outline: 2px solid currentColor }
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.terminal-program-status {
+  max-width: 46%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid #687187;
+  border-radius: 0.3rem;
+  color: #c9cbd8;
+  font-size: 0.85em;
+
+  &[data-program-state="working"] { color: #bd93f9; border-color: #bd93f9 }
+  &[data-program-state="done"] { color: #50fa7b; border-color: #50fa7b }
+  &[data-program-state="blocked"] { color: #f1fa8c; border-color: #f1fa8c }
+  &[data-program-state="error"] { color: #ff5555; border-color: #ff5555 }
+}
+
+[data-terminal-appearance="light"] {
+  .terminal-bar { background: #e5e5e9 }
+  .terminal-appearance { color: #505971 }
+  .terminal-appearance:hover { background: rgb(0 0 0 / 0.08) }
+  .terminal-program-status { color: #505971 }
+  [data-program-state="working"] { color: #6740a1; border-color: #6740a1 }
+  [data-program-state="done"] { color: #247247; border-color: #247247 }
+  [data-program-state="blocked"] { color: #8a6100; border-color: #8a6100 }
+  [data-program-state="error"] { color: #b82836; border-color: #b82836 }
 }
 
 .terminal-screen {

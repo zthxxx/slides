@@ -6,17 +6,20 @@ Each terminal on a slide is a shell on its own pty of that one machine, drawn by
 ## Layers
 
 ```
-slides.md                 content, demo steps, speaker notes
+slides.md, pages/         content, demo steps, speaker notes
    │
 components/               Vue views; know about Slidev (render context, active slide, layout)
    ShellDemo.vue          a demo: stacked terminals + numbered steps; provides the terminal names
    Terminal.vue           one terminal window; adopts its session's element when its slide is active
    ShellStep.vue          one step button; plays here, or relays from the presenter window
-   diagrams/              SVG diagrams for tty drivers, foreground groups and SSH; shared light/dark styles
+   diagrams/              SVG diagrams for TTY, SSH, OSC and Agent gateways; shared light/dark styles
    │
 runtime/                  plain TypeScript; no templates
    session.ts             ShellSession = one pty + one emulator; registry by slide and name; step playback
    emulator.ts            the terminal emulator seam (ghostty-web)
+   appearance.ts          shared dark/light terminal preference and color palettes
+   palette.ts             two synchronized VT parsers, selected by the terminal preference
+   program-status.ts      stream observer for root OSC 7501 reports
    kernel.ts              the page's one VM, booted once per tab
    disk.ts                the published disk image, fetched lazily, under an in-memory copy-on-write layer
    steps.ts               pure: step → bytes, `{a.pts}` references
@@ -82,6 +85,22 @@ The terminal's font starts at 18 slide pixels and adjusts with the slide scale s
 Hack's ascent and descent together exceed one em. The custom baseline keeps box-drawing strokes connected at line height 1; letter descenders may extend by about one pixel into the next row. Font files, upstream version and metrics are recorded in [the font README](../public/fonts/hack-nerd-font-mono/README.md).
 
 The renderer adaptations depend on ghostty-web **0.4.0**: [`dist/index.d.ts`](../node_modules/ghostty-web/dist/index.d.ts) declares `CanvasRenderer` and its private DPR field; [`dist/ghostty-web.js`](../node_modules/ghostty-web/dist/ghostty-web.js) implements `measureFont`, `renderLine`, canvas resizing and DPR use. Re-check these methods and the query/keyboard behavior above when upgrading the package.
+
+### Shared terminal appearance
+
+Every terminal title bar toggles the same dark/light preference, independent of Slidev's page theme. `appearance.ts` stores `terminal-glance:appearance` in origin-local `localStorage`, falls back to dark when storage is unavailable, and accepts changes from other tabs. Reloading preserves this preference; the VM and its disk writes still reset.
+
+ghostty-web 0.4.0 resolves default and indexed colors inside its WASM parser when cells are written. Its `options.theme` setter only warns, while `CanvasRenderer.setTheme()` updates renderer colors without changing those cells. `palette.ts` therefore feeds two real parsers with identical output and resize events, using dark and light palettes. The emulator selects the current parser and redraws through the same renderer; explicit truecolor remains application-owned. Only the active parser's terminal replies reach the PTY, and the inactive parser's replies are drained.
+
+This keeps the same shell, screen and alternate-screen state when switching, with bounded scrollback (5,000 lines per parser). VT parsing and parser/scrollback storage are approximately doubled; there is no retained unbounded output transcript. The adapter depends on ghostty-web 0.4.0's `Ghostty.createTerminal`, `GhosttyTerminal` methods and `CanvasRenderer.render`; sources are the declaration and bundle linked above.
+
+OSC 10/11 replies use the currently selected palette. Applications decide when to query: bat queries when invoked, while jovial chooses its prompt palette during initialization. A title-bar toggle does not restart the shell or send a color-change notification to applications.
+
+### Program status reports
+
+`program-status.ts` observes OSC 7501 in the output stream, including frames split across writes and tmux passthrough wrappers. It answers probes, updates a root program-status record for valid reports, and clears it on `state=clear` or a terminal reset. Child records are ignored; this is a root-status demonstration rather than a full hierarchical protocol implementation. The display stream still reaches the VT parser.
+
+`session.ts` exposes the latest record to the title bar. It is a program report, not a liveness or success check. Wire framing follows [Program Status Protocol rev 0.4](https://www.superlogical.com/rex/docs/build/program-status) and [botmux cb8ff44b2's parser](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/utils/program-status-parser.ts#L14-L120); the observer's inline references identify the derived behavior.
 
 ## Keyboard and focus
 
