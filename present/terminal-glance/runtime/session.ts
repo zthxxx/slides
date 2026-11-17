@@ -1,9 +1,8 @@
 import type { Pty, PtyEnd } from 'unkernel/web'
 import type { SessionField, StepChunk, StepInput } from './steps'
-import { FitAddon } from '@xterm/addon-fit'
-import { Terminal } from '@xterm/xterm'
 import { ref, shallowReactive } from 'vue'
-import { useKernel } from './kernel'
+import { createEmulator } from './emulator'
+import { useLinux } from './kernel'
 import { referencedSessions, resolveSessionRefs, stepChunks } from './steps'
 
 export type SessionStatus = 'idle' | 'starting' | 'running' | 'failed'
@@ -12,46 +11,17 @@ const TYPING_DELAY_MS = 24
 const KEY_PAUSE_MS = 160
 
 /**
- * One shell on its own pty of the shared VM, shown by one xterm.
+ * One shell on its own pty of the shared VM, shown by one terminal emulator.
  * The pty is spawned the first time the terminal is shown, so pty numbers follow the order slides are visited.
  */
 export class ShellSession {
   readonly status = ref<SessionStatus>('idle')
   readonly pts = ref<number>()
   readonly pid = ref<number>()
-  /** The element xterm renders into; a terminal component adopts it. */
+  /** The element the terminal emulator renders into; a terminal component adopts it. */
   readonly host = document.createElement('div')
-  readonly terminal = new Terminal({
-    fontFamily: '"Fira Code", Menlo, Monaco, Consolas, monospace',
-    fontSize: 18,
-    lineHeight: 1.15,
-    cursorBlink: true,
-    scrollback: 5000,
-    theme: {
-      background: '#272936',
-      foreground: '#f8f8f2',
-      cursor: '#f8f8f2',
-      selectionBackground: '#44475a',
-      black: '#21222c',
-      red: '#ff5555',
-      green: '#50fa7b',
-      yellow: '#f1fa8c',
-      blue: '#bd93f9',
-      magenta: '#ff79c6',
-      cyan: '#8be9fd',
-      white: '#f8f8f2',
-      brightBlack: '#6272a4',
-      brightRed: '#ff6e6e',
-      brightGreen: '#69ff94',
-      brightYellow: '#ffffa5',
-      brightBlue: '#d6acff',
-      brightMagenta: '#ff92df',
-      brightCyan: '#a4ffff',
-      brightWhite: '#ffffff',
-    },
-  })
+  readonly terminal = createEmulator()
 
-  #fit = new FitAddon()
   #opening: Promise<void> | undefined
   #pty: Pty | undefined
   #starting: Promise<Pty> | undefined
@@ -59,31 +29,22 @@ export class ShellSession {
 
   constructor(readonly key: string) {
     this.host.className = 'shell-session'
-    this.terminal.loadAddon(this.#fit)
     this.terminal.onData(data => void this.#pty?.write(data))
-    this.terminal.onBinary(data => void this.#pty?.write(Uint8Array.from(data, char => char.charCodeAt(0))))
     this.terminal.onResize(({ cols, rows }) => this.#pty?.resize(cols, rows))
   }
 
-  /** Render into a visible container; the first call also opens xterm and starts the shell. */
+  /** Render into a visible container; the first call also opens the emulator and starts the shell. */
   async show(container: HTMLElement): Promise<void> {
     if (this.host.parentElement !== container)
       container.append(this.host)
-    this.#opening ??= this.#open()
+    this.#opening ??= this.terminal.open(this.host)
     await this.#opening
     this.fit()
     void this.start().catch(() => {})
   }
 
-  async #open(): Promise<void> {
-    // xterm measures its cell size once at open(), so the web font must be ready by then.
-    await document.fonts.load(`${this.terminal.options.fontSize}px "Fira Code"`).catch(() => {})
-    this.terminal.open(this.host)
-  }
-
   fit(): void {
-    if (this.terminal.element && this.host.clientWidth > 0 && this.host.clientHeight > 0)
-      this.#fit.fit()
+    this.terminal.fit()
   }
 
   start(): Promise<Pty> {
@@ -114,16 +75,18 @@ export class ShellSession {
   async #spawn(): Promise<Pty> {
     this.status.value = 'starting'
     try {
-      const vm = await useKernel()
+      const { vm, notice } = await useLinux()
+      if (notice)
+        void this.terminal.write(`\x1B[33m${notice}\x1B[0m\r\n`)
       const pty = await vm.spawn(undefined, undefined, { cols: this.terminal.cols, rows: this.terminal.rows })
       this.#pty = pty
       this.pts.value = pty.pts
       this.pid.value = pty.pid
       this.status.value = 'running'
 
-      // Resolving after xterm has parsed each chunk lets the pty's flow control pace a flood such as `yes`.
+      // Resolving after the emulator has parsed each chunk lets the pty's flow control pace a flood such as `yes`.
       void pty.output
-        .pipeTo(new WritableStream({ write: chunk => new Promise(resolve => this.terminal.write(chunk, resolve)) }))
+        .pipeTo(new WritableStream({ write: chunk => this.terminal.write(chunk) }))
         .catch(() => {})
       pty.ended.then(end => this.#ended(end), error => this.#failed(error))
       return pty
@@ -142,7 +105,7 @@ export class ShellSession {
       return
     }
     const how = end.type === 'exit' ? `exited with ${end.code}` : `killed by signal ${end.signal}`
-    this.terminal.write(`\r\n\x1B[2m[shell ${how}, starting a new one]\x1B[0m\r\n`)
+    void this.terminal.write(`\r\n\x1B[2m[shell ${how}, starting a new one]\x1B[0m\r\n`)
     this.#starting = undefined
     void this.start().catch(() => {})
   }
@@ -150,7 +113,7 @@ export class ShellSession {
   #failed(error: unknown): void {
     this.status.value = 'failed'
     const message = error instanceof Error ? error.message : String(error)
-    this.terminal.write(`\r\n\x1B[31m${message.replaceAll('\n', '\r\n')}\x1B[0m\r\n`)
+    void this.terminal.write(`\r\n\x1B[31m${message.replaceAll('\n', '\r\n')}\x1B[0m\r\n`)
   }
 }
 

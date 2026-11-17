@@ -10,7 +10,7 @@ Terminal / 输入输出
 <!--
 - 本系列想把每天都在用、却说不清的几个概念讲明白：Terminal、TTY、Shell，以及它们和进程怎么协作。
 - 「其一」只讲输入输出：一个按键从键盘到屏幕走过的完整路径。
-- 演示用的是页面里直接运行的真实 Linux 内核（unkernel，Alpine riscv64，shell 是 busybox ash），会后每个人打开这个页面都能自己重做一遍。
+- 演示用的是页面里直接运行的真实 Linux 内核（unkernel，Alpine 3.24 riscv64），预装 zsh + jovial、bash、tmux、htop、node、python、git、nvim，不需要联网；会后每个人打开这个页面都能自己重做一遍。
 -->
 
 ---
@@ -214,8 +214,13 @@ showkey -a      # 依次按 a、↑、Enter
 <ShellDemo>
   <ShellStep run="tty" />
   <ShellStep run="echo $TERM" />
-  <ShellStep run="ls -l /proc/$$/fd" />
+  <ShellStep run="ls -l /proc/$$/fd/{0..2}" />
   <ShellStep run="ls /dev/pts/" />
+  <ShellStep run="tmux" />
+  <ShellStep keys="^S l" />
+  <ShellStep run="tty" />
+  <ShellStep keys="^D" />
+  <ShellStep keys="^D" />
 </ShellDemo>
 
 <!--
@@ -225,15 +230,21 @@ showkey -a      # 依次按 a、↑、Enter
 演示：
 1. `tty`：当前 shell 标准输入连接的终端设备，`/dev/pts/N`。
 2. `echo $TERM`：`xterm-256color`，程序靠终端类型决定用哪套转义序列。
-3. `ls -l /proc/$$/fd`：fd 0、1、2 都指向这个 pts，shell 的 stdin、stdout、stderr 就是这个 tty；多出来的 `10 -> /dev/tty` 是 ash 为作业控制打开的。
+3. `ls -l /proc/$$/fd/{0..2}`：fd 0、1、2 都指向这个 pts，shell 的 stdin、stdout、stderr 就是这个 tty。
 4. `ls /dev/pts/`：每打开一个伪终端就多一个编号（上一页的终端也还在），另外还有 `ptmx`。
+5. `tmux` 后按 `Ctrl-S l` 向右分屏（镜像里是 zthxxx/tmux-config，prefix 是 Ctrl-S），在新窗格里 `tty`：又多了一个 pts。tmux server 自己持有 ptmx，给每个窗格开一个 pts，和后面 ssh 那页的结构一样。
+6. 两次 `Ctrl-D`：依次退出两个窗格里的 shell，tmux 随之结束。
 
 ```sh
 # A
 tty
 echo $TERM
-ls -l /proc/$$/fd
+ls -l /proc/$$/fd/{0..2}
 ls /dev/pts/
+tmux
+# A: 按 Ctrl-S 再按 l，然后在新窗格里
+tty
+# A: 按两次 Ctrl-D
 ```
 -->
 
@@ -300,14 +311,14 @@ TTY 负责控制字符的输入输出
 
 ```bash
 # 前端进程
-for i in $(seq 1 10); do
+for i in {1..10}; do
   echo $i
   sleep 1
 done
 
 # 非前端进程
 (
-  for i in $(seq 1 10); do
+  for i in {1..10}; do
     echo $i
     sleep 1
   done
@@ -317,15 +328,14 @@ done
 <!--
 - 同一段循环，一个直接在前台跑，一个加上括号和 `&` 放到后台跑。
 - 先让大家预测：两种情况下按 Ctrl-C 有什么区别？在循环运行时打字会发生什么？
-- 演示环境是 busybox ash，不支持 `{1..10}` 花括号展开，所以用 `$(seq 1 10)`。
 -->
 
 ---
 
 <ShellDemo terminals="a b">
-  <ShellStep to="a" run="for i in $(seq 1 10); do echo $i; sleep 1; done" />
+  <ShellStep to="a" run="for i in {1..10}; do echo $i; sleep 1; done" />
   <ShellStep to="a" keys="^C" />
-  <ShellStep to="a" run="(for i in $(seq 1 10); do echo $i; sleep 1; done) &" />
+  <ShellStep to="a" run="(for i in {1..10}; do echo $i; sleep 1; done) &" />
   <ShellStep to="a" keys="^C" />
   <ShellStep to="a" run="jobs" />
   <ShellStep to="a" run="read x &" />
@@ -342,14 +352,14 @@ done
 3. A 跑后台循环：提示符立刻返回，数字照样打印，说明后台进程可以写 tty。
 4. 再按 `Ctrl-C`：只换了一行新提示符，后台循环不受影响。
 5. `jobs`：后台作业状态为 Running。
-6. `read x &` 再 `jobs`：显示 `Stopped (tty input)`，后台进程组去读 tty 收到 SIGTTIN 被暂停，对应前面图里只有 W 的 fish。
-7. B 执行 `ps`：PGID 列就是进程组；TT 列的 `136,N` 是 pts 的主、次设备号（busybox ps 不显示设备名）。
+6. `read x &` 再 `jobs`：显示 `suspended (tty input)`，后台进程组去读 tty 收到 SIGTTIN 被暂停，对应前面图里只有 W 的 fish。
+7. B 执行 `ps`：PGID 列就是进程组，被暂停的 `read` 状态是 `T`；TT 列的 `136,N` 是 pts 的主、次设备号（busybox ps 不显示设备名）。
 
 ```sh
 # A
-for i in $(seq 1 10); do echo $i; sleep 1; done
+for i in {1..10}; do echo $i; sleep 1; done
 # A: 按 Ctrl-C
-(for i in $(seq 1 10); do echo $i; sleep 1; done) &
+(for i in {1..10}; do echo $i; sleep 1; done) &
 # A: 按 Ctrl-C
 jobs
 read x &
@@ -427,10 +437,10 @@ PTS                       |   |        |   +-------+    |       +-------+
   <ShellStep to="a" run="tty" />
   <ShellStep to="b" run="tty" />
   <ShellStep to="b" run="lsof | grep /dev/pts/{a.pts}" />
-  <ShellStep to="b" run="ls -l /proc/{a.pid}/fd" />
+  <ShellStep to="b" run="ls -l /proc/{a.pid}/fd/{0..2}" />
   <ShellStep to="b" run="echo ok > /dev/pts/{a.pts}" />
   <ShellStep to="a" run="exec 6<> ./testfd.txt" />
-  <ShellStep to="a" run="ls -l /proc/$$/fd" />
+  <ShellStep to="a" run="ls -l /proc/$$/fd/{0,1,2,6}" />
   <ShellStep to="b" run="lsof | grep testfd" />
   <ShellStep to="b" run='echo -e "\e[35;1mTitle of the Program\e[0m" > /dev/pts/{a.pts}' />
   <ShellStep to="a" run="printf 'Hello World\e[5D*****\n'" />
@@ -444,12 +454,12 @@ PTS                       |   |        |   +-------+    |       +-------+
 演示：
 1. A、B 各执行 `tty`：同一台机器上的两个 PTY。
 2. B `lsof | grep /dev/pts/<A>`：A 的 shell 的 0、1、2 都打开着 A 的 pts。
-3. B `ls -l /proc/<A 的 shell pid>/fd`：从 /proc 看到同样的结果。
+3. B `ls -l /proc/<A 的 shell pid>/fd/{0..2}`：从 /proc 看到同样的结果。
 4. B `echo ok > /dev/pts/<A>`：ok 出现在 A 的屏幕上；写 pts 就是往 A 的输出方向写，A 的 shell 毫不知情。
-5. A `exec 6<> ./testfd.txt` 再 `ls -l /proc/$$/fd`：shell 多出 fd 6；B `lsof | grep testfd` 也能看到。fd 只是进程打开文件的编号，0、1、2 只是约定。
+5. A `exec 6<> ./testfd.txt` 再 `ls -l /proc/$$/fd/{0,1,2,6}`：shell 多出 fd 6；B `lsof | grep testfd` 也能看到。fd 只是进程打开文件的编号，0、1、2 只是约定。
 6. B 往 A 写 `\e[35;1m...`：A 上出现紫色粗体字。颜色是终端模拟器解析 ANSI 序列的结果，与 shell 无关。
 7. A `printf 'Hello World\e[5D*****\n'`：光标左移 5 格后覆盖写入，显示 `Hello *****`。
-8. B `stty -F /dev/pts/<A> -a | grep icanon`：A 停在提示符时是 `-isig -icanon -echo`，为下一页做铺垫。
+8. B `stty -F /dev/pts/<A> -a | grep icanon`：A 停在提示符时是 `-icanon -echo`，为下一页做铺垫。
 
 ```sh
 # A
@@ -457,11 +467,11 @@ tty
 # B
 tty
 lsof | grep /dev/pts/0                # 0 换成 A 的 pts 编号
-ls -l /proc/<A 的 shell pid>/fd
+ls -l /proc/<A 的 shell pid>/fd/{0..2}
 echo ok > /dev/pts/0
 # A
 exec 6<> ./testfd.txt
-ls -l /proc/$$/fd
+ls -l /proc/$$/fd/{0,1,2,6}
 # B
 lsof | grep testfd
 echo -e "\e[35;1mTitle of the Program\e[0m" > /dev/pts/0
@@ -482,7 +492,7 @@ stty -F /dev/pts/0 -a | grep icanon
 因为 shell 在交互模式 (interactive) 下，所以才能控制光标编辑命令
 
 <!--
-- 交互模式下，shell 的行编辑器（ash 自带的行编辑、bash 的 readline、zsh 的 zle）把 tty 切到非规范模式（-icanon -echo），每个按键都立刻交给 shell。
+- 交互模式下，shell 的行编辑器（zsh 的 zle、bash 的 readline）把 tty 切到非规范模式（`-icanon -echo`），每个按键都立刻交给 shell。
 - 所以按回车之前字符已经到了 shell；回显、光标移动、退格、补全、历史，都是 shell 自己用 ANSI 序列画出来的。
 - 按下回车 shell 才解析并执行；执行前它恢复规范模式，把前台交给这个命令。
 - 证据：上一页最后一步，A 停在提示符时 `stty -F` 看到 `-icanon -echo`；后面 ^C 那页会对比 A 跑 sleep 时的 `icanon echo`。
@@ -552,7 +562,7 @@ stty -F /dev/pts/0 -a | grep icanon
 演示：
 1. A `sleep 100`，B `printf '\003' > /dev/pts/<A>`：什么都没发生，sleep 继续运行。写 slave 走的是输出方向，字节交给终端模拟器去显示；^C 只有在输入方向上经过开启了 isig 的 line discipline，才会变成 SIGINT。
 2. B `stty -F /dev/pts/<A> -a | grep icanon`：sleep 在前台时是 `isig icanon echo`，规范模式。
-3. A 按 `Ctrl-C` 结束 sleep，B 再查一次：回到提示符后变成 `-isig -icanon -echo`，交互 shell 的行编辑器把 tty 切成 raw，回显和编辑由它自己完成，印证前面「没有回车前的输入也传给了 shell」。
+3. A 按 `Ctrl-C` 结束 sleep，B 再查一次：回到提示符后变成 `-icanon -echo`，zsh 的行编辑器关掉了 tty 的行缓冲和回显，自己逐键处理（isig 留着，Ctrl-C 仍由 TTY 转成信号），印证前面「没有回车前的输入也传给了 shell」。
 
 ```sh
 # A
@@ -608,6 +618,8 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
   <ShellStep type="ab" />
   <ShellStep keys="^C" run="stty icanon" />
   <ShellStep run="printf '\e[?1049h\e[H'; echo 'alternate screen, like vim / less'; sleep 3; printf '\e[?1049l'" />
+  <ShellStep run="htop" />
+  <ShellStep type="q" />
 </ShellDemo>
 
 <!--
@@ -618,7 +630,8 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
 2. `read input` 后输入 `secret`：输入时正常回显。
 3. `stty -echo` 后再 `read`：屏幕上看不到输入，但程序照样读到了。输入密码就是这样实现的，回显是 TTY 的功能。
 4. `stty -icanon; cat` 后输入 `ab`：显示 `abab`。关掉规范模式后不再按行缓冲，每个字符都立刻交给 cat；`Ctrl-C` 退出后 `stty icanon` 恢复。
-5. `\e[?1049h` 切到备用屏幕停 3 秒再 `\e[?1049l` 切回，原来的内容原样恢复；vim、less、top 退出后屏幕能复原靠的就是它。旧写法是 `\e[?47h` / `\e[?47l`。
+5. `\e[?1049h` 切到备用屏幕停 3 秒再 `\e[?1049l` 切回，原来的内容原样恢复；旧写法是 `\e[?47h` / `\e[?47l`。
+6. `htop`，按 `q` 退出：全屏程序（htop、vim、less）都是这样进出备用屏幕的，退出后屏幕复原。
 
 ```sh
 # A
@@ -628,6 +641,7 @@ stty -echo; read input; stty echo; echo "you typed: $input"   # 输入 secret �
 stty -icanon; cat                                             # 输入 ab，然后 Ctrl-C
 stty icanon
 printf '\e[?1049h\e[H'; echo 'alternate screen, like vim / less'; sleep 3; printf '\e[?1049l'
+htop                                                          # 按 q 退出
 ```
 -->
 

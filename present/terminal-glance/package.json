@@ -2,13 +2,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "slidev --log info --open"
+    "dev": "slidev --log info --open",
+    "build:image": "bun image/build.ts",
+    "test": "bun test"
   },
   "dependencies": {
     "@slidev/cli": "catalog:",
-    "@xterm/addon-fit": "catalog:",
-    "@xterm/xterm": "catalog:",
+    "ghostty-web": "catalog:",
     "slidev-theme-eloc": "workspace:*",
     "unkernel": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "fast-check": "catalog:"
   }
 }

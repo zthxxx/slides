@@ -1,0 +1,15 @@
+# Alpine 3.24 riscv64 packages preinstalled in the guest image (main + community).
+# One per line; `#` starts a comment. Installed by guest/setup.sh with `apk add`.
+
+# Shells: zsh is root's login shell (the jovial theme, via zinit); bash for bash-only syntax.
+zsh
+bash
+
+# Tools the talk and its audience reach for.
+tmux
+htop
+less
+git
+neovim
+nodejs
+python3

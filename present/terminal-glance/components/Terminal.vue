@@ -2,10 +2,9 @@
 import { useIsSlideActive, useNav, useSlideContext } from '@slidev/client'
 import { computed, inject, useTemplateRef, watch } from 'vue'
 import { shellDemoKey, terminalAccent } from '../runtime/demo'
-import { useKernel } from '../runtime/kernel'
+import { useLinux } from '../runtime/kernel'
 import { serveRelayedSteps } from '../runtime/relay'
 import { playStep, sessionKey, useShellSession } from '../runtime/session'
-import '@xterm/xterm/css/xterm.css'
 
 const props = withDefaults(defineProps<{
   /** The terminal's name on this slide; steps address it by this name. */
@@ -26,7 +25,7 @@ const screen = useTemplateRef<HTMLDivElement>('screen')
 
 if (live) {
   // Boot while the slide is still hidden, so the shell is ready when the talk reaches it.
-  void useKernel().catch(() => {})
+  void useLinux().catch(() => {})
   serveRelayedSteps(({ page, to, step }) => void playStep(page, to, step).catch(() => {}))
 }
 
@@ -127,6 +126,8 @@ const status = computed(() => {
   flex: 1;
   min-height: 0;
   padding: 0.5rem 0.4rem 0.3rem 0.8rem;
+  /* The emulator's host is enlarged by the slide scale and scaled back down (runtime/emulator.ts). */
+  overflow: hidden;
 }
 
 .terminal-stand-in {
@@ -140,19 +141,11 @@ const status = computed(() => {
 </style>
 
 <style>
+/* The element ghostty-web renders into: it makes it the focusable, contenteditable input of the terminal. */
 .shell-session {
   width: 100%;
   height: 100%;
-
-  .xterm {
-    height: 100%;
-    /* The theme turns on Fira Code's ligatures for the slide, which would redraw `0x`, `->` and `---` in the shell output. */
-    font-feature-settings: "calt" 0, "liga" 0;
-    font-variant-ligatures: none;
-  }
-
-  .xterm-viewport {
-    background-color: transparent !important;
-  }
+  outline: none;
+  caret-color: transparent;
 }
 </style>

@@ -15,6 +15,7 @@ export const KEY_BYTES: Readonly<Record<string, string>> = {
   '^C': '\x03',
   '^D': '\x04',
   '^L': '\x0C',
+  '^S': '\x13',
   '^Z': '\x1A',
   '↑': '\x1B[A',
   '↓': '\x1B[B',

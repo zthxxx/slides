@@ -58,6 +58,16 @@ jobs:
         run: |
           pnpm i --frozen-lockfile
 
+      - name: Test terminal-glance
+        run: |
+          pnpm -C present/terminal-glance test
+
+      # present/terminal-glance boots a guest disk built here on every push (see present/terminal-glance/docs/image.md).
+      - name: Build terminal-glance guest image
+        # Its VM driver needs Node >= 24 (WebAssembly JSPI); the script falls back to `npx -y node@24`.
+        run: |
+          pnpm -C present/terminal-glance build:image
+
       - name: Build site
         run: |
           pnpm build
@@ -68,3 +78,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./.site
+          # One commit on gh-pages, so the guest disk chunks of old builds do not pile up in its history.
+          force_orphan: true

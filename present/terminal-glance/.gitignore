@@ -1,0 +1,3 @@
+# Built by image/build.ts: the raw guest disk and its published chunks (CI rebuilds them).
+/.cache/
+/public/linux/
