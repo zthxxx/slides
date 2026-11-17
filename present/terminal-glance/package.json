@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "slidev --log info --open"
+  },
+  "dependencies": {
+    "@slidev/cli": "catalog:",
+    "@xterm/addon-fit": "catalog:",
+    "@xterm/xterm": "catalog:",
+    "slidev-theme-eloc": "workspace:*",
+    "unkernel": "catalog:"
+  }
+}

@@ -13,7 +13,7 @@ routerMode: hash
 - *2022.05* [The `eloc` Theme for Slidev](https://eloc-slidev.vercel.app/)
 - *2020.09* <a href="/present/git-operate-proposal" target="_blank">Our Git Operate Proposal</a>
 - *2020.08* <a href="/present/code-design-and-roast" target="_blank">Graphic Design in Code Style</a>
-- *2020.05* <a href="/present/terminal-glance" target="_blank">Terminal Concept Guide</a> <small>(need local service)</small>
+- *2020.05* <a href="/present/terminal-glance" target="_blank">Terminal Concept Guide</a>
 - *2020.02* <a href="/present/git-merkle-glance" target="_blank">A Glance at Git Merkle</a>
 - *2019.11* [Zsh History Search Plugin](https://zsh-history-enquirer.zthxxx.me)
 - *2019.11* [You Don't Need to Care Log](https://dont-care-log.zthxxx.me)
