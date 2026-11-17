@@ -1,46 +1,55 @@
-## Commands
-
-Package manager is **pnpm** (v9.6.0 in CI), Node **>=22**.
-
-- `pnpm dev` — serve the root index deck (`slides.md`) with HMR.
-- `pnpm dev <slide-name>` — serve a single deck under `present/<slide-name>/slides.md`. The positional arg is parsed by `zx` in `scripts/dev.mjs` and `cd`s into that directory before invoking `slidev`.
-- `pnpm build` — build the entire site into `.site/` (see Architecture). Runs all decks in parallel via an `rxjs` pipeline.
-- `pnpm clean` — remove `index.html`, `.site/`, and every `present/*/index.html` and `present/*/dist` produced by Slidev.
-
-A single deck can also be developed in isolation by `cd present/<slide-name> && pnpm dev` (each present directory that needs its own deps has a local `package.json`, e.g. `pipeline-in-rxjs`).
-
-## Architecture
-
 This repo ships a **multi-deck Slidev site** deployed to https://slides.zthxxx.me (GitHub Pages, CNAME in `public/CNAME`).
+
 
 ### Layout
 
-- `slides.md` — root landing deck; its links point to each sub-deck under `/present/<slide>/`. Uses `routerMode: hash` so the static GH Pages host can resolve in-deck navigation without server rewrites.
-- `present/<slide-name>/slides.md` — one deck per directory. Local `public/`, `components/`, and (optionally) `package.json` live alongside the markdown.
-- `packages/slidev-theme-eloc/` — the shared Slidev theme (`slidev-theme-eloc`), referenced as `workspace:*` from the root and from any deck that overrides its dependency set. Owns layouts, styles, and theme-level Slidev defaults (e.g. `canvasWidth: 1580`, `routerMode: history`).
+- `slides.md` — root landing deck; its links point to each sub-deck under `/present/<slide>/`.
+  Uses `routerMode: hash` so the static GH Pages host can resolve in-deck navigation without server rewrites.
+- `packages/slidev-theme-eloc/` — the shared Slidev theme (`slidev-theme-eloc`), overrides its dependency set. Owns layouts, styles, and theme-level Slidev defaults.
 - `public/` — site-wide static assets copied to the root of `.site/` by Slidev.
+- `present/<slide-name>/` — one deck per directory.
+  - `slides.md`: Slidev entry file for this deck
+  - `pages/*.md`: optional, slide content split from `slides.md` for better organization;
+    Each file may contain one or more slides and is included by the main `slides.md` file.
+  - `artboard/<page-name>/*.md`: optional, used for batch-discussing different visual styles for the same page with users;
+    Use this only when the user explicitly requests a batch style demonstration.
+  - `public/`: optional, static assets like `images/` `sounds/` `images/`; Organize them by category instead of just laying them all out flat.
+  - `components/`: optional, Vue components
+  - `package.json`: optional, for specifying dependencies or scripts
+  - `.logs`, `.playwright-cli`: optional, log files by Coding Agent
 
-### pnpm workspace
 
-`pnpm-workspace.yaml` includes `packages/**` plus `present/pipeline-in-rxjs` (the only present-directory currently needing its own dependency graph, because it pulls in `rxjs@8.0.0-alpha.14`). When adding a new deck that needs deck-specific deps, add its directory to `pnpm-workspace.yaml` and create a local `package.json` mirroring `present/pipeline-in-rxjs/package.json`.
+## Commands
 
-### Build pipeline (`scripts/build.mjs`)
+Package manager is pnpm with `pnpm-workspace.yaml`, Node.js >=22, and Bun runs the scripts in `scripts/`.
 
-1. Glob `present/*` directories.
-2. In parallel (via `rxjs` `merge` + `mergeMap`):
-   - Build the root deck: `slidev build --out .site slides.md`.
-   - Build each sub-deck: `slidev build --base /present/<slide>/ present/<slide>/slides.md` (output goes to `present/<slide>/dist`).
-3. Copy each `present/<slide>/dist` into `.site/present/<slide>/`.
+- `pnpm dev` — serve the root index deck (`slides.md`) with HMR.
+- `pnpm dev <slide-name>` — serve a single deck under `present/<slide-name>/slides.md`.
+- `pnpm build` — build the entire site into `.site/`. Runs all decks in parallel.
+- `pnpm clean` — remove build artifacts.
 
-The `--base` flag is critical — it rewrites asset URLs so each sub-deck loads correctly when served under its sub-path on GitHub Pages.
+A single deck can also be developed in isolation by `cd present/<slide-name> && pnpm dev` (needs its own deps has a local `package.json` for scripts and dependencies).
 
-### CI / Deploy (`.github/workflows/build.yml`)
 
-Every push and PR runs `pnpm build`. On `master`, `.site/` is published to the `gh-pages` branch via `peaceiris/actions-gh-pages@v4`. Playwright browser downloads are skipped in CI (`PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`); any deck-time export step requiring Chromium must run locally.
+## CI / Deploy
+
+Every push and PR runs `pnpm build`. On `master`, `.site/` is published to the `gh-pages`. see `.github/workflows/build.yml`
+
 
 ## Adding a new deck
 
-1. Create `present/<slide-name>/slides.md` (frontmatter typically `theme: eloc` and `routerMode: hash` if linked from the root index).
-2. If it needs deck-specific deps, add `present/<slide-name>` to `pnpm-workspace.yaml` and a local `package.json` with `slidev-theme-eloc: "workspace:*"`.
-3. Add a link entry in the root `slides.md` index list.
-4. `pnpm dev <slide-name>` to preview, `pnpm build` to verify the production output.
+1. Create `present/<slide-name>/` with
+   - `slides.md`, with frontmatter typically containing `theme: eloc` and `routerMode: hash`; you can refer to other `slides.md` files
+   - `package.json` if it needs specific dependencies, like [`pipeline-in-rxjs`](./present/pipeline-in-rxjs/package.json)
+
+2. Based on the user's requirements / intent / discussion, use the `slidev` skill to create the slides.
+
+3. Run `pnpm dev <slide-name>` to serve the preview; use browser to open the URL and continuously view / verify / improve it.
+
+3.1 If users want to discuss or review batch modifications of different style versions for a single page during the review process, they should use the "artboard design" mode:
+  Create different slidev files under the `artboard/` and use the `slidev` CLI to load them so users can view them all simultaneously in a single browser page.
+
+4. Run `pnpm build` to verify the production output. After verification is complete, ask the user to review it.
+  - If the user has any feedback, back to step 2.
+
+5. After the user has reviewed it, add a link entry to the root `slides.md` index list.

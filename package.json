@@ -19,12 +19,11 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.mjs",
-    "build": "node scripts/build.mjs",
+    "dev": "bun scripts/dev.ts",
+    "build": "bun scripts/build.ts",
     "clean": "rm -rf index.html .site present/*/index.html present/*/dist"
   },
   "dependencies": {
-    "@rive-app/canvas": "catalog:",
     "@slidev/cli": "catalog:",
     "slidev-theme-eloc": "workspace:*"
   },
@@ -33,7 +32,6 @@
     "@types/bun": "catalog:",
     "@zthxxx/tsconfig": "catalog:",
     "rxjs": "catalog:",
-    "typescript": "catalog:",
-    "zx": "catalog:"
+    "typescript": "catalog:"
   }
 }

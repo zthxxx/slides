@@ -4,6 +4,7 @@
     "dev": "slidev --log info --open"
   },
   "dependencies": {
+    "@rive-app/canvas": "catalog:",
     "@slidev/cli": "catalog:",
     "rxjs": "catalog:",
     "slidev-theme-eloc": "workspace:*"

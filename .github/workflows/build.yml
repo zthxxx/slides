@@ -44,6 +44,12 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: 'pnpm'
 
+      - name: Setup Bun
+        # https://github.com/oven-sh/setup-bun/tree/v2
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
       - name: Environment variables
         run: |
           env
