@@ -257,6 +257,8 @@ function fetchChunks(manifestUrl: URL): ChunkLoader {
 export interface ImageDisk {
   disk: CowDisk
   manifest: DiskManifest
+  /** Settles once what the guest reads up to its first prompt has downloaded (or failed, leaving reads to fetch it). */
+  bootData: Promise<void>
 }
 
 /**
@@ -276,6 +278,6 @@ export async function openImageDisk(manifestUrl: URL): Promise<ImageDisk | undef
   if (manifest.format !== MANIFEST_FORMAT)
     throw new Error(`${manifestUrl}: unknown disk format ${JSON.stringify(manifest.format)}`)
   const base = new ChunkedDiskBase(manifest, fetchChunks(manifestUrl))
-  void base.prefetchBoot(BOOT_PREFETCH_CONCURRENCY)
-  return { disk: new CowDisk(base), manifest }
+  const bootData = base.prefetchBoot(BOOT_PREFETCH_CONCURRENCY).catch(() => {})
+  return { disk: new CowDisk(base), manifest, bootData }
 }

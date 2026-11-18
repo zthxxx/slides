@@ -44,8 +44,9 @@ export interface DownloadSummary {
   active: boolean
 }
 
-export const linuxDownloads = computed<DownloadSummary>(() => {
-  const all = [...downloads.values()]
+/** The downloads of the current batch whose file name passes `include` (all by default); reactive inside a computed. */
+export function summarizeDownloads(include: (name: string) => boolean = () => true): DownloadSummary {
+  const all = [...downloads].filter(([name]) => include(name)).map(([, download]) => download)
   return {
     files: all.length,
     filesDone: all.filter(download => download.done).length,
@@ -53,7 +54,9 @@ export const linuxDownloads = computed<DownloadSummary>(() => {
     total: all.reduce((sum, download) => sum + Math.max(download.total, download.loaded), 0),
     active: all.some(download => !download.done),
   }
-})
+}
+
+export const linuxDownloads = computed<DownloadSummary>(() => summarizeDownloads())
 
 /** Reads a response body to the end, reporting the bytes as they arrive. */
 export async function readCounted(response: Response, name: string): Promise<Uint8Array<ArrayBuffer>> {

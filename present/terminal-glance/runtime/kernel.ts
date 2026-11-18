@@ -2,8 +2,9 @@ import type { KernelInstance } from 'unkernel/web'
 import type { ImageDisk } from './disk'
 import kernelUrl from 'unkernel/alpine.wasm?url'
 import { checkSupport, createKernel, loadKernelModule } from 'unkernel/web'
+import { shallowReactive } from 'vue'
 import { openImageDisk } from './disk'
-import { AHEAD_PRIORITY, trackDownload } from './downloads'
+import { AHEAD_PRIORITY, summarizeDownloads, trackDownload } from './downloads'
 
 /**
  * The page's only Linux VM: unkernel's bundled kernel and Alpine 3.24 riscv64 initramfs,
@@ -33,6 +34,47 @@ interface Downloads {
 let booting: Promise<LinuxMachine> | undefined = import.meta.hot?.data.booting
 let downloads: Downloads | undefined = import.meta.hot?.data.downloads
 
+/** The download progress entry of the kernel wasm; every other entry during the boot is the disk's. */
+export const KERNEL_DOWNLOAD = 'unkernel-alpine.wasm'
+
+/**
+ * The machine's boot, in stages, for the terminals' boot screen: the two downloads run together, then the kernel
+ * boots until the guest's kwtty accepts the first pty (`vm.spawn` waits for it; unkernel 0.1.0 has no other
+ * readiness signal, `createKernel` resolves at kernel entry).
+ */
+export interface BootStage {
+  state: 'waiting' | 'active' | 'done' | 'failed'
+  /** `performance.now()` at the boot stage's start and end. */
+  startedAt?: number
+  endedAt?: number
+  /** Bytes the stage downloaded, once done. */
+  bytes?: number
+}
+
+export interface LinuxBoot {
+  kernel: BootStage
+  disk: BootStage
+  boot: BootStage
+}
+
+export const linuxBoot: LinuxBoot = import.meta.hot?.data.linuxBoot ?? shallowReactive<LinuxBoot>({
+  kernel: { state: 'waiting' },
+  disk: { state: 'waiting' },
+  boot: { state: 'waiting' },
+})
+if (import.meta.hot)
+  import.meta.hot.data.linuxBoot = linuxBoot
+
+function setStage(name: keyof LinuxBoot, change: Partial<BootStage>): void {
+  linuxBoot[name] = { ...linuxBoot[name], ...change }
+}
+
+/** Ends the boot stage: called when a pty has spawned, which needs the guest's kwtty up. */
+export function markLinuxUp(): void {
+  if (linuxBoot.boot.state === 'active')
+    setStage('boot', { state: 'done', endedAt: performance.now() })
+}
+
 /**
  * Starts downloading what Linux needs (the kernel wasm, the disk manifest and the chunks the guest reads up to
  * its first prompt) without booting it. Safe in any window: it runs no kernel, so a presenter window calling it
@@ -42,7 +84,9 @@ export function prefetchLinux(): void {
   if (downloads)
     return
   // unkernel counts the decoded bytes; the wire size of a gzip response would understate them.
-  const kernelProgress = trackDownload('unkernel-alpine.wasm', __KERNEL_WASM_BYTES__)
+  const kernelProgress = trackDownload(KERNEL_DOWNLOAD, __KERNEL_WASM_BYTES__)
+  setStage('kernel', { state: 'active' })
+  setStage('disk', { state: 'active' })
   // Fetched here rather than by unkernel, so the download can yield to the page's own scripts and styles; unkernel
   // compiles the response while it streams. The index.html preload is low priority as well (vite.config.ts).
   const kernelResponse = fetch(new URL(kernelUrl, location.href), { priority: AHEAD_PRIORITY }).then((response) => {
@@ -55,8 +99,17 @@ export function prefetchLinux(): void {
     image: openImageDisk(manifestUrl()),
   }
   // A failed download is reported by the boot that awaits it; the progress bar stops counting it.
-  downloads.kernel.catch(() => kernelProgress(0, true))
-  downloads.image.catch(() => {})
+  downloads.kernel.then(
+    () => setStage('kernel', { state: 'done', bytes: __KERNEL_WASM_BYTES__ }),
+    () => {
+      kernelProgress(0, true)
+      setStage('kernel', { state: 'failed' })
+    },
+  )
+  downloads.image.then(image => image?.bootData).then(
+    () => setStage('disk', { state: 'done', bytes: summarizeDownloads(name => name !== KERNEL_DOWNLOAD).loaded }),
+    () => setStage('disk', { state: 'failed' }),
+  )
   if (import.meta.hot)
     import.meta.hot.data.downloads = downloads
 }
@@ -77,7 +130,15 @@ async function bootLinux(): Promise<LinuxMachine> {
     throw new Error(`This browser cannot run the in-page Linux VM:\n${support.problems.join('\n')}`)
 
   const [kernel, image] = await Promise.all([downloads!.kernel, downloads!.image])
-  const vm = await createKernel({ kernel, disks: image ? [image.disk] : [] })
+  setStage('boot', { state: 'active', startedAt: performance.now() })
+  let vm: KernelInstance
+  try {
+    vm = await createKernel({ kernel, disks: image ? [image.disk] : [] })
+  }
+  catch (error) {
+    setStage('boot', { state: 'failed' })
+    throw error
+  }
 
   if (!image)
     return { vm, notice: `No preinstalled image at ${manifestUrl().pathname}: this is bare Alpine (busybox ash). Build it with \`pnpm build:image\` in present/terminal-glance.` }

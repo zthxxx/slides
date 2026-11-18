@@ -4,7 +4,7 @@ import type { ProgramStatus } from './program-status'
 import { ref, shallowReactive } from 'vue'
 import { playBellSound } from './bell'
 import { createEmulator } from './emulator'
-import { useLinux } from './kernel'
+import { markLinuxUp, useLinux } from './kernel'
 import { referencedSessions, resolveSessionRefs, stepChunks, typingPlan } from './steps'
 
 export type SessionStatus = 'idle' | 'starting' | 'running' | 'failed'
@@ -18,6 +18,8 @@ export class ShellSession {
   /** Counts the writes that rang the bell; a terminal shows its bell icon again whenever it grows. */
   readonly bells = ref(0)
   readonly status = ref<SessionStatus>('idle')
+  /** The shell has written its first output (its first prompt); stays true when a replacement shell starts. */
+  readonly ready = ref(false)
   readonly pts = ref<number>()
   readonly pid = ref<number>()
   /** The element the terminal emulator renders into; a terminal component adopts it. */
@@ -83,6 +85,7 @@ export class ShellSession {
       if (notice)
         void this.terminal.write(`\x1B[33m${notice}\x1B[0m\r\n`)
       const pty = await vm.spawn(undefined, undefined, { cols: this.terminal.cols, rows: this.terminal.rows })
+      markLinuxUp()
       this.#pty = pty
       this.pts.value = pty.pts
       this.pid.value = pty.pid
@@ -90,7 +93,12 @@ export class ShellSession {
 
       // Resolving after the emulator has parsed each chunk lets the pty's flow control pace a flood such as `yes`.
       void pty.output
-        .pipeTo(new WritableStream({ write: chunk => this.terminal.write(chunk) }))
+        .pipeTo(new WritableStream({
+          write: (chunk) => {
+            this.ready.value = true
+            return this.terminal.write(chunk)
+          },
+        }))
         .catch(() => {})
       pty.ended.then(end => this.#ended(end), error => this.#failed(error))
       return pty
