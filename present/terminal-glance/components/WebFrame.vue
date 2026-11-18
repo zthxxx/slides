@@ -5,8 +5,10 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 /**
  * A live web page embedded in a slide, cropped to one region of it. A cross-origin page cannot be restyled from
  * outside, so the page is laid out at `viewport` CSS pixels wide, shifted so that the region inside `crop`
- * (top right bottom left, in the page's pixels) sits at the frame's origin, and scaled so that region fills the
- * frame's width. Sticky headers and sidebars stay outside the visible region while the page scrolls.
+ * (top right bottom left, in the page's pixels) sits at the frame's origin, and scaled as large as the slide allows
+ * while the region's full width and `fitHeight` page pixels of height stay visible; the window narrows to the region's
+ * width at that scale, so nothing outside the crop shows. Sticky headers and sidebars stay outside the visible region
+ * while the page scrolls.
  */
 const props = withDefaults(defineProps<{
   src: string
@@ -14,10 +16,13 @@ const props = withDefaults(defineProps<{
   viewport?: number
   /** Insets cut off the page, as "top right bottom left" in the page's pixels. */
   crop?: string
+  /** Page pixels that must fit vertically, e.g. the tallest media in the region, so it shows whole. */
+  fitHeight?: number
   title?: string
 }>(), {
   viewport: 1400,
   crop: '0 0 0 0',
+  fitHeight: 0,
   title: 'Embedded page',
 })
 
@@ -50,38 +55,55 @@ watch(box, (element, _, onCleanup) => {
   onCleanup(() => observer.disconnect())
 }, { immediate: true })
 
+const scale = computed(() => {
+  const { width, height } = size.value
+  if (!width)
+    return 1
+  const byWidth = width / insets.value.width
+  return props.fitHeight > 0 && height ? Math.min(byWidth, height / props.fitHeight) : byWidth
+})
+
+const windowStyle = computed(() => ({ width: `${Math.floor(insets.value.width * scale.value)}px` }))
+
 const frameStyle = computed(() => {
-  const { top, left, width } = insets.value
-  const scale = size.value.width ? size.value.width / width : 1
+  const { top, left } = insets.value
   return {
     width: `${props.viewport}px`,
-    height: `${top + size.value.height / scale}px`,
-    transform: `scale(${scale}) translate(${-left}px, ${-top}px)`,
+    height: `${top + size.value.height / scale.value}px`,
+    transform: `scale(${scale.value}) translate(${-left}px, ${-top}px)`,
   }
 })
 </script>
 
 <template>
   <div ref="box" class="web-frame">
-    <iframe
-      v-if="live && loaded"
-      class="web-frame-page"
-      :src="src"
-      :title="title"
-      :style="frameStyle"
-      referrerpolicy="no-referrer"
-    />
-    <a v-else class="web-frame-stand-in" :href="src" target="_blank" rel="noopener">{{ src }}</a>
+    <div class="web-frame-window" :style="windowStyle">
+      <iframe
+        v-if="live && loaded"
+        class="web-frame-page"
+        :src="src"
+        :title="title"
+        :style="frameStyle"
+        referrerpolicy="no-referrer"
+      />
+      <a v-else class="web-frame-stand-in" :href="src" target="_blank" rel="noopener">{{ src }}</a>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .web-frame {
-  position: relative;
+  display: flex;
+  justify-content: center;
   flex: 1 1 0;
   width: 100%;
   min-height: 0;
   margin-bottom: 24px;
+}
+
+.web-frame-window {
+  position: relative;
+  height: 100%;
   overflow: hidden;
   border: 1px solid rgb(127 127 127 / 0.25);
   border-radius: 0.6rem;

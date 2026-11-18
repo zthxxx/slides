@@ -1,6 +1,6 @@
 [Botmux Web 终端](https://deepcoldy.github.io/botmux/web-terminal)：同一个 Agent，在浏览器里看和接着敲
 
-<WebFrame src="https://deepcoldy.github.io/botmux/web-terminal" crop="64 308 0 360" title="botmux docs · Web Terminal" />
+<WebFrame src="https://deepcoldy.github.io/botmux/web-terminal" crop="64 324 0 376" :fit-height="430" title="botmux docs · Web Terminal" />
 
 <!--
 - 这是 botmux 官方文档的 Web Terminal 页面，嵌在 slide 里现场翻：页面开头的视频演示了飞书消息、Web 终端和主机上的 CLI 三方同步
