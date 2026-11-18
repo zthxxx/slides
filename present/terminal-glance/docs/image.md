@@ -126,10 +126,11 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
 - An index missing from `chunks` is all zeros.
 - Files are named by content: equal chunks are stored once, and a file's URL never changes content, so browsers and CDNs may cache it indefinitely.
 - The packer writes the manifest last, by rename, and deletes chunk files no longer referenced.
-- `vm/trace-boot.ts` boots the published disk once, offline, the way the page does, and records what the guest reads from power-on until zsh's first prompt (and 2.5 s after it, for fast-syntax-highlighting's turbo load).
-- `boot` lists the chunks it read, in first-read order. `bootBundle` holds the bytes it read, rounded to 16 KiB blocks: `runs` are `[first block, block count]`, and the file is those blocks one after another, each 16 KiB, gzip-compressed.
-- The page downloads the bundle as soon as it has the manifest, in parallel with the kernel's own download. A read the bundle covers entirely is served from it; any other read loads its chunks lazily, as before. The boot reads only about 3 MiB of the 25 chunks it touches, so the bundle is about 1 MiB gzip where those chunks are about 6 MiB.
-- A manifest with `boot` but no bundle fetches those chunks 6 at a time instead; one with neither boots fully lazily.
+- `vm/trace-boot.ts` boots the published disk once, offline, the way the page does, and records what the guest reads from power-on until zsh's first prompt (and 2.5 s after it, for fast-syntax-highlighting's turbo load). It recognizes the prompt by jovial's `─➤`; when none appears within 60 s, the build fails.
+- `boot` lists the chunks it read, in first-read order. `bootBundle` holds the bytes it read, rounded to 16 KiB blocks: `runs` are `[first block, block count]`, ascending, and the file is those blocks one after another, each 16 KiB (the disk's last one padded with zeros), gzip-compressed and named by content like the chunks.
+- The page downloads the bundle as soon as it has the manifest, in parallel with the kernel's own download. A read the bundle covers entirely is served from it; any other read loads its chunks. The boot reads about 3 MiB from the 25 chunks it touches, so the bundle is about 1 MiB gzip where those chunks are about 6.5 MiB.
+- The guest's timing varies, so two traces of one image differ by a few blocks; on the page, such a read loads its chunk.
+- A manifest with `boot` but no bundle, or whose bundle fails to download, fetches those chunks 6 at a time instead; one with neither boots fully lazily. A prefetched chunk stays in memory until the guest has read it.
 
 `test/disk.test.ts` checks this contract both ways: whatever `pack.ts` publishes, `runtime/disk.ts` reads back byte for byte.
 
@@ -143,6 +144,7 @@ Figures from the current package list:
 | Overlay upper in the guest (zinit and its two plugins 10 MiB of it) | 68 MiB |
 | Non-zero data | 95 chunks, 95 MiB |
 | Published (gzip) | **27.6 MiB** |
+| Boot bundle (gzip): the 245 blocks of 16 KiB the boot reads | 1.0 MiB |
 
 The page downloads the boot bundle at once, and other chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.

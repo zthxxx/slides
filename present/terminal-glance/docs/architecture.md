@@ -46,7 +46,7 @@ Dependencies point down only. `runtime/` never imports from `components/`; `step
 ### Boot, once per tab
 
 1. Slidev mounts every slide about 3 s after the deck opens (hidden with `v-show`). The first live `Terminal` calls `useLinux()`, so the VM boots in the background, usually before the talk reaches a demo.
-2. `useLinux()` (`kernel.ts`) checks browser support and calls `createKernel({ kernel, disks })` once two downloads, started together by `prefetchLinux()`, are ready: the kernel wasm, compiled while it streams, and the disk, whose boot bundle (the bytes the guest reads up to its first prompt, one file) is fetched as soon as the manifest arrives (image.md). The disk is `CowDisk(ChunkedDiskBase)`; writes stay in memory, so a reload is a fresh machine.
+2. `useLinux()` (`kernel.ts`) checks browser support, then starts two downloads together (`prefetchLinux()`): the kernel wasm, compiled while it streams, and the disk manifest, after which the disk's boot bundle (the bytes the guest reads up to its first prompt, one file; image.md) is fetched at once. `createKernel({ kernel, disks })` runs as soon as the wasm is compiled and the manifest read; the guest's first disk reads wait for the bundle. The disk is `CowDisk(ChunkedDiskBase)`; writes stay in memory, so a reload is a fresh machine.
    `prefetchLinux()` runs no kernel, so any window may call it to start the downloads early; only the audience window boots.
 3. The initramfs `/init` mounts the disk labelled `kwdata` and makes `/` an overlay of the initramfs and the disk (image.md). busybox `init` starts `kwtty serve`.
 
@@ -159,9 +159,9 @@ The deck is often opened over slow links where any single request may stall for 
 | `build.cssCodeSplit: false` | `vite.config.ts` | One stylesheet instead of one per slide; slide styles are scoped, so loading them all at once is safe. |
 | `preloadImages: false` | `slides.md` headmatter | Slide pictures load with their slides, which Slidev mounts about 3 s after opening, instead of competing with the scripts. |
 
-Linux loads separately and on demand: `unkernel-alpine.wasm` (12.5 MB, about 7 MB gzipped) when the first terminal mounts, and the disk image's 1 MiB chunks as the guest reads them (image.md).
+Linux loads separately, when the first terminal mounts: `unkernel-alpine.wasm` (12.5 MB, about 7 MB gzipped) and the disk's boot bundle (about 1 MB) download in parallel, so a cold boot takes about as long as the wasm download; other disk chunks (1 MiB each) load as the guest reads them (image.md).
 
-All of it is cached by the browser's HTTP cache. Script, stylesheet and wasm names carry a content hash and disk chunks are named by content, so they can be cached for as long as the host allows; `index.html` and `linux/manifest.json` keep a short lifetime so a new deploy is picked up. Once the long-lived files are cached, a reload over a link with 400 ms of latency renders the slide in under 0.5 s and Linux spawns its first shell in 1 to 2 s.
+All of it is cached by the browser's HTTP cache. Script, stylesheet and wasm names carry a content hash, and disk chunks and the boot bundle are named by content, so they can be cached for as long as the host allows; `index.html` and `linux/manifest.json` keep a short lifetime so a new deploy is picked up. Once the long-lived files are cached, a reload over a link with 400 ms of latency renders the slide in under 0.5 s and Linux spawns its first shell in 1 to 2 s.
 
 ## Keyboard and focus
 
