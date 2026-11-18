@@ -27,11 +27,12 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
       <text class="sub" x="572" y="252" text-anchor="middle">input · output fan-out</text>
       <text class="sub" x="572" y="287" text-anchor="middle">OSC / hooks / idle</text>
       <rect class="box" x="865" y="170" width="220" height="160" rx="12" />
-      <text class="label mono" x="975" y="231" text-anchor="middle">tmux server</text>
-      <text class="sub" x="975" y="268" text-anchor="middle">one pane</text>
+      <text class="label mono" x="975" y="222" text-anchor="middle">tmux server</text>
+      <text class="sub" x="975" y="256" text-anchor="middle">holds pane ptmx</text>
+      <text class="sub" x="975" y="284" text-anchor="middle">draws the pane</text>
       <rect class="box a" x="1200" y="170" width="180" height="160" rx="12" />
       <text class="label" x="1290" y="231" text-anchor="middle">Agent</text>
-      <text class="sub" x="1290" y="268" text-anchor="middle">one process</text>
+      <text class="sub" x="1290" y="268" text-anchor="middle">on pane pts</text>
       <path class="edge b" d="M285,150 H365 V205 H450" :marker-end="arrow('b')" />
       <path class="edge a" d="M285,365 H365 V270 H450" :marker-end="arrow('a')" />
       <path class="edge a" d="M450,303 H400 V405 H285" :marker-end="arrow('a')" />

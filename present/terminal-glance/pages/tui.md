@@ -29,12 +29,17 @@ Claude Code / Codex / Neovim 怎样控制整屏？
   <ShellStep run=":q!" />
   <ShellStep run="less /root/hello.sh" />
   <ShellStep type="q" />
-  <ShellStep run="printf 'back in the shell\n'" />
+  <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
+printf "${CSI}?1049h${CSI}H"' />
+  <ShellStep run="echo inside the alternate screen" />
+  <ShellStep run='printf "${CSI}?1049l"' />
 </ShellDemo>
 
 <!--
 - nvim 启动后接管按键处理与屏幕绘制；本演示保持普通模式，输入 :q! 回车退出。若手动进入了插入模式，要先按 Esc
 - less 内部用 j/k 或方向键移动，q 退出；观察两个程序退出后，before the TUI 和 shell 提示符仍在原屏幕
+- 最后三步手动做一遍它们进出备用屏幕的动作：声明 ESC、CSI 后 `printf "${CSI}?1049h${CSI}H"`，屏幕清空，提示符出现在左上角，这是备用屏幕；在里面 echo 一行字；再 `printf "${CSI}?1049l"` 回到主屏幕，before the TUI 和之前的命令原样还在，备用屏幕里的那行字消失
+- 1049h 进入时保存光标位置并切换缓冲区，1049l 切回主缓冲区并恢复光标；`${CSI}H` 只是把光标移到左上角，nvim、less 进入时也会自己清屏重画
 - 窗口变化也没有创建新 shell：宿主更新 PTY 尺寸，内核发送 SIGWINCH，TUI 根据新尺寸重绘
 - 这是实际运行的 nvim 与 less。它们根据 TERM/terminfo 和终端能力选择控制序列，并非所有 TUI 都硬编码同一套模式
 -->

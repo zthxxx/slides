@@ -3,7 +3,7 @@
 <AgentGatewayDiagram />
 
 <!--
-- 这张图对应本地 botmux cb8ff44b2 的默认 tmux pipe 后端。只有一个 Agent 进程、一个 pane PTY；IM 和 Web 是访问它的不同路径
+- 这张图对应本地 botmux cb8ff44b2 的默认 tmux pipe 后端。只有一个 Agent 进程，跑在 tmux pane 的 pts 上；pane 的 ptmx 由 tmux server 持有，tmux 解析 Agent 的输出并画出 pane 的屏幕。IM 和 Web 是访问这个 pane 的不同路径
 - worker 用 send-keys 或 load-buffer + paste-buffer 写入 tmux，输出由 pipe-pane 复制到 FIFO；worker 一边解析状态，一边把输出广播给 WebSocket viewer
 - 新 viewer 可以用 capture-pane 得到当前屏幕，再接实时输出。屏幕快照包含渲染后的单元格，无法还原已经被解释的所有 OSC 事件
 - Web 的即时按键直接进入 backend.write；IM 消息有 turn queue 和 ready gate。两者可同时影响同一个输入区域，不能把共享终端理解成自动拥有全局输入锁
@@ -69,9 +69,11 @@ Gateway 怎样知道 Agent 在等什么？
 <ProbeRelayDiagram />
 
 <!--
-- pipe-pane 能观察到 OSC，不意味着它的异步旁路有能力及时回答探测。botmux 遇到的问题是回复顺序：tmux 自行回答 DA1，worker 经 FIFO 再执行 send-keys 返回 7501 reply 已经晚了
-- botmux 为新启动的 Claude + tmux 路径插入 pane-resident relay。relay 同步回答精确的 7501 probe，再把后续字节转发到 tmux，保证 tmux 在看到 DA1 之前，7501 reply 已经写回内层 PTY
-- relay 只截获探测，状态和其他输出继续转发。既有 adopt / reattach 会话不会自动获得同样的插入路径
-- 这是应用协议端点和中间层的时序问题；仅把字节接通，还不足以保证协议握手正确
+- 上半张图：Agent 跑在 tmux pane 的 pts 上，这个 pane 的 ptmx 由 tmux server 持有。对 Agent 来说 tmux 就是它的终端：tmux 解析 pane 的输出、画出 pane 的屏幕，也像终端一样回答 DA1 这类查询
+- Claude Code 在同一次写入里发 OSC 7501 探测，紧跟一个 DA1 (`CSI c`) 作为截止标记：7501 回复先到才算支持，DA1 回复先到就判定不支持
+- 按编号看：① 探测和 DA1 进入 tmux；② tmux 不认识 7501，但认识 DA1，1–2 ms 内把 DA1 回复写回 pane；③ pipe-pane 把原始输出复制到 FIFO，worker 这时才看到探测；④ worker 起一个 send-keys 客户端写回 7501 回复，已经排在 DA1 回复后面。Agent 判定不支持，之后不再发状态
+- 下半张图：botmux 为新启动的 Claude + tmux 会话在 pane 里先运行一个 relay，relay 再开一对内层 PTY，Agent 跑在内层 pts 上。① 探测和 DA1 先到 relay；② relay 认出精确的 7501 探测，同步写回 7501 回复；③ 然后才把 DA1 转发给 tmux；④ tmux 的 DA1 回复经 relay 回到 Agent，必然晚于 ②
+- relay 只截获探测，状态报告和其他输出原样转发，worker 照旧从 pipe-pane 读到；既有 adopt / reattach 的会话没有这个插入路径
+- 这是协议端点和中间层的时序问题：字节接通了，握手顺序仍可能被中间层改变
 - 来源：[botmux · probe relay](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/utils/program-status-probe-relay.ts#L1-L118)、[inner PTY 与转发](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/program-status-relay.ts#L75-L157)
 -->

@@ -22,6 +22,9 @@
 在**终端**里敲下按键到显示出字母发生了什么
 
 <ShellDemo>
+  <ShellStep run="uname -a" />
+  <ShellStep run="cat /etc/os-release" />
+  <ShellStep run="nproc; free -m" />
   <ShellStep run="echo hello" />
   <ShellStep run="showkey -a" />
   <ShellStep type="a" />
@@ -35,14 +38,10 @@
 - 屏幕上的字母是回显 (echo) 回来的输出，键盘只负责发出字节
 
 演示 (右侧按钮把输入逐字敲进真实 shell；演讲者视图里点按钮，会在放映窗口执行)：
-1. `echo hello`：最普通的一次输入、执行、输出
-2. `showkey -a`，再依次输入 `a`、`↑`、`Enter`：看到 `97`、`27 91 65`、`13`。到了程序这一层只剩字节：方向键是转义序列 `ESC [ A`，Enter 是 `\r` (平时被 TTY 的 icrnl 转成 `\n`)
-3. `Ctrl-D` 退出：它对应 stty 里的 `eof = ^D`，后面会讲谁在处理它
-
-```sh
-# A
-echo hello
-showkey -a      # 依次按 a、↑、Enter
-# A: 按 Ctrl-D 退出
-```
+1. `uname -a`：内核是 Linux 7.3，机器架构是 riscv64。这是页面里运行的 unkernel：Linux 内核本身编译成 WebAssembly，用户程序是原版 riscv64 二进制，由链接进内核的 riscv64 CPU (kwemu) 用 JIT 执行；整台机器都在浏览器里，没有远端服务器
+2. `cat /etc/os-release`：完整的 Alpine Linux 3.24，后面用到的 zsh、tmux、htop、nvim 都是 apk 装好的原版软件包
+3. `nproc; free -m`：一个 CPU、约 500 MiB 内存，都跑在这个浏览器 Tab 里；刷新页面就是一台新开机的机器
+4. `echo hello`：最普通的一次输入、执行、输出
+5. `showkey -a`，再依次输入 `a`、`↑`、`Enter`：看到 `97`、`27 91 65`、`13`。到了程序这一层只剩字节：方向键是转义序列 `ESC [ A`，Enter 是 `\r` (平时被 TTY 的 icrnl 转成 `\n`)
+6. `Ctrl-D` 退出：它对应 stty 里的 `eof = ^D`，后面会讲谁在处理它
 -->

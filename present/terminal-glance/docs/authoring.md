@@ -60,10 +60,23 @@ Steps can be clicked again and in any order. A played step shows a check mark; t
 
 The step text is an HTML attribute inside markdown, kept as raw HTML:
 
-- Use single quotes around the attribute when the command contains double quotes: `run='echo -e "\e[35m..."'`.
-- Backslashes are literal (`\e`, `\003`, `\n` reach the shell as typed).
-- `<`, `>`, `&`, `$`, `{`, `}` need no escaping.
+- Use single quotes around the attribute when the command contains double quotes: `run='echo "you typed: $input"'`.
+- When the command contains both kinds, write each single quote as `&#39;` inside a single-quoted attribute; Vue decodes HTML entities in attribute values, so the shell receives `'`.
+- Backslashes are literal (`\x1b`, `\003`, `\n` reach the shell as typed).
+- `<`, `>`, `$`, `{`, `}` need no escaping, and neither does `&` unless it starts an entity such as `&#39;`.
 - Keep the `<ShellDemo>` block free of blank lines: a blank line ends markdown's raw-HTML block.
+
+### Escape sequences in steps
+
+On each terminal of a slide, the first step that prints an escape sequence declares the names on its first line and uses them on the next, so the audience reads `${CSI}`, `${OSC}` instead of raw `\e[`:
+
+```md
+  <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["; OSC="${ESC}]"; ST="${ESC}\\"
+printf "${OSC}7501;state=clear${ST}"' />
+  <ShellStep run='printf "${OSC}7501;state=done${ST}"' />
+```
+
+Later steps on the same terminal reuse the variables; the names live in that terminal's shell only. Slides with only cursor and color steps declare `ESC` and `CSI`; OSC slides declare all four. The vocabulary slide in `pages/ansi-stty.md` introduces the names.
 
 ## Where things run
 
@@ -77,7 +90,7 @@ A terminal's shell is spawned the first time its slide is shown, so pty numbers 
 
 ## Speaker notes
 
-Each slide's notes (the last `<!-- ... -->` of the slide) hold the talk outline. A demo slide's notes also list its commands in a `sh` block marked `# A` / `# B`, so the demo can be typed by hand. Keep `$` inside code spans in notes, so KaTeX does not read `$...$` as math.
+Each slide's notes (the last `<!-- ... -->` of the slide) hold the talk outline. A demo slide's notes explain its steps in order, by number; the commands themselves live only in the `<ShellStep>`s, which the presenter view shows as buttons. Keep `$` inside code spans in notes, so KaTeX does not read `$...$` as math.
 
 ## Checking a demo
 

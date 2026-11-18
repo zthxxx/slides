@@ -23,18 +23,6 @@
 4. `ls /dev/pts/`：每打开一个伪终端就多一个编号 (上一页的终端也还在)，另外还有 `ptmx`
 5. `tmux` 后按 `Ctrl-S l` 向右分屏 (镜像里是 zthxxx/tmux-config，prefix 是 Ctrl-S)，在新窗格里 `tty`：又多了一个 pts。tmux server 自己持有 ptmx，给每个窗格开一个 pts，和后面 ssh 那页的结构一样
 6. 两次 `Ctrl-D`：依次退出两个窗格里的 shell，tmux 随之结束
-
-```sh
-# A
-tty
-echo $TERM
-ls -l /proc/$$/fd/{0..2}
-ls /dev/pts/
-tmux
-# A: 按 Ctrl-S 再按 l，然后在新窗格里
-tty
-# A: 按两次 Ctrl-D
-```
 -->
 
 ---
@@ -115,27 +103,6 @@ done" />
 5. `jobs`：后台作业状态为 Running
 6. `read x &` 再 `jobs`：显示 `suspended (tty input)`，后台进程组去读 tty 收到 SIGTTIN 被暂停，对应前面图里只有 W 的 fish
 7. B 执行 `ps`：PGID 列就是进程组，被暂停的 `read` 状态是 `T`；TT 列的 `136,N` 是 pts 的主、次设备号 (busybox ps 不显示设备名)
-
-```sh
-# A
-for i in {1..10}; do
-  echo $i
-  sleep 1
-done
-# A: 按 Ctrl-C
-(
-  for i in {1..10}; do
-    echo $i
-    sleep 1
-  done
-)&
-# A: 按 Ctrl-C
-jobs
-read x &
-jobs
-# B
-ps -o pid,ppid,pgid,tty,stat,args | grep -v ' ? '
-```
 -->
 
 ---
@@ -185,9 +152,11 @@ ssh & pts
   <ShellStep to="a" run="exec 6<> ./testfd.txt" />
   <ShellStep to="a" run="ls -l /proc/$$/fd/{0,1,2,6}" />
   <ShellStep to="b" run="lsof ./testfd.txt" />
-  <ShellStep to="b" run="printf '\e[35;1mTitle of the Program\e[0m' > /dev/pts/{a.pts}" />
+  <ShellStep to="b" run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
+printf "${CSI}35;1mTitle of the Program${CSI}0m" > /dev/pts/{a.pts}' />
   <ShellStep to="a" keys="⏎" />
-  <ShellStep to="a" run="printf 'Hello World\e[5D*****\n'" />
+  <ShellStep to="a" run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
+printf "Hello World${CSI}5D*****\n"' />
   <ShellStep to="b" run="stty -F /dev/pts/{a.pts} -a | grep icanon" />
 </ShellDemo>
 
@@ -200,29 +169,9 @@ ssh & pts
 2. B `lsof /dev/pts/<A>`：A 的 zsh 的 0、1、2 都打开着 A 的 pts；再看 `ls -l /proc/<A 的 shell pid>/fd/{0..2}`，从 /proc 看到同样的结果
 3. B `printf ok > /dev/pts/<A>`：ok 出现在 A 的提示符后面，看起来像是在 A 里敲进去的。回到 A 按回车，zsh 只换了一行新提示符，ok 没有被执行。留个问题给大家：ok 去哪了，回车为什么不执行它？后面 ^C 那页揭晓
 4. A `exec 6<> ./testfd.txt` 再 `ls -l /proc/$$/fd/{0,1,2,6}`：shell 多出 fd 6；B `lsof ./testfd.txt` 也能看到。fd 只是进程打开文件的编号，0、1、2 是约定
-5. B 往 A 写 `\e[35;1mTitle of the Program\e[0m`：A 上出现紫色粗体字，颜色是终端模拟器解析 ANSI 序列的结果，与 shell 无关；同样回到 A 按回车
-6. A `printf 'Hello World\e[5D*****\n'`：光标左移 5 格后覆盖写入，显示 `Hello *****`
+5. B 第一行把 ESC (0x1B) 和 CSI (`ESC [`) 存进变量，第二行往 A 写 `${CSI}35;1m…${CSI}0m`：A 上出现紫色粗体字，颜色是终端模拟器解析 ANSI 序列的结果，与 shell 无关；同样回到 A 按回车。ESC、CSI 这些名字后面 ANSI 那页展开
+6. A 同样先声明变量 (变量只在各自的 shell 里)，再 `printf "Hello World${CSI}5D*****\n"`：光标左移 5 格后覆盖写入，显示 `Hello *****`
 7. B `stty -F /dev/pts/<A> -a | grep icanon`：A 停在提示符时是 `-icanon -echo`，为下一页做铺垫
-
-```sh
-# A
-tty
-# B
-tty
-lsof /dev/pts/0                       # 0 换成 A 的 pts 编号
-ls -l /proc/<A 的 shell pid>/fd/{0..2}
-printf ok > /dev/pts/0
-# A: 按回车
-exec 6<> ./testfd.txt
-ls -l /proc/$$/fd/{0,1,2,6}
-# B
-lsof ./testfd.txt
-printf '\e[35;1mTitle of the Program\e[0m' > /dev/pts/0
-# A: 按回车
-printf 'Hello World\e[5D*****\n'
-# B
-stty -F /dev/pts/0 -a | grep icanon
-```
 -->
 
 ---
