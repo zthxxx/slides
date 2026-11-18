@@ -273,8 +273,8 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
   <ShellStep type="b" />
   <ShellStep keys="^C" run="stty icanon" />
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
-echo "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"' />
-  <ShellStep run='echo "${CSI}?1049l"' />
+echo "${CSI}?1049h${CSI}Halternate screen, like vim / less"' />
+  <ShellStep run='echo -n "${CSI}?1049l"' />
 </ShellDemo>
 
 <!--
