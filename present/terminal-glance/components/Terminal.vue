@@ -416,17 +416,18 @@ const status = computed(() => {
   }
 }
 
-/* A stamp laid over the title bar's right side, overlapping the screen a little, so the state reads from afar. */
+/* A stamp centered on the title bar's right side and a little taller, sticking out above and below it. */
 .terminal-program-status {
   position: absolute;
-  top: 0.55rem;
+  top: 50%;
+  translate: 0 -50%;
   right: 5.4rem;
   z-index: 3;
   max-width: 60%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding: 0.15rem 0.65rem;
+  padding: 0.42rem 0.75rem;
   border: 2px solid currentColor;
   border-radius: 0.45rem;
   color: #c9cbd8;
