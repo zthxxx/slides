@@ -59,11 +59,12 @@ export function useLinux(): Promise<LinuxMachine> {
 }
 
 async function bootLinux(): Promise<LinuxMachine> {
-  prefetchLinux()
+  // Checked first, so a browser that cannot run Linux does not download it.
   const support = await checkSupport()
   if (!support.ok)
     throw new Error(`This browser cannot run the in-page Linux VM:\n${support.problems.join('\n')}`)
 
+  prefetchLinux()
   const [kernel, image] = await Promise.all([downloads!.kernel, downloads!.image])
   const vm = await createKernel({ kernel, disks: image ? [image.disk] : [] })
 
