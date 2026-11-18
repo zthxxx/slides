@@ -1,6 +1,6 @@
 import type { MouseAction, MouseButton } from './mouse'
 import type { ProgramStatus } from './program-status'
-import { CanvasRenderer, FitAddon, Ghostty, Terminal } from 'ghostty-web'
+import { CanvasRenderer, Ghostty, Terminal } from 'ghostty-web'
 import { watch } from 'vue'
 import { terminalAppearance, TERMINAL_THEMES } from './appearance'
 import { BellDetector } from './bell'
@@ -129,7 +129,6 @@ export function createEmulator(): TerminalEmulator {
 
 class GhosttyEmulator implements TerminalEmulator {
   #terminal: Terminal | undefined
-  #fitAddon = new FitAddon()
   #host: HTMLElement | undefined
   #pending: Array<Uint8Array | string> = []
   /** Inline images (iTerm2, kitty), which ghostty-web 0.4.0 does not draw; all output reaches the terminal through it. */
@@ -177,7 +176,6 @@ class GhosttyEmulator implements TerminalEmulator {
       scrollback: 5000,
       theme: TERMINAL_THEMES[terminalAppearance.value],
     })
-    terminal.loadAddon(this.#fitAddon)
     terminal.onData(data => this.#dataListeners.forEach(listener => listener(data)))
     terminal.onResize(size => this.#resizeListeners.forEach(listener => listener(size)))
     terminal.open(host)
@@ -197,6 +195,7 @@ class GhosttyEmulator implements TerminalEmulator {
     // stops only the keys it encodes itself: without this, a space typed into the shell also turns the slide.
     host.addEventListener('keydown', event => event.stopPropagation())
     this.#reportMouse(terminal, host)
+    this.#keepCanvasRight(host)
 
     this.#graphics = new GraphicsOverlay(terminal, host, reply => this.#dataListeners.forEach(listener => listener(reply)))
     for (const data of this.#pending.splice(0))
@@ -254,8 +253,23 @@ class GhosttyEmulator implements TerminalEmulator {
     if (fontSize !== terminal.options.fontSize)
       terminal.options.fontSize = fontSize
     applyCounterScale(host, scale)
-    this.#fitAddon.fit()
+    this.#fitGrid(terminal, host)
     this.#alignToDevicePixels()
+  }
+
+  /**
+   * As many whole cells as the host holds. ghostty-web's FitAddon keeps 15 px free for a scrollbar
+   * (ghostty-web@0.4.0 `dist/ghostty-web.js`, `proposeDimensions`, `gA = 15`), but its renderer draws the scrollbar
+   * inside the canvas, over the last column, while scrolling; the free strip only left a gap at the right edge.
+   */
+  #fitGrid(terminal: Terminal, host: HTMLElement): void {
+    const metrics = terminal.renderer?.getMetrics()
+    if (!metrics?.width || !metrics.height || !host.clientWidth || !host.clientHeight)
+      return
+    const cols = Math.max(2, Math.floor(host.clientWidth / metrics.width))
+    const rows = Math.max(1, Math.floor(host.clientHeight / metrics.height))
+    if (cols !== terminal.cols || rows !== terminal.rows)
+      terminal.resize(cols, rows)
   }
 
   /**
@@ -282,6 +296,27 @@ class GhosttyEmulator implements TerminalEmulator {
     // Under the counter-scale the canvas is in screen pixels, so this shift is in screen pixels too.
     if (Math.abs(dx) > 1e-4 || Math.abs(dy) > 1e-4)
       canvas.style.transform = `translate(${dx}px, ${dy}px)`
+  }
+
+  /**
+   * The grid is a whole number of cells, so the canvas is up to a cell narrower than its host. ghostty-web draws its
+   * scrollbar at the canvas's right edge; the canvas sits at the host's right edge, so the scrollbar lines up with the
+   * window's edge, and the remainder (under one cell) goes to the left margin. The image overlay follows the canvas.
+   */
+  #keepCanvasRight(host: HTMLElement): void {
+    const canvas = host.querySelector('canvas')
+    if (!canvas)
+      return
+    const align = () => {
+      const spare = Math.max(0, host.clientWidth - canvas.offsetWidth)
+      const margin = `${spare}px`
+      if (canvas.style.marginLeft !== margin) {
+        canvas.style.marginLeft = margin
+        this.#alignToDevicePixels()
+      }
+    }
+    new ResizeObserver(align).observe(canvas)
+    new ResizeObserver(align).observe(host)
   }
 
   /**

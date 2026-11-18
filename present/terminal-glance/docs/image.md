@@ -60,6 +60,8 @@ pnpm build:image --force    # rebuild anyway, e.g. to pick up newer packages
 About 1.5 minutes on a laptop: 50 to 80 s provisioning, 2 s packing, then about 7 s tracing the boot.
 When the inputs are unchanged but the manifest has no boot trace yet, the build only traces the boot.
 
+Most of the time is apk downloading packages, so the build first downloads the guest's package index (`v3.24/main/riscv64/APKINDEX.tar.gz`) from the official CDN and a few large mirrors at once and installs from the fastest; from some networks the official CDN delivers about 30 KB/s while a nearby mirror delivers 1 MB/s. `ALPINE_MIRROR=https://…` skips the probe. When apk fails on the chosen mirror, `setup.sh` installs again from the official repositories, which the image keeps. The build stops with an error after 5 minutes (`--timeout-min`), naming the mirror to check.
+
 The input hash covers every file under `image/` and the installed `unkernel` version.
 Packages come from the live Alpine 3.24 repositories and zinit clones jovial from its default branch, so two builds with the same hash can differ.
 

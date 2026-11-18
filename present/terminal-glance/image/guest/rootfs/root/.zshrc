@@ -92,9 +92,10 @@ zinit light-mode depth=1 wait lucid for \
 # iTerm2's SetUserVar escape (OSC 1337), the usual way for a shell to signal its terminal; terminals that do not
 # know it ignore it, so nothing shows. `prompt` is sent once, from the last precmd hook before the first prompt;
 # `plugins` once the turbo (wait) loads above have run. The values are base64, as SetUserVar requires, written out
-# so that the boot runs no extra process: cHJvbXB0 is `prompt`, cGx1Z2lucw== is `plugins`.
+# so that the boot runs no extra process: cHJvbXB0 is `prompt`, cGx1Z2lucw== is `plugins`. Only to a terminal: a
+# `zsh -i -c` whose output is captured (image/guest/setup.sh) must not get them in its output.
 .terminal-glance-mark() {
-    print -n "\e]1337;SetUserVar=terminal_glance_boot=$1\a"
+    [[ -t 1 ]] && print -n "\e]1337;SetUserVar=terminal_glance_boot=$1\a"
 }
 .terminal-glance-first-prompt() {
     add-zsh-hook -d precmd .terminal-glance-first-prompt

@@ -32,6 +32,8 @@ const { values: options } = parseArgs({
     'guest': { type: 'string' },
     'memory': { type: 'string', default: '2048' },
     'input-hash': { type: 'string', default: '' },
+    /** The Alpine mirror apk downloads from during the build (image/build.ts picks it). */
+    'apk-mirror': { type: 'string', default: '' },
   },
 })
 if (!options.disk || !options.guest)
@@ -106,7 +108,7 @@ vm.onOutput(bytes => process.stderr.write(bytes))
 const setup: Subprocess = await vm.spawn('/bin/sh', ['/provision/setup.sh'], {
   pty: false,
   timeout: 120_000,
-  env: { IMAGE_INPUT_HASH: options['input-hash'], UNKERNEL_VERSION: unkernelVersion },
+  env: { IMAGE_INPUT_HASH: options['input-hash'], UNKERNEL_VERSION: unkernelVersion, APK_MIRROR: options['apk-mirror'] },
 })
 const forward = (stream: ReadableStream<Uint8Array>, out: NodeJS.WriteStream) =>
   stream.pipeTo(new WritableStream({ write: chunk => void out.write(chunk) }))

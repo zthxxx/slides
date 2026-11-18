@@ -15,6 +15,13 @@ export interface Download {
 const downloads = shallowReactive(new Map<string, Download>())
 
 /**
+ * The fetch priority of downloads made ahead of need (the kernel, the disk manifest and boot data): low in a build,
+ * so they yield to the deck's scripts and styles. A dev server serves hundreds of modules over HTTP/1.1, where Chrome
+ * holds low-priority requests back until those finish, so there they keep the default.
+ */
+export const AHEAD_PRIORITY: RequestPriority = import.meta.env?.PROD ? 'low' : 'auto'
+
+/**
  * Registers a download and returns its updater. A download that starts while nothing else is in flight begins a
  * new batch, so the bar shows the files being fetched now instead of everything fetched since the page opened.
  */

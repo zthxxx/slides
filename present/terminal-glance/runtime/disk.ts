@@ -1,4 +1,4 @@
-import { readCounted } from './downloads'
+import { AHEAD_PRIORITY, readCounted } from './downloads'
 import type { DiskBase } from 'unkernel/web'
 import { CowDisk } from 'unkernel/web'
 
@@ -42,8 +42,12 @@ export const BOOT_PREFETCH_CONCURRENCY = 6
 /** Chunks fetched ahead of a missed read, so a sequential read (a binary starting) is pipelined. */
 const PREFETCH_CHUNKS = 2
 
-/** Loads a chunk by its manifest path and returns the raw (decompressed) bytes. */
-export type ChunkLoader = (file: string) => Promise<Uint8Array>
+/**
+ * Loads a chunk by its manifest path and returns the raw (decompressed) bytes. `low` marks a download made ahead of
+ * need (the boot bundle, boot chunks), which should yield to the page's own scripts and styles; a chunk the guest is
+ * waiting for has the default priority.
+ */
+export type ChunkLoader = (file: string, priority?: 'low') => Promise<Uint8Array>
 
 /** A read-only disk image loaded one chunk at a time, the first time the guest reads inside it. */
 export class ChunkedDiskBase implements DiskBase {
@@ -111,7 +115,7 @@ export class ChunkedDiskBase implements DiskBase {
         start()
       })
       this.#unread.add(index)
-      this.#remember(index, started.then(() => this.#load(file)))
+      this.#remember(index, started.then(() => this.#load(file, 'low')))
       queue.push(index)
     }
 
@@ -206,7 +210,7 @@ export class ChunkedDiskBase implements DiskBase {
     const file = this.#manifest.bootBundle?.file
     if (!file)
       return Promise.reject(new Error('no boot bundle'))
-    this.#bundle ??= this.#load(file).catch((error: unknown) => {
+    this.#bundle ??= this.#load(file, 'low').catch((error: unknown) => {
       // Reads then go to the chunks for good.
       this.#bundled.clear()
       throw error
@@ -241,9 +245,9 @@ export async function decodeChunk(bytes: Uint8Array<ArrayBuffer>): Promise<Uint8
 }
 
 function fetchChunks(manifestUrl: URL): ChunkLoader {
-  return async (file) => {
+  return async (file, priority) => {
     const url = new URL(file, manifestUrl)
-    const response = await fetch(url)
+    const response = await fetch(url, priority ? { priority: AHEAD_PRIORITY } : {})
     if (!response.ok)
       throw new Error(`disk chunk ${url}: HTTP ${response.status}`)
     return decodeChunk(await readCounted(response, file))
@@ -262,7 +266,7 @@ export interface ImageDisk {
  * kernel exists: on a high-latency link the guest would otherwise wait one round trip per chunk it reads.
  */
 export async function openImageDisk(manifestUrl: URL): Promise<ImageDisk | undefined> {
-  const response = await fetch(manifestUrl)
+  const response = await fetch(manifestUrl, { priority: AHEAD_PRIORITY })
   // A dev server answers a missing file with its HTML fallback page.
   if (response.status === 404 || !response.headers.get('content-type')?.includes('json'))
     return undefined

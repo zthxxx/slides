@@ -29,9 +29,25 @@ echo "/ is the overlay over $OV/upper; lower image $(cat /usr/lib/kw-image)"
 
 step "apk packages"
 /etc/kw-apk-enable                     # community: neovim, ...
-apk update
-# shellcheck disable=SC2046 # one word per package
-apk add --no-cache $(sed -e 's/#.*//' "$P/packages.txt")
+apk_install() {
+  apk update && \
+    # shellcheck disable=SC2046 # one word per package
+    apk add --no-cache $(sed -e 's/#.*//' "$P/packages.txt")
+}
+# image/build.ts passes the fastest mirror from the build host. When apk fails on it (not synced, a bad response),
+# the install runs again on the official repositories, which the image keeps in any case.
+cp /etc/apk/repositories /tmp/repositories.default
+if [ -n "${APK_MIRROR:-}" ]; then
+  sed -i -E "s#^https?://[^/]+/alpine#${APK_MIRROR%/}/alpine#" /etc/apk/repositories
+  cat /etc/apk/repositories
+fi
+if ! apk_install; then
+  [ -n "${APK_MIRROR:-}" ] || fail "apk failed on the official repositories"
+  echo "!!! apk failed on $APK_MIRROR; retrying on the official repositories"
+  cp /tmp/repositories.default /etc/apk/repositories
+  apk_install || fail "apk failed on the official repositories too"
+fi
+mv /tmp/repositories.default /etc/apk/repositories
 
 step "root's files and login shell"
 cp -R "$P/rootfs/." /

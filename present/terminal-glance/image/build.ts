@@ -3,7 +3,8 @@
  * Builds the guest disk image the deck boots with: zsh + jovial, bash, tmux, htop, git, less
  * bat and neovim preinstalled on unkernel's Alpine, so the page needs no network.
  *
- *   bun image/build.ts [--force]      (or `pnpm build:image` in present/terminal-glance)
+ *   bun image/build.ts [--force] [--timeout-min 5]      (or `pnpm build:image` in present/terminal-glance)
+ *   ALPINE_MIRROR=https://mirrors.aliyun.com bun image/build.ts      (skip the mirror probe)
  *
  * 1. Hash the inputs: every file under image/ and the installed unkernel version. When
  *    public/linux/manifest.json already has that hash, the build is skipped (--force rebuilds).
@@ -14,6 +15,11 @@
  * 4. image/vm/trace-boot.ts boots the published disk offline, as the page does, and records what the guest reads
  *    up to zsh's first prompt: the chunks go into the manifest's `boot`, the bytes into one boot bundle
  *    (`bootBundle`), so the page downloads the boot in one request instead of one round trip per chunk.
+ *
+ * The build must finish within --timeout-min (5 by default); a slower build stops with an error instead of hanging.
+ * Most of its time is apk downloading packages, so it first picks the fastest Alpine mirror from this network
+ * (ALPINE_MIRROR overrides the probe): from some networks the default dl-cdn.alpinelinux.org delivers 30 KB/s
+ * while a nearby mirror delivers 1 MB/s.
  *
  * Outputs (both gitignored): .cache/image/kwdata.img (the raw disk) and public/linux/.
  */
@@ -28,8 +34,34 @@ $.env({ ...process.env, FORCE_COLOR: '1' })
 
 const { values: options } = parseArgs({
   args: Bun.argv.slice(2),
-  options: { force: { type: 'boolean', default: false } },
+  options: {
+    'force': { type: 'boolean', default: false },
+    'timeout-min': { type: 'string', default: '5' },
+  },
 })
+
+/**
+ * The Alpine branch and architecture of unkernel's guest (unkernel@0.1.0-261117-0e4b2ec boots Alpine 3.24.4 riscv64):
+ * the mirror probe downloads the index apk will use, so a mirror without riscv64 or behind on this branch fails it.
+ */
+const ALPINE_INDEX = 'alpine/v3.24/main/riscv64/APKINDEX.tar.gz'
+/** Alpine mirrors to probe; the first is the official CDN, which setup.sh falls back to. Ref: https://mirrors.alpinelinux.org/ */
+const ALPINE_MIRRORS = [
+  'https://dl-cdn.alpinelinux.org',
+  'https://mirrors.aliyun.com',
+  'https://mirrors.tuna.tsinghua.edu.cn',
+  'https://mirrors.ustc.edu.cn',
+  'https://mirror.sjtu.edu.cn',
+]
+
+const timeoutMs = Number(options['timeout-min']) * 60_000
+const deadline = setTimeout(() => {
+  console.error(`[image] not done within ${options['timeout-min']} min: stopping. Check the mirror the build picked, or set ALPINE_MIRROR.`)
+  // The VM drivers run under npx/node; stop them too, so no VM keeps running after the build gave up.
+  Bun.spawnSync(['pkill', '-f', join(imageDir, 'vm/')])
+  process.exit(1)
+}, timeoutMs)
+deadline.unref()
 
 const imageDir = import.meta.dir
 const deckDir = resolve(imageDir, '..')
@@ -55,7 +87,9 @@ const started = performance.now()
 
 const node = await nodeCommand()
 log(`VM driver on ${node.join(' ')}`)
-await $`${node} ${join(imageDir, 'vm/provision.ts')} --disk ${diskPath} --guest ${join(imageDir, 'guest')} --input-hash ${inputHash}`
+const mirror = process.env.ALPINE_MIRROR || await fastestMirror()
+log(`Alpine mirror ${mirror}`)
+await $`${node} ${join(imageDir, 'vm/provision.ts')} --disk ${diskPath} --guest ${join(imageDir, 'guest')} --input-hash ${inputHash} --apk-mirror ${mirror}`
   .cwd(deckDir)
 const provisioned = performance.now()
 
@@ -82,6 +116,30 @@ async function traceBoot(published: DiskManifest, node: string[]): Promise<void>
   const bundleBytes = Bun.file(join(outDir, published.bootBundle.file)).size
   log(`boot reads ${boot.length} chunks (${mib(chunkBytes.reduce((sum, bytes) => sum + bytes, 0))} gzip); `
     + `the boot bundle holds the bytes read, ${mib(bundleBytes)} gzip`)
+}
+
+/**
+ * The mirror that serves the guest's package index (ALPINE_INDEX) fastest from here, of ALPINE_MIRRORS. Each one
+ * downloads it at once, for at most 10 s; one that fails is never picked. The choice does not change the image's
+ * inputs, and setup.sh retries on the official CDN when apk fails on it.
+ */
+async function fastestMirror(): Promise<string> {
+  const timed = await Promise.all(ALPINE_MIRRORS.map(async (mirror) => {
+    const started = performance.now()
+    try {
+      const response = await fetch(`${mirror}/${ALPINE_INDEX}`, { signal: AbortSignal.timeout(10_000) })
+      await response.arrayBuffer()
+      return { mirror, ms: response.ok ? performance.now() - started : Infinity }
+    }
+    catch {
+      return { mirror, ms: Infinity }
+    }
+  }))
+  timed.sort((a, b) => a.ms - b.ms)
+  if (!Number.isFinite(timed[0].ms))
+    return ALPINE_MIRRORS[0]
+  log(`mirror probe: ${timed.map(({ mirror, ms }) => `${new URL(mirror).host} ${Number.isFinite(ms) ? `${(ms / 1000).toFixed(1)} s` : 'failed'}`).join(', ')}`)
+  return timed[0].mirror
 }
 
 function mib(bytes: number): string {

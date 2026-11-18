@@ -91,6 +91,7 @@ Only Slidev's `slide` render context outside print mode runs Linux. The presente
 | URLs in the text underline on hover; Cmd-click / Ctrl-click opens them in a new tab (a plain click opens nothing, as in Ghostty). OSC 8 hyperlinks do not open: ghostty-web 0.4.0's `getHyperlinkUri()` always returns null | ghostty-web |
 | Option(Alt)-click moves the shell's cursor to the clicked cell (arrow keys along the wrapped line, `ESC O` under DECCKM), on the normal screen at the bottom of the scrollback | `emulator.ts` with `cursorMoveKeys` in `mouse.ts` |
 | A bar cursor | `cursorStyle: 'bar'` in `emulator.ts` |
+| The grid fills the window's width, and ghostty-web's scrollbar, drawn at the canvas's right edge, sits at the window's edge | `emulator.ts` fits whole cells to the full width (ghostty-web's FitAddon kept 15 px free for a scrollbar it draws inside the canvas anyway) and right-aligns the canvas; the remainder, under one cell, goes to the left margin |
 | A user's paste wrapped in bracketed-paste markers while the program asks for them (`CSI ? 2004 h`), so zle takes a multi-line paste as one edit instead of running it line by line | `emulator.ts`; ghostty-web 0.4.0's own paste sends no markers |
 | Cursor position reports (`ESC [ 6 n`) | ghostty-web |
 | Background / foreground color queries (OSC 10/11) and primary device attributes (`ESC [ c`) | `QueryResponder` in `emulator.ts`; jovial asks both when zsh starts and would otherwise wait out a timeout |

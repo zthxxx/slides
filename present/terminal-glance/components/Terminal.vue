@@ -499,7 +499,8 @@ const status = computed(() => {
 .terminal-screen {
   flex: 1;
   min-height: 0;
-  padding: 0.5rem 0.4rem 8px 0.8rem;
+  /* No right padding: the canvas, and the scrollbar ghostty-web draws at its right edge, end at the window's edge. */
+  padding: 0.5rem 0 8px 0.8rem;
   border-radius: 0 0 0.6rem 0.6rem;
   /* The emulator's host is enlarged by the slide scale and scaled back down (runtime/emulator.ts). */
   overflow: hidden;

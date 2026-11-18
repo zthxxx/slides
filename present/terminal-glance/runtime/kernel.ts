@@ -3,7 +3,7 @@ import type { ImageDisk } from './disk'
 import kernelUrl from 'unkernel/alpine.wasm?url'
 import { checkSupport, createKernel, loadKernelModule } from 'unkernel/web'
 import { openImageDisk } from './disk'
-import { trackDownload } from './downloads'
+import { AHEAD_PRIORITY, trackDownload } from './downloads'
 
 /**
  * The page's only Linux VM: unkernel's bundled kernel and Alpine 3.24 riscv64 initramfs,
@@ -43,12 +43,19 @@ export function prefetchLinux(): void {
     return
   // unkernel counts the decoded bytes; the wire size of a gzip response would understate them.
   const kernelProgress = trackDownload('unkernel-alpine.wasm', __KERNEL_WASM_BYTES__)
+  // Fetched here rather than by unkernel, so the download can yield to the page's own scripts and styles; unkernel
+  // compiles the response while it streams. The index.html preload is low priority as well (vite.config.ts).
+  const kernelResponse = fetch(new URL(kernelUrl, location.href), { priority: AHEAD_PRIORITY }).then((response) => {
+    if (!response.ok)
+      throw new Error(`${response.url}: HTTP ${response.status}`)
+    return response
+  })
   downloads = {
-    kernel: loadKernelModule(new URL(kernelUrl, location.href), { onProgress: ({ loaded, done }) => kernelProgress(loaded, done) }),
+    kernel: kernelResponse.then(response => loadKernelModule(response, { onProgress: ({ loaded, done }) => kernelProgress(loaded, done) })),
     image: openImageDisk(manifestUrl()),
   }
-  // A failed download is reported by the boot that awaits it.
-  downloads.kernel.catch(() => {})
+  // A failed download is reported by the boot that awaits it; the progress bar stops counting it.
+  downloads.kernel.catch(() => kernelProgress(0, true))
   downloads.image.catch(() => {})
   if (import.meta.hot)
     import.meta.hot.data.downloads = downloads
