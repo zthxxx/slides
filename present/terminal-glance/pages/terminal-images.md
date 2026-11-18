@@ -33,11 +33,11 @@
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["; OSC="${ESC}]"; ST="${ESC}\\"
 data=$(base64 -w0 ~/chinatsu-bot-avatar.png); keys="a=T,f=100,c=24,"
 while [[ -n $data ]]; do
-  printf "${ESC}_G${keys}m=%d;%s${ST}" $(( ${#data} > 4096 )) "${data[1,4096]}"
+  echo -n "${ESC}_G${keys}m=$(( ${#data} > 4096 ));${data[1,4096]}${ST}"
   data=${data[4097,-1]}; keys=
 done; echo' />
-  <ShellStep run='printf "${OSC}1337;File=inline=1;width=24:%s${ST}" "$(base64 -w0 ~/chinatsu-bot-avatar.jpeg)"; echo' />
-  <ShellStep run='printf "${OSC}1337;File=inline=1;width=24:%s${ST}" "$(base64 -w0 ~/chinatsu-bot-avatar.jpeg)" | head -c 72 | cat -v; echo' />
+  <ShellStep run='echo "${OSC}1337;File=inline=1;width=24:$(base64 -w0 ~/chinatsu-bot-avatar.jpeg)${ST}"' />
+  <ShellStep run='echo "${OSC}1337;File=inline=1;width=24:$(base64 -w0 ~/chinatsu-bot-avatar.jpeg)${ST}" | head -c 72 | cat -v; echo' />
   <ShellStep run="clear" />
 </ShellDemo>
 

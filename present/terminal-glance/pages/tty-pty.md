@@ -158,10 +158,10 @@ ssh & pts
   <ShellStep to="a" run="ls -l /proc/$$/fd/{0,1,2,6}" />
   <ShellStep to="b" run="lsof ./testfd.txt" />
   <ShellStep to="b" run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
-printf "${CSI}35;1mTitle of the Program${CSI}0m" > /dev/pts/{a.pts}' />
+echo -n "${CSI}35;1mTitle of the Program${CSI}0m" > /dev/pts/{a.pts}' />
   <ShellStep to="a" keys="⏎" />
   <ShellStep to="a" run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
-printf "Hello World${CSI}5D*****\n"' />
+echo "Hello World${CSI}5D*****"' />
   <ShellStep to="b" run="stty -F /dev/pts/{a.pts} -a | grep icanon" />
 </ShellDemo>
 
@@ -175,7 +175,7 @@ printf "Hello World${CSI}5D*****\n"' />
 3. B `printf ok > /dev/pts/<A>`：ok 出现在 A 的提示符后面，看起来像是在 A 里敲进去的。回到 A 按回车，zsh 只换了一行新提示符，ok 没有被执行。留个问题给大家：ok 去哪了，回车为什么不执行它？后面 ^C 那页揭晓
 4. A `exec 6<> ./testfd.txt` 再 `ls -l /proc/$$/fd/{0,1,2,6}`：shell 多出 fd 6；B `lsof ./testfd.txt` 也能看到。fd 只是进程打开文件的编号，0、1、2 是约定
 5. B 第一行把 ESC (0x1B) 和 CSI (`ESC [`) 存进变量，第二行往 A 写 `${CSI}35;1m…${CSI}0m`：A 上出现紫色粗体字，颜色是终端模拟器解析 ANSI 序列的结果，与 shell 无关；同样回到 A 按回车。ESC、CSI 这些名字后面 ANSI 那页展开
-6. A 同样先声明变量 (变量只在各自的 shell 里)，再 `printf "Hello World${CSI}5D*****\n"`：光标左移 5 格后覆盖写入，显示 `Hello *****`
+6. A 同样先声明变量 (变量只在各自的 shell 里)，再 `echo "Hello World${CSI}5D*****"`：光标左移 5 格后覆盖写入，显示 `Hello *****`
 7. B `stty -F /dev/pts/<A> -a | grep icanon`：A 停在提示符时是 `-icanon -echo`，为下一页做铺垫
 -->
 
