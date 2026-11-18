@@ -38,11 +38,19 @@ src: ./pages/ansi-stty.md
 ---
 
 ---
+src: ./pages/terminal-layers.md
+---
+
+---
 src: ./pages/osc.md
 ---
 
 ---
 src: ./pages/tui.md
+---
+
+---
+src: ./pages/tui-interaction.md
 ---
 
 ---
@@ -54,7 +62,7 @@ src: ./pages/agent-gateway.md
 \> To Be Continued
 
 <!--
-- 这次讲了：终端与 TTY 的分工、PTY 和前台进程组、ANSI 与 stty、跨机器的 OSC 查询、全屏 TUI，以及 Agent 网关的共享输入和状态监控
+- 这次讲了：终端与 TTY 的分工、PTY 和前台进程组、ANSI 与 stty、终端模拟器和 tmux / herdr 所在的层、跨机器的 OSC 查询、全屏 TUI、鼠标和图片协议，以及 Agent 网关的共享输入和状态监控
 - 下期预告：session、进程组和控制终端的关系；SIGHUP、nohup，以及 tmux 为什么断线后进程不退出；守护进程怎么脱离终端
 -->
 
@@ -87,6 +95,22 @@ Ref Docs: Control Protocols
 <!--
 - 新增的控制序列、状态协议和网关实现，原始来源也分别放在对应页面的 notes
 - botmux 链接固定到实际核对的 commit，便于检查实现路径
+-->
+
+---
+
+Ref Docs: Emulators, Multiplexers, Mouse & Images
+
+- [unkernel · kwtty.c (0e4b2ec)](https://github.com/pithings/unkernel/blob/0e4b2ecb4d677bab0b326cc56362dc38a9111af5/kernel/guest/kwtty.c)
+- [iTerm2 · Proprietary Escape Codes](https://iterm2.com/documentation-escape-codes.html) · [Inline Images](https://iterm2.com/documentation-images.html)
+- [kitty · keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) · [graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/)
+- [Libghostty Is Coming](https://mitchellh.com/writing/libghostty-is-coming) · [How Warp Works](https://www.warp.dev/blog/how-warp-works)
+- [tmux(1) 3.7c](https://github.com/tmux/tmux/blob/3.7c/tmux.1) · [herdr 0.9.5](https://github.com/herdrdev/herdr/tree/ee5bfb5041bb3e4a49d591c72308aae3c81ecdde)
+- [XTerm · Mouse Tracking](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Mouse-Tracking) · [Are We Sixel Yet?](https://www.arewesixelyet.com/)
+
+<!--
+- 终端分层这部分的原始来源：unkernel 的 kwtty、各终端模拟器的扩展协议文档、tmux 手册和 herdr 源码
+- 鼠标上报看 xterm 的控制序列文档；图片协议的支持情况看 kitty 文档的实现列表和 Are We Sixel Yet
 -->
 
 ---
