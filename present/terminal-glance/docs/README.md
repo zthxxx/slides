@@ -21,7 +21,8 @@ Without a built image the page still runs, on bare Alpine (busybox ash), and say
 
 ```
 present/terminal-glance/
-  slides.md          the deck: slides, demo steps, speaker notes
+  slides.md          the deck's entry: cover, the order of pages/, closing slides
+  pages/             slides grouped by topic, each with its demo steps and speaker notes
   components/        ShellDemo, Terminal, ShellStep (auto-registered by Slidev)
   runtime/           the VM, sessions, emulator, disk, steps, presenter relay
   image/             the guest image build (IaC)
