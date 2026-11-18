@@ -3,11 +3,11 @@
 # OSC 7501 framing/fields: botmux cb8ff44b2 src/utils/program-status-parser.ts.
 set -eu
 
-printf '\033]7501;state=working:app=demo-agent\033\\'
+printf '\033]7501;state=working:app=ClaudeCode\033\\'
 printf 'working: generating a reply\n'
 sleep 2
-printf '\033]7501;state=blocked:app=demo-agent:kind=permission\033\\'
+printf '\033]7501;state=blocked:app=ClaudeCode:kind=permission\033\\'
 printf 'blocked: press Enter to approve\n'
 IFS= read -r answer
-printf '\033]7501;state=done:app=demo-agent\033\\'
+printf '\033]7501;state=done:app=ClaudeCode\033\\'
 printf 'done: reply complete\n'

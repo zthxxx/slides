@@ -3,6 +3,8 @@ import type { ProgramStatus } from './program-status'
 import { CanvasRenderer, FitAddon, Ghostty, Terminal } from 'ghostty-web'
 import { watch } from 'vue'
 import { terminalAppearance, TERMINAL_THEMES } from './appearance'
+import { BellDetector } from './bell'
+import { GraphicsOverlay } from './graphics-overlay'
 import { encodeMouse, mouseProtocol } from './mouse'
 import { themedGhostty } from './palette'
 import { ProgramStatusObserver } from './program-status'
@@ -36,6 +38,8 @@ export interface TerminalEmulator {
   onData: (listener: (data: string | Uint8Array) => void) => void
   onResize: (listener: (size: { cols: number, rows: number }) => void) => void
   onProgramStatus: (listener: (status: ProgramStatus | undefined) => void) => void
+  /** A BEL in the output rang (a BEL ending an OSC string does not ring); once per write. */
+  onBell: (listener: () => void) => void
   /** Fit the grid to the host's container; a hidden container is left alone. */
   fit: () => void
   focus: () => void
@@ -128,10 +132,14 @@ class GhosttyEmulator implements TerminalEmulator {
   #fitAddon = new FitAddon()
   #host: HTMLElement | undefined
   #pending: Array<Uint8Array | string> = []
-  #queries = new QueryResponder(reply => this.#dataListeners.forEach(listener => listener(reply)))
+  /** Inline images (iTerm2, kitty), which ghostty-web 0.4.0 does not draw; all output reaches the terminal through it. */
+  #graphics: GraphicsOverlay | undefined
+  #queries =new QueryResponder(reply => this.#dataListeners.forEach(listener => listener(reply)))
   #dataListeners: Array<(data: string | Uint8Array) => void> = []
   #resizeListeners: Array<(size: { cols: number, rows: number }) => void> = []
   #programStatusListeners: Array<(status: ProgramStatus | undefined) => void> = []
+  #bells = new BellDetector()
+  #bellListeners: Array<() => void> = []
   #programStatus = new ProgramStatusObserver({
     reply: reply => this.#dataListeners.forEach(listener => listener(reply)),
     onStatus: status => this.#programStatusListeners.forEach(listener => listener(status)),
@@ -189,8 +197,9 @@ class GhosttyEmulator implements TerminalEmulator {
     host.addEventListener('keydown', event => event.stopPropagation())
     this.#reportMouse(terminal, host)
 
+    this.#graphics = new GraphicsOverlay(terminal, host, reply => this.#dataListeners.forEach(listener => listener(reply)))
     for (const data of this.#pending.splice(0))
-      terminal.write(data)
+      this.#graphics.write(data)
     // The slide's scale follows the window size, which resizes no element inside the slide. Slidev derives it
     // from a ResizeObserver and applies it a frame or two after the resize event, so measure once resizing settles.
     let settle: ReturnType<typeof setTimeout> | undefined
@@ -207,9 +216,11 @@ class GhosttyEmulator implements TerminalEmulator {
   async write(data: Uint8Array | string): Promise<void> {
     this.#programStatus.scan(data)
     this.#queries.scan(data)
+    if (this.#bells.scan(data) > 0)
+      this.#bellListeners.forEach(listener => listener())
     // Parsing is synchronous; ghostty-web's write callback would wait for the next animation frame and cap a flood at one chunk per frame.
-    if (this.#terminal)
-      this.#terminal.write(data)
+    if (this.#graphics)
+      this.#graphics.write(data)
     else
       this.#pending.push(data)
   }
@@ -224,6 +235,10 @@ class GhosttyEmulator implements TerminalEmulator {
 
   onProgramStatus(listener: (status: ProgramStatus | undefined) => void): void {
     this.#programStatusListeners.push(listener)
+  }
+
+  onBell(listener: () => void): void {
+    this.#bellListeners.push(listener)
   }
 
   fit(): void {

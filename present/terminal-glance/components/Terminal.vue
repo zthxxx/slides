@@ -2,6 +2,7 @@
 import { useIsSlideActive, useNav, useSlideContext } from '@slidev/client'
 import { computed, inject, ref, useTemplateRef, watch } from 'vue'
 import { terminalAppearance, TERMINAL_THEMES, toggleTerminalAppearance } from '../runtime/appearance'
+import { armBellSound } from '../runtime/bell'
 import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
 import { useLinux } from '../runtime/kernel'
 import { serveRelayedSteps } from '../runtime/relay'
@@ -11,6 +12,8 @@ import { clampHeight, terminalHeights } from '../runtime/terminal-height'
 const props = withDefaults(defineProps<{
   /** The terminal's name on this slide; steps address it by this name. */
   name?: string
+  /** Share of the demo's height when stacked with other terminals (flex-grow); a dragged height takes precedence. */
+  grow?: number
 }>(), {
   name: 'a',
 })
@@ -30,12 +33,13 @@ const screen = useTemplateRef<HTMLDivElement>('screen')
 if (live) {
   // Boot while the slide is still hidden, so the shell is ready when the talk reaches it.
   void useLinux().catch(() => {})
+  armBellSound()
   serveRelayedSteps(({ page, to, step }) => void playStep(page, to, step).catch(() => {}))
 }
 
 watch([isActive, screen], ([active, element]) => {
   if (session && active && element)
-    void session.show(element)
+    void session.show(element).then(updateMinHeight)
   if (session && !active)
     session.terminal.blur()
 }, { immediate: true, flush: 'post' })
@@ -43,7 +47,12 @@ watch([isActive, screen], ([active, element]) => {
 watch(screen, (element, _, onCleanup) => {
   if (!session || !element)
     return
-  const observer = new ResizeObserver(() => isActive.value && session.fit())
+  const observer = new ResizeObserver(() => {
+    if (!isActive.value)
+      return
+    session.fit()
+    updateMinHeight()
+  })
   observer.observe(element)
   onCleanup(() => observer.disconnect())
 }, { immediate: true })
@@ -52,6 +61,25 @@ const accent = computed(() => terminalAccent(demo?.terminals ?? [props.name], pr
 const titleAccent = computed(() => terminalAppearance.value === 'light' ? `color-mix(in srgb, ${accent.value}, black 45%)` : accent.value)
 const theme = computed(() => TERMINAL_THEMES[terminalAppearance.value])
 const programStatus = computed(() => session?.programStatus.value)
+const programStatusText = computed(() => {
+  const status = programStatus.value
+  if (!status)
+    return ''
+  const progress = status.progress !== undefined ? ` ${status.progress}%` : ''
+  return `${status.app ? `${status.app} · ` : ''}${status.state}${progress}`
+})
+
+/** The bell icon shows for a while after each bell, as in iTerm2 and Ghostty; a new bell starts it over. */
+const BELL_SHOWN_MS = 2600
+const bells = computed(() => session?.bells.value ?? 0)
+const bellShown = ref(false)
+watch(bells, (count, _, onCleanup) => {
+  if (!count)
+    return
+  bellShown.value = true
+  const timer = setTimeout(() => bellShown.value = false, BELL_SHOWN_MS)
+  onCleanup(() => clearTimeout(timer))
+})
 const appearanceLabel = computed(() => `Switch all terminals to ${terminalAppearance.value === 'dark' ? 'light' : 'dark'} mode`)
 
 function toggleAppearance(event: MouseEvent) {
@@ -72,11 +100,22 @@ const FALLBACK_ROW_HEIGHT = 18
 /** The height while a drag is in progress; stored when the drag ends. */
 const draggedHeight = ref<number>()
 const height = computed(() => draggedHeight.value ?? terminalHeights.get(key))
+/** About ten rows, in slide pixels, once the emulator has measured its rows: a layout share never squeezes it below. */
+const minHeight = ref<number>()
 const frameStyle = computed(() => ({
   '--terminal-background': theme.value.background,
   '--terminal-foreground': theme.value.foreground,
-  ...(height.value === undefined ? {} : { height: `${height.value}px`, flex: '0 1 auto' }),
+  ...(minHeight.value === undefined ? {} : { minHeight: `${minHeight.value}px` }),
+  ...(height.value !== undefined
+    ? { height: `${height.value}px`, flex: '0 1 auto' }
+    : props.grow !== undefined ? { flex: `${props.grow} 1 0` } : {}),
 }))
+
+function updateMinHeight() {
+  const box = frame.value
+  if (box?.offsetHeight && session?.terminal.cellHeight)
+    minHeight.value = heightBounds(box).min
+}
 
 /** Sizes in slide pixels (layout sizes, before Slidev's scale): about ten rows, up to the room the slide has left. */
 function heightBounds(box: HTMLElement): { min: number, max: number } {
@@ -159,14 +198,21 @@ const status = computed(() => {
     <header class="terminal-bar">
       <span class="terminal-dots"><i /><i /><i /></span>
       <span class="terminal-title" :style="{ color: titleAccent }">{{ title }}</span>
+      <span v-if="bellShown" :key="bells" class="terminal-bell" role="img" aria-label="Bell" title="Bell (BEL, 0x07)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6v-5a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z" />
+        </svg>
+      </span>
       <span class="terminal-status">{{ status }}</span>
+      <!-- Keyed by its text, so every change mounts it anew and replays the pop animation. -->
       <span
         v-if="programStatus"
+        :key="programStatusText"
         class="terminal-program-status"
         :data-program-state="programStatus.state"
         title="Latest OSC 7501 report; this does not check whether the process is alive"
         aria-live="polite"
-      >{{ programStatus.app ? `${programStatus.app} · ` : '' }}{{ programStatus.state }}{{ programStatus.progress !== undefined ? ` ${programStatus.progress}%` : '' }}</span>
+      >{{ programStatusText }}</span>
       <button class="terminal-appearance" type="button" :aria-label="appearanceLabel" :title="appearanceLabel" @click="toggleAppearance">
         <svg v-if="terminalAppearance === 'dark'" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="4" />
@@ -197,7 +243,8 @@ const status = computed(() => {
   min-height: 0;
   height: 100%;
   margin: 0;
-  overflow: hidden;
+  /* Visible, so the status stamp may stick out over the window's edge; the bar and the screen round their own corners. */
+  overflow: visible;
   border-radius: 0.6rem;
   background: var(--terminal-background);
   color: var(--terminal-foreground);
@@ -209,6 +256,7 @@ const status = computed(() => {
   align-items: center;
   gap: 0.8rem;
   padding: 0.45rem 0.9rem;
+  border-radius: 0.6rem 0.6rem 0 0;
   background: #1e1f29;
   font-family: "Hack Nerd Font Mono", Menlo, monospace;
   font-size: 15px;
@@ -263,38 +311,95 @@ const status = computed(() => {
   }
 }
 
+/* A stamp laid over the title bar's right side, overlapping the screen a little, so the state reads from afar. */
 .terminal-program-status {
-  max-width: 46%;
+  position: absolute;
+  top: 0.5rem;
+  right: 3.4rem;
+  z-index: 3;
+  max-width: 60%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding: 0.1rem 0.45rem;
-  border: 1px solid #687187;
-  border-radius: 0.3rem;
+  padding: 0.25rem 0.9rem;
+  border: 2px solid currentColor;
+  border-radius: 0.55rem;
   color: #c9cbd8;
-  font-size: 0.85em;
+  background: color-mix(in srgb, currentColor 20%, rgb(30 31 41 / 0.72));
+  backdrop-filter: blur(3px);
+  box-shadow: 0 0.4rem 1.2rem rgb(0 0 0 / 0.35);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  rotate: -10deg;
+  animation: program-status-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  &[data-program-state="working"] { color: #bd93f9; border-color: #bd93f9 }
-  &[data-program-state="done"] { color: #50fa7b; border-color: #50fa7b }
-  &[data-program-state="blocked"] { color: #f1fa8c; border-color: #f1fa8c }
-  &[data-program-state="error"] { color: #ff5555; border-color: #ff5555 }
+  &[data-program-state="working"] { color: #bd93f9 }
+  &[data-program-state="done"] { color: #50fa7b }
+  &[data-program-state="blocked"] { color: #f1fa8c }
+  &[data-program-state="error"] { color: #ff5555 }
+}
+
+@keyframes program-status-pop {
+  0% { scale: 0.4; opacity: 0 }
+  55% { scale: 1.18; opacity: 1 }
+  78% { scale: 0.95 }
+  100% { scale: 1 }
+}
+
+.terminal-bell {
+  display: grid;
+  place-items: center;
+  color: #f1fa8c;
+  transform-origin: 50% 10%;
+  animation: terminal-bell-ring 0.7s ease-in-out, terminal-bell-fade 2.6s ease-in forwards;
+
+  svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: currentColor;
+  }
+}
+
+@keyframes terminal-bell-ring {
+  0%, 100% { rotate: 0deg }
+  20% { rotate: 20deg }
+  40% { rotate: -16deg }
+  60% { rotate: 10deg }
+  80% { rotate: -5deg }
+}
+
+@keyframes terminal-bell-fade {
+  0%, 65% { opacity: 1 }
+  100% { opacity: 0 }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-program-status { animation: none }
+  .terminal-bell { animation: terminal-bell-fade 2.6s ease-in forwards }
 }
 
 [data-terminal-appearance="light"] {
   .terminal-bar { background: #e5e5e9 }
   .terminal-appearance { color: #505971 }
   .terminal-appearance:hover { background: rgb(0 0 0 / 0.08) }
-  .terminal-program-status { color: #505971 }
-  [data-program-state="working"] { color: #6740a1; border-color: #6740a1 }
-  [data-program-state="done"] { color: #247247; border-color: #247247 }
-  [data-program-state="blocked"] { color: #8a6100; border-color: #8a6100 }
-  [data-program-state="error"] { color: #b82836; border-color: #b82836 }
+  .terminal-bell { color: #8a6100 }
+  .terminal-program-status {
+    color: #505971;
+    background: color-mix(in srgb, currentColor 14%, rgb(255 255 255 / 0.78));
+    box-shadow: 0 0.4rem 1.2rem rgb(0 0 0 / 0.18);
+  }
+  [data-program-state="working"] { color: #6740a1 }
+  [data-program-state="done"] { color: #247247 }
+  [data-program-state="blocked"] { color: #8a6100 }
+  [data-program-state="error"] { color: #b82836 }
 }
 
 .terminal-screen {
   flex: 1;
   min-height: 0;
   padding: 0.5rem 0.4rem 8px 0.8rem;
+  border-radius: 0 0 0.6rem 0.6rem;
   /* The emulator's host is enlarged by the slide scale and scaled back down (runtime/emulator.ts). */
   overflow: hidden;
 }

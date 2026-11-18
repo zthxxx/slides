@@ -49,6 +49,12 @@ bash -n /usr/local/bin/terminal-colors
 sh -n /usr/local/bin/agent-status-demo
 bat --paging=never --theme=auto --color=never /root/hello.sh >/dev/null
 
+step "inline image demo files"
+# pages/terminal-images.md sends these with `base64 -w0` inside iTerm2 and kitty image sequences.
+for image in /root/chinatsu-bot-avatar.jpeg /root/chinatsu-bot-avatar.png; do
+	[ -n "$(base64 -w0 "$image" | head -c 16)" ] || fail "cannot base64 $image for the image demo"
+done
+
 step "tmux: the config loads, and its default-terminal has a terminfo entry"
 [ -e /usr/share/terminfo/t/tmux-256color ] || [ -e /etc/terminfo/t/tmux-256color ] ||
 	fail "no terminfo for tmux-256color (default-terminal in ~/.config/tmux/tmux.conf)"

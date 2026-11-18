@@ -2,6 +2,7 @@ import type { Pty, PtyEnd } from 'unkernel/web'
 import type { SessionField, StepInput, TimedWrite } from './steps'
 import type { ProgramStatus } from './program-status'
 import { ref, shallowReactive } from 'vue'
+import { playBellSound } from './bell'
 import { createEmulator } from './emulator'
 import { useLinux } from './kernel'
 import { referencedSessions, resolveSessionRefs, stepChunks, typingPlan } from './steps'
@@ -14,6 +15,8 @@ export type SessionStatus = 'idle' | 'starting' | 'running' | 'failed'
  */
 export class ShellSession {
   readonly programStatus = ref<ProgramStatus>()
+  /** Counts the writes that rang the bell; a terminal shows its bell icon again whenever it grows. */
+  readonly bells = ref(0)
   readonly status = ref<SessionStatus>('idle')
   readonly pts = ref<number>()
   readonly pid = ref<number>()
@@ -30,6 +33,10 @@ export class ShellSession {
     this.host.className = 'shell-session'
     this.terminal.onData(data => void this.#pty?.write(data))
     this.terminal.onProgramStatus(status => this.programStatus.value = status)
+    this.terminal.onBell(() => {
+      this.bells.value++
+      playBellSound()
+    })
     this.terminal.onResize(({ cols, rows }) => this.#pty?.resize(cols, rows))
   }
 

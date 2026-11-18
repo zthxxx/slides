@@ -33,14 +33,23 @@ describe('typing a step', () => {
     }))
   })
 
-  test('types at least twice as fast as one character per 24 ms, and faster for longer text', () => {
+  test('types at most 6 ms per character, and faster for longer text', () => {
     fc.assert(fc.property(text.filter(value => value.length > 0), text.filter(value => value.length > 0), (shorter, extra) => {
       const pace = (run: string) => {
         const times = typingPlan(stepChunks({ run })).map(write => write.at)
         return (times.at(-1) ?? 0) / [...run].length
       }
-      expect(pace(shorter)).toBeLessThanOrEqual(12)
+      expect(pace(shorter)).toBeLessThanOrEqual(TYPING.charMs)
       expect(pace(shorter + extra)).toBeLessThanOrEqual(pace(shorter) + 1e-9)
+    }))
+  })
+
+  test('sends typed text in a bounded number of writes, however long it is', () => {
+    fc.assert(fc.property(step, (input) => {
+      const chunks = stepChunks(input)
+      const typedChunks = chunks.filter(chunk => chunk.typed).length
+      const keyWrites = chunks.length - typedChunks
+      expect(typingPlan(chunks).length).toBeLessThanOrEqual(keyWrites + TYPING.maxTextWrites + typedChunks)
     }))
   })
 })

@@ -32,7 +32,7 @@ image/
   guest/              Mounted read-only at /provision inside the build VM.
     setup.sh          Runs in the guest (busybox ash): apk, login shell, checks, zinit, cleanup, zero free blocks.
     packages.txt      apk packages, one per line.
-    rootfs/           Copied over / : shell/tmux config, demo commands and /root/hello.sh.
+    rootfs/           Copied over / : shell/tmux config, demo commands, /root/hello.sh and the demo images.
 ```
 
 Outputs, all gitignored:
@@ -67,7 +67,7 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 1. Checks that `/` is the overlay on the kwdata disk.
 2. Enables Alpine's community repository and `apk add --no-cache` everything in `packages.txt`.
 3. Copies `rootfs/` over `/` and sets root's shell to `/bin/zsh`.
-   Checks `bat --version`, the demo scripts' syntax and bat's ability to render the sample file.
+   Checks `bat --version`, the demo scripts' syntax, bat's ability to render the sample file, and that `base64 -w0` reads the demo images.
 4. Checks tmux: the `tmux-256color` terminfo entry exists (`default-terminal` in the config) and the config loads without errors.
 5. Runs `zsh -i -c '@zinit-scheduler burst'`: zinit clones itself, jovial and fast-syntax-highlighting (a turbo `wait` load, which `burst` runs at once). The build fails unless zinit's plugins are exactly the ones `.zshrc` loads (`zthxxx---jovial`, `zdharma-continuum---fast-syntax-highlighting`, plus zinit's own `_local---zinit`) and no snippet file (where oh-my-zsh libs and plugins would land) exists.
 6. Fails if `node`, `python3` or `zoxide` came in as a dependency of another package.
@@ -93,9 +93,11 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
 
 `terminal-colors` (`rootfs/usr/local/bin/terminal-colors`) queries the terminal with OSC 11 and prints the reply as both escaped bytes and an RGB value. It opens `/dev/tty`, saves the terminal settings, disables echo and canonical input while consuming the reply, and restores the saved settings on exit or interruption. It accepts BEL and ST terminators and gives up after two seconds.
 
-`bat --paging=never --theme=auto /root/hello.sh` detects the terminal's current colors each time it runs. Alpine 3.24 installs **bat 0.26.1**; its [`src/theme.rs`](https://github.com/sharkdp/bat/blob/v0.26.1/src/theme.rs) uses terminal-colorsaurus 1.0.1 to send OSC 10/11 queries and a DA1 sentinel. The [`--theme` help](https://github.com/sharkdp/bat/blob/v0.26.1/src/bin/bat/clap_app.rs) distinguishes `auto` (query when stdout is a terminal), `auto:always` (also query when redirected), and `auto:system` (macOS system preference). Use `auto` for this guest.
+`bat /root/hello.sh` detects the terminal's current colors each time it runs: its `--theme` defaults to `auto`. Alpine 3.24 installs **bat 0.26.1**; its [`src/theme.rs`](https://github.com/sharkdp/bat/blob/v0.26.1/src/theme.rs) uses terminal-colorsaurus 1.0.1 to send OSC 10/11 queries and a DA1 sentinel. The [`--theme` help](https://github.com/sharkdp/bat/blob/v0.26.1/src/bin/bat/clap_app.rs) distinguishes `auto` (query when stdout is a terminal), `auto:always` (also query when redirected), and `auto:system` (macOS system preference). Use `auto` for this guest.
 
-`agent-status-demo` (`rootfs/usr/local/bin/agent-status-demo`) sends OSC 7501 reports for `working`, `blocked` and `done`. Press Enter at `blocked` to continue; the final `done` state remains visible. It is a protocol demo, with no Coding Agent or network service. The sequence format follows botmux `cb8ff44b2`, `src/utils/program-status-parser.ts`.
+`/root/chinatsu-bot-avatar.jpeg` (1080 × 1080, 67 KiB) and `/root/chinatsu-bot-avatar.png` (the same picture at 256 × 256, 76 KiB, made with `sips -s format png -Z 256`) are the image demo's files (`pages/terminal-images.md`): the JPEG goes through the iTerm2 protocol, the PNG through the kitty protocol, which takes PNG (`f=100`) but not JPEG. Both are Git LFS files, as `.gitattributes` tracks `*.jpeg` and `*.png`.
+
+`agent-status-demo` (`rootfs/usr/local/bin/agent-status-demo`) sends OSC 7501 reports for `working`, `blocked` and `done`, as `app=ClaudeCode`. Press Enter at `blocked` to continue; the final `done` state remains visible. It is a protocol demo, with no Coding Agent or network service. The sequence format follows botmux `cb8ff44b2`, `src/utils/program-status-parser.ts`.
 
 ## The published format
 
@@ -111,7 +113,7 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
   "chunkSize": 1048576,
   "encoding": "gzip",
   "chunks": { "<index>": "chunks/<first 16 hex of sha256(raw chunk)>.gz" },
-  "stats": { "nonZeroChunks": 91, "uniqueChunks": 91, "rawBytes": 95420416, "compressedBytes": 28303939 }
+  "stats": { "nonZeroChunks": 95, "uniqueChunks": 95, "rawBytes": 99614720, "compressedBytes": 28892482 }
 }
 ```
 
@@ -130,8 +132,8 @@ Figures from the current package list:
 | --- | --- |
 | Installed by apk | 56 MiB |
 | Overlay upper in the guest (zinit and its two plugins 10 MiB of it) | 68 MiB |
-| Non-zero data | 91 chunks, 91 MiB |
-| Published (gzip) | **27.0 MiB** |
+| Non-zero data | 95 chunks, 95 MiB |
+| Published (gzip) | **27.6 MiB** |
 
 The page downloads chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.
