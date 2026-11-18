@@ -35,9 +35,10 @@ describe('typing a step', () => {
 
   test('types at most 6 ms per character, and faster for longer text', () => {
     fc.assert(fc.property(text.filter(value => value.length > 0), text.filter(value => value.length > 0), (shorter, extra) => {
+      // Per keystroke typed: a CRLF line break is one Enter.
       const pace = (run: string) => {
         const times = typingPlan(stepChunks({ run })).map(write => write.at)
-        return (times.at(-1) ?? 0) / [...run].length
+        return (times.at(-1) ?? 0) / [...run.replace(/\r?\n/g, '\r')].length
       }
       expect(pace(shorter)).toBeLessThanOrEqual(TYPING.charMs)
       expect(pace(shorter + extra)).toBeLessThanOrEqual(pace(shorter) + 1e-9)
