@@ -265,9 +265,9 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
 <ShellDemo>
   <ShellStep run="stty -a" />
   <ShellStep run='read input; echo "you typed: $input"' />
-  <ShellStep run="secret" />
+  <ShellStep run="this is secret" />
   <ShellStep run='stty -echo; read input; stty echo; echo "you typed: $input"' />
-  <ShellStep run="secret" />
+  <ShellStep run="this is secret" />
   <ShellStep run="stty -icanon; cat" />
   <ShellStep type="a" />
   <ShellStep type="b" />
