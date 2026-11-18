@@ -133,6 +133,7 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
 - The page downloads the bundle as soon as it has the manifest, in parallel with the kernel's own download. A read the bundle covers entirely is served from it; any other read loads its chunks. The boot reads about 3 MiB from the 25 chunks it touches, so the bundle is about 1 MiB gzip where those chunks are about 6.5 MiB.
 - The guest's timing varies, so two traces of one image differ by a few blocks; on the page, such a read loads its chunk.
 - A manifest with `boot` but no bundle, or whose bundle fails to download, fetches those chunks 6 at a time instead; one with neither boots fully lazily. A prefetched chunk stays in memory until the guest has read it.
+- Once a shell has drawn its first prompt (or 5 s after the boot when no terminal is shown) and the page is idle, the page downloads every chunk not fetched yet, in disk order, two at a time at low priority, so a program's first run (htop, bat, tmux) reads from memory. Every fetched file is kept as published, gzip (`ImageFiles`), 27 MiB for the whole image; a guest read decompresses its chunk, and no file is fetched twice. The guest still has no network: these are the page's own requests for its disk.
 
 `test/disk.test.ts` checks this contract both ways: whatever `pack.ts` publishes, `runtime/disk.ts` reads back byte for byte.
 

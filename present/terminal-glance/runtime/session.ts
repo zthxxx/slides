@@ -4,7 +4,7 @@ import type { ProgramStatus } from './program-status'
 import { ref, shallowReactive } from 'vue'
 import { playBellSound } from './bell'
 import { createEmulator } from './emulator'
-import { markLinuxUp, useLinux } from './kernel'
+import { downloadRestOfDisk, markLinuxUp, useLinux } from './kernel'
 import { referencedSessions, resolveSessionRefs, stepChunks, typingPlan } from './steps'
 
 export type SessionStatus = 'idle' | 'starting' | 'running' | 'failed'
@@ -95,7 +95,10 @@ export class ShellSession {
       void pty.output
         .pipeTo(new WritableStream({
           write: (chunk) => {
-            this.ready.value = true
+            if (!this.ready.value) {
+              this.ready.value = true
+              downloadRestOfDisk()
+            }
             return this.terminal.write(chunk)
           },
         }))

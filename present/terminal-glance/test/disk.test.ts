@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { CowDisk } from 'unkernel/web'
 import { CHUNK_SIZE, packDisk, writeBootBundle } from '../image/pack'
-import { ChunkedDiskBase, decodeChunk, MANIFEST_FORMAT } from '../runtime/disk'
+import { ChunkedDiskBase, decodeChunk, ImageFiles, MANIFEST_FORMAT } from '../runtime/disk'
 
 /**
  * The published disk is the contract between image/pack.ts (build) and runtime/disk.ts (page):
@@ -429,6 +429,86 @@ describe('chunk cache', () => {
           expect(loads.get(`chunks/${index}.gz`)).toBe(1)
       }),
       { numRuns: 50 },
+    )
+  }, 120_000)
+})
+
+describe('rest of the disk in the background', () => {
+  /** The network boundary: the published files, each answered after a short seeded delay; `flaky` files fail their first fetch. */
+  function network(outDir: string, seed: number, fetches: Map<string, number>, flaky: ReadonlySet<string> = new Set()) {
+    return async (file: string) => {
+      const count = (fetches.get(file) ?? 0) + 1
+      fetches.set(file, count)
+      const delay = [...file].reduce((sum, char) => (sum * 31 + char.charCodeAt(0) + seed) >>> 0, 0) % 5
+      await new Promise(resolve => setTimeout(resolve, delay))
+      if (flaky.has(file) && count === 1)
+        throw new Error(`${file}: connection reset`)
+      return Bun.file(join(outDir, file)).bytes()
+    }
+  }
+
+  const plan = fc.record({
+    concurrency: fc.integer({ min: 1, max: 4 }),
+    seed: fc.nat(),
+    /** Guest reads, each started before or after the background download begins, while it runs. */
+    reads: fc.array(fc.record({ position: fc.double({ min: 0, max: 1, noNaN: true }), length: fc.integer({ min: 1, max: 2 * CHUNK_SIZE }), early: fc.boolean() }), { maxLength: 6 }),
+  })
+
+  const inDiskOrder = (manifest: DiskManifest) => Object.entries(manifest.chunks).sort(([a], [b]) => Number(a) - Number(b)).map(([, file]) => file)
+
+  test('every file is fetched once, guest reads included, and afterwards the whole disk reads without the network', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, plan, async (spec, { concurrency, seed, reads }) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const fetches = new Map<string, number>()
+          const files = new ImageFiles(network(outDir, seed, fetches))
+          const base = new ChunkedDiskBase(manifest, files.load)
+          const read = ({ position, length }: { position: number, length: number }) => {
+            const offset = Math.min(disk.length - 1, Math.floor(position * disk.length))
+            const end = Math.min(disk.length, offset + length)
+            return base.read(offset, end - offset).then(bytes => expect(bytes).toEqual(disk.subarray(offset, end)))
+          }
+          await Promise.all([...reads.filter(r => r.early).map(read), files.downloadAll(inDiskOrder(manifest), concurrency), ...reads.filter(r => !r.early).map(read)])
+          expect(new Set(fetches.keys())).toEqual(new Set(Object.values(manifest.chunks)))
+          for (const count of fetches.values())
+            expect(count).toBe(1)
+
+          const before = new Map(fetches)
+          expect(await new ChunkedDiskBase(manifest, files.load).read(0, disk.length)).toEqual(disk)
+          expect(fetches).toEqual(before)
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 20 },
+    )
+  }, 120_000)
+
+  test('a file whose background fetch failed is fetched again when the guest reads it', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, plan, fc.nat(), async (spec, { concurrency, seed }, pick) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const all = inDiskOrder(manifest)
+          // An all-zero disk publishes no file.
+          fc.pre(all.length > 0)
+          const flaky = all[pick % all.length]
+          const fetches = new Map<string, number>()
+          const files = new ImageFiles(network(outDir, seed, fetches, new Set([flaky])))
+          await files.downloadAll(all, concurrency)
+          expect(fetches.get(flaky)).toBe(1)
+          expect(await new ChunkedDiskBase(manifest, files.load).read(0, disk.length)).toEqual(disk)
+          expect(fetches.get(flaky)).toBe(2)
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 15 },
     )
   }, 120_000)
 })

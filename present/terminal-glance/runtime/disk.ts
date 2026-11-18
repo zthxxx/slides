@@ -244,21 +244,80 @@ export async function decodeChunk(bytes: Uint8Array<ArrayBuffer>): Promise<Uint8
   return new Uint8Array(await new Response(gunzipped).arrayBuffer())
 }
 
-function fetchChunks(manifestUrl: URL): ChunkLoader {
-  return async (file, priority) => {
-    const url = new URL(file, manifestUrl)
-    const response = await fetch(url, priority ? { priority: AHEAD_PRIORITY } : {})
-    if (!response.ok)
-      throw new Error(`disk chunk ${url}: HTTP ${response.status}`)
-    return decodeChunk(await readCounted(response, file))
+/**
+ * Why a file is fetched: the guest waits for it (`need`), the boot will read it (`ahead`), or the rest of the image
+ * is being downloaded while nothing waits (`background`).
+ */
+export type FetchReason = 'need' | 'ahead' | 'background'
+
+/** Fetches one published file (a chunk or the boot bundle) by its manifest path; resolves to its bytes as published. */
+export type FileFetcher = (file: string, reason: FetchReason) => Promise<Uint8Array<ArrayBuffer>>
+
+/**
+ * The image's published files, each fetched once and kept as published (gzip): the whole image is 27 MiB this way,
+ * against 90 MiB decompressed, and no chunk the guest has evicted from its cache is downloaded again.
+ */
+export class ImageFiles {
+  readonly #fetch: FileFetcher
+  readonly #files = new Map<string, Promise<Uint8Array<ArrayBuffer>>>()
+
+  constructor(fetchFile: FileFetcher) {
+    this.#fetch = fetchFile
+  }
+
+  /** A ChunkLoader: the file's decompressed bytes, fetched the first time only. */
+  readonly load: ChunkLoader = async (file, priority) => decodeChunk(await this.#get(file, priority ? 'ahead' : 'need'))
+
+  /**
+   * Fetches every listed file not fetched yet, `concurrency` at a time, in the given order. A guest read of a file
+   * in flight waits for that fetch. Resolves when all have settled; a failed file is fetched again when read.
+   */
+  async downloadAll(files: readonly string[], concurrency: number): Promise<void> {
+    const queue = [...new Set(files)]
+    let next = 0
+    const lane = async (): Promise<void> => {
+      while (next < queue.length)
+        await this.#get(queue[next++], 'background').catch(() => {})
+    }
+    await Promise.all(Array.from({ length: Math.max(1, concurrency) }, lane))
+  }
+
+  #get(file: string, reason: FetchReason): Promise<Uint8Array<ArrayBuffer>> {
+    let fetching = this.#files.get(file)
+    if (!fetching) {
+      const started = this.#fetch(file, reason)
+      started.catch(() => {
+        if (this.#files.get(file) === started)
+          this.#files.delete(file)
+      })
+      this.#files.set(file, started)
+      fetching = started
+    }
+    return fetching
   }
 }
+
+function fetchFiles(manifestUrl: URL): FileFetcher {
+  return async (file, reason) => {
+    const url = new URL(file, manifestUrl)
+    const response = await fetch(url, reason === 'need' ? {} : { priority: AHEAD_PRIORITY })
+    if (!response.ok)
+      throw new Error(`disk chunk ${url}: HTTP ${response.status}`)
+    // Nobody waits for a background download, so the terminals' progress bar leaves it out.
+    return reason === 'background' ? new Uint8Array(await response.arrayBuffer()) : readCounted(response, file)
+  }
+}
+
+/** Files of the background download fetched at once: enough to finish soon, few enough to leave a guest read room. */
+export const BACKGROUND_CONCURRENCY = 2
 
 export interface ImageDisk {
   disk: CowDisk
   manifest: DiskManifest
   /** Settles once what the guest reads up to its first prompt has downloaded (or failed, leaving reads to fetch it). */
   bootData: Promise<void>
+  /** Downloads every chunk not fetched yet, at low priority; settles when all have been tried. */
+  downloadRest: () => Promise<void>
 }
 
 /**
@@ -277,7 +336,9 @@ export async function openImageDisk(manifestUrl: URL): Promise<ImageDisk | undef
   const manifest = await response.json() as DiskManifest
   if (manifest.format !== MANIFEST_FORMAT)
     throw new Error(`${manifestUrl}: unknown disk format ${JSON.stringify(manifest.format)}`)
-  const base = new ChunkedDiskBase(manifest, fetchChunks(manifestUrl))
+  const files = new ImageFiles(fetchFiles(manifestUrl))
+  const base = new ChunkedDiskBase(manifest, files.load)
   const bootData = base.prefetchBoot(BOOT_PREFETCH_CONCURRENCY).catch(() => {})
-  return { disk: new CowDisk(base), manifest, bootData }
+  const inDiskOrder = Object.entries(manifest.chunks).sort(([a], [b]) => Number(a) - Number(b)).map(([, file]) => file)
+  return { disk: new CowDisk(base), manifest, bootData, downloadRest: () => files.downloadAll(inDiskOrder, BACKGROUND_CONCURRENCY) }
 }

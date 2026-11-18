@@ -114,6 +114,32 @@ export function prefetchLinux(): void {
     import.meta.hot.data.downloads = downloads
 }
 
+/** After the boot, how long the rest of the disk waits for a shell's first prompt before it downloads anyway. */
+const REST_AFTER_BOOT_MS = 5000
+let restStarted = false
+
+/**
+ * Downloads the rest of the disk (27 MiB in all) while the page is idle, so a program's first run (htop, bat, tmux)
+ * reads it from memory instead of waiting for its chunks. Called when a shell has drawn its first prompt, or a while
+ * after the boot when no terminal is shown: the page, the boot and the first prompt have all they need by then, and
+ * the download is low priority, two files at a time.
+ */
+export function downloadRestOfDisk(): void {
+  if (restStarted || !downloads)
+    return
+  restStarted = true
+  void downloads.image.then(image => image && whenIdle().then(image.downloadRest)).catch(() => {})
+}
+
+function whenIdle(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback === 'function')
+      requestIdleCallback(() => resolve(), { timeout: 2000 })
+    else
+      setTimeout(resolve, 200)
+  })
+}
+
 export function useLinux(): Promise<LinuxMachine> {
   booting ??= bootLinux()
   if (import.meta.hot)
@@ -139,6 +165,7 @@ async function bootLinux(): Promise<LinuxMachine> {
     setStage('boot', { state: 'failed' })
     throw error
   }
+  setTimeout(downloadRestOfDisk, REST_AFTER_BOOT_MS)
 
   if (!image)
     return { vm, notice: `No preinstalled image at ${manifestUrl().pathname}: this is bare Alpine (busybox ash). Build it with \`pnpm build:image\` in present/terminal-glance.` }
