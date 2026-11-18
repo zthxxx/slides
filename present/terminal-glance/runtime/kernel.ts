@@ -59,12 +59,13 @@ export function useLinux(): Promise<LinuxMachine> {
 }
 
 async function bootLinux(): Promise<LinuxMachine> {
-  // Checked first, so a browser that cannot run Linux does not download it.
+  // The downloads start before the support check, as they do from the page's preloads: the check costs a round
+  // trip of its own, and the browsers the deck is shown in support it.
+  prefetchLinux()
   const support = await checkSupport()
   if (!support.ok)
     throw new Error(`This browser cannot run the in-page Linux VM:\n${support.problems.join('\n')}`)
 
-  prefetchLinux()
   const [kernel, image] = await Promise.all([downloads!.kernel, downloads!.image])
   const vm = await createKernel({ kernel, disks: image ? [image.disk] : [] })
 

@@ -14,6 +14,7 @@ components/               Vue views; know about Slidev (render context, active s
    ShellStep.vue          one step button; plays here, or relays from the presenter window; shell highlighting (shell-highlight.ts)
    WebFrame.vue           a live web page cropped to one region (e.g. a docs page without its header and sidebars)
    diagrams/              SVG diagrams for TTY, SSH, OSC and Agent gateways; DiagramFrame.vue gives each the shared light/dark styles
+setup/main.ts             Slidev app setup: starts Linux's downloads in the audience window
    │
 runtime/                  plain TypeScript; no templates
    session.ts             ShellSession = one pty + one emulator; registry by slide and name; step playback
@@ -45,10 +46,11 @@ Dependencies point down only. `runtime/` never imports from `components/`; `step
 
 ### Boot, once per tab
 
-1. Slidev mounts every slide about 3 s after the deck opens (hidden with `v-show`). The first live `Terminal` calls `useLinux()`, so the VM boots in the background, usually before the talk reaches a demo.
-2. `useLinux()` (`kernel.ts`) checks browser support, then starts two downloads together (`prefetchLinux()`): the kernel wasm, compiled while it streams, and the disk manifest, after which the disk's boot bundle (the bytes the guest reads up to its first prompt, one file; image.md) is fetched at once. `createKernel({ kernel, disks })` runs as soon as the wasm is compiled and the manifest read; the guest's first disk reads wait for the bundle. The disk is `CowDisk(ChunkedDiskBase)`; writes stay in memory, so a reload is a fresh machine.
-   `prefetchLinux()` runs no kernel, so any window may call it to start the downloads early; only the audience window boots.
-3. The initramfs `/init` mounts the disk labelled `kwdata` and makes `/` an overlay of the initramfs and the disk (image.md). busybox `init` starts `kwtty serve`.
+1. The downloads start before any script runs: a build's `index.html` preloads the disk manifest, the boot bundle it names and the kernel wasm (see [Loading and caching](#loading-and-caching)). As soon as the app runs, `setup/main.ts` calls `prefetchLinux()` in the audience window; its fetches take over the preloaded responses, and the kernel compiles while it streams.
+2. Slidev mounts every slide about 3 s after the deck opens (hidden with `v-show`). The first live `Terminal` calls `useLinux()`, so the VM boots in the background, usually before the talk reaches a demo.
+3. `useLinux()` (`kernel.ts`) starts the downloads if nothing has yet, checks browser support, and calls `createKernel({ kernel, disks })` once two downloads, started together by `prefetchLinux()`, are ready: the kernel wasm, compiled while it streams, and the disk, whose boot bundle (the bytes the guest reads up to its first prompt, one file) is fetched as soon as the manifest arrives (image.md). The disk is `CowDisk(ChunkedDiskBase)`; writes stay in memory, so a reload is a fresh machine.
+   `prefetchLinux()` runs no kernel. `setup/main.ts` still calls it only where `Terminal.vue` boots (the `play` route outside print mode): another window would compile a kernel it never boots.
+4. The initramfs `/init` mounts the disk labelled `kwdata` and makes `/` an overlay of the initramfs and the disk (image.md). busybox `init` starts `kwtty serve`.
 
 `useLinux()` is memoized and kept across Vite HMR (`import.meta.hot.data`): a thread can run only one kernel.
 
@@ -158,8 +160,9 @@ The deck is often opened over slow links where any single request may stall for 
 | `build.rolldownOptions.output.codeSplitting` | `vite.config.ts` | The page is two scripts plus rolldown's tiny runtime: `terminal` (ghostty-web with its inlined wasm, and unkernel's loader) and `app` (Slidev, Vue, shiki and every slide). Moving between slides loads nothing. It replaces Slidev's own `manualChunks`. |
 | `build.cssCodeSplit: false` | `vite.config.ts` | One stylesheet instead of one per slide; slide styles are scoped, so loading them all at once is safe. |
 | `preloadImages: false` | `slides.md` headmatter | Slide pictures load with their slides, which Slidev mounts about 3 s after opening, instead of competing with the scripts. |
+| `preloadLinux()` | `vite.config.ts` | `index.html` preloads `linux/manifest.json`, the boot bundle and `unkernel-alpine.wasm` (`as="fetch"`, `crossorigin`, `fetchpriority="low"`), so they download alongside the scripts instead of after them. The plain `fetch()` calls in `disk.ts` and unkernel's `loadKernelModule` take over these responses; with another `as` or without `crossorigin`, each would be a second request that only the HTTP cache can answer. Low priority lets an HTTP/2 or HTTP/3 server send the scripts, styles and visible images first. |
 
-Linux loads separately, when the first terminal mounts: `unkernel-alpine.wasm` (12.5 MB, about 7 MB gzipped) and the disk's boot bundle (about 1 MB) download in parallel, so a cold boot takes about as long as the wasm download; other disk chunks (1 MiB each) load as the guest reads them (image.md).
+Linux's boot downloads are `unkernel-alpine.wasm` (12.5 MB, about 7 MB gzipped) and the disk's boot bundle (about 1 MB); the disk image's other 1 MiB chunks load as the guest reads them (image.md). Every window preloads, the presenter's included, but only the audience window compiles and boots. Chrome serves a second window's request for a file that is still downloading from that one download, so an audience and a presenter window opened together fetch each file once, and a presenter window opened first leaves the files in the HTTP cache for the audience window.
 
 All of it is cached by the browser's HTTP cache. Script, stylesheet and wasm names carry a content hash, and disk chunks and the boot bundle are named by content, so they can be cached for as long as the host allows; `index.html` and `linux/manifest.json` keep a short lifetime so a new deploy is picked up. Once the long-lived files are cached, a reload over a link with 400 ms of latency renders the slide in under 0.5 s and Linux spawns its first shell in 1 to 2 s.
 
