@@ -4,8 +4,9 @@ import fc from 'fast-check'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { CowDisk } from 'unkernel/web'
 import { CHUNK_SIZE, packDisk, writeBootBundle } from '../image/pack'
-import { ChunkedDiskBase, decodeChunk } from '../runtime/disk'
+import { ChunkedDiskBase, decodeChunk, MANIFEST_FORMAT } from '../runtime/disk'
 
 /**
  * The published disk is the contract between image/pack.ts (build) and runtime/disk.ts (page):
@@ -130,15 +131,28 @@ describe('published disk image', () => {
   }, 120_000)
 })
 
-/** Reads from the published files after a delay that differs per chunk file, so fetches finish out of order. */
-function slowLoader(outDir: string, seed: number, loads: Map<string, number>) {
+/**
+ * Reads from the published files after a delay that differs per chunk file, so fetches finish out of order;
+ * a file in `failing` fails after its delay, as a download that breaks off.
+ */
+function slowLoader(outDir: string, seed: number, loads: Map<string, number>, failing: ReadonlySet<string> = new Set()) {
   const read = readFromFiles(outDir)
   return async (file: string) => {
     loads.set(file, (loads.get(file) ?? 0) + 1)
     const delay = [...file].reduce((sum, char) => (sum * 31 + char.charCodeAt(0) + seed) >>> 0, 0) % 5
     await new Promise(resolve => setTimeout(resolve, delay))
+    if (failing.has(file))
+      throw new Error(`${file}: connection reset`)
     return read(file)
   }
+}
+
+/** Chunk indices with equal contents share one file; each index is still fetched on its own. */
+function indicesPerFile(manifest: DiskManifest): Map<string, number> {
+  const count = new Map<string, number>()
+  for (const file of Object.values(manifest.chunks))
+    count.set(file, (count.get(file) ?? 0) + 1)
+  return count
 }
 
 describe('boot prefetch', () => {
@@ -194,12 +208,9 @@ describe('boot prefetch', () => {
           }
           await Promise.all([...reads.filter(r => r.early).map(read), base.prefetch(bootIndices, concurrency), ...reads.filter(r => !r.early).map(read)])
           // The disks here have at most 5 chunks, fewer than the cache holds, so nothing is evicted and fetched again.
-          // Chunk indices with equal contents share one file; each index is still fetched on its own.
-          const indicesPerFile = new Map<string, number>()
-          for (const file of Object.values(manifest.chunks))
-            indicesPerFile.set(file, (indicesPerFile.get(file) ?? 0) + 1)
+          const perFile = indicesPerFile(manifest)
           for (const [file, count] of loads)
-            expect(count).toBeLessThanOrEqual(indicesPerFile.get(file) ?? 0)
+            expect(count).toBeLessThanOrEqual(perFile.get(file) ?? 0)
         }
         finally {
           await cleanup()
@@ -240,21 +251,228 @@ describe('boot bundle', () => {
     )
   }, 120_000)
 
-  test('the reads recorded at boot download the bundle and no chunk', async () => {
+  test('the reads recorded at boot download the bundle once and no chunk', async () => {
     await fc.assert(
-      fc.asyncProperty(diskSpec, fc.array(range, { minLength: 1, maxLength: 12 }), fc.nat(), async (spec, bootReads, seed) => {
+      fc.asyncProperty(diskSpec, fc.array(fc.tuple(range, fc.boolean()), { minLength: 1, maxLength: 12 }), fc.nat(), async (spec, bootReads, seed) => {
         const disk = render(spec)
         const { manifest, outDir, cleanup } = await publish(disk)
         try {
-          const boot = bootReads.map(r => at(disk, r))
-          const bootBundle = await writeBootBundle(outDir, manifest, boot)
+          const boot = bootReads.map(([r, early]) => [...at(disk, r), early] as const)
+          const bootBundle = await writeBootBundle(outDir, manifest, boot.map(([offset, length]) => [offset, length]))
           const loads = new Map<string, number>()
           const base = new ChunkedDiskBase({ ...manifest, bootBundle }, slowLoader(outDir, seed, loads))
-          void base.prefetchBoot(4)
           // Any part of a recorded read is covered as well: the guest may split a read differently.
-          await Promise.all(boot.map(([offset, length]) => base.read(offset + Math.floor(length / 3), Math.max(1, Math.floor(length / 2)))))
+          // Some reads come before the page starts the bundle's download, all of them before it arrives.
+          const read = ([offset, length]: readonly [number, number, boolean]) =>
+            base.read(offset + Math.floor(length / 3), Math.max(1, Math.floor(length / 2)))
+          const early = boot.filter(([, , first]) => first).map(read)
+          const prefetching = base.prefetchBoot(4)
+          await Promise.all([...early, prefetching, ...boot.filter(([, , first]) => !first).map(read)])
           expect([...loads.keys()]).toEqual([bootBundle.file])
           expect(loads.get(bootBundle.file)).toBe(1)
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 20 },
+    )
+  }, 120_000)
+
+  test('the bundle file is the blocks the boot read, in the order of its runs', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, fc.array(range, { maxLength: 12 }), async (spec, bootReads) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const reads = bootReads.map(r => at(disk, r))
+          const { file, blockSize, runs } = await writeBootBundle(outDir, manifest, reads)
+          const touched = new Set(reads.flatMap(([offset, length]) => {
+            const first = Math.floor(offset / blockSize)
+            return Array.from({ length: Math.floor((offset + length - 1) / blockSize) - first + 1 }, (_, k) => first + k)
+          }))
+          const blocks = runs.flatMap(([first, count]) => Array.from({ length: count }, (_, k) => first + k))
+          expect(blocks).toEqual([...touched].sort((a, b) => a - b))
+          // Runs are maximal: two runs never touch.
+          for (const [i, [first, count]] of runs.entries()) {
+            expect(count).toBeGreaterThan(0)
+            if (i > 0)
+              expect(first).toBeGreaterThan(runs[i - 1][0] + runs[i - 1][1])
+          }
+          const bundle = await decodeChunk(await Bun.file(join(outDir, file)).bytes())
+          expect(bundle.length).toBe(blocks.length * blockSize)
+          for (const [rank, block] of blocks.entries()) {
+            // The disk's last block is padded with zeros.
+            const expected = new Uint8Array(blockSize)
+            expected.set(disk.subarray(block * blockSize, (block + 1) * blockSize))
+            expect(bundle.subarray(rank * blockSize, (rank + 1) * blockSize)).toEqual(expected)
+          }
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 20 },
+    )
+  }, 120_000)
+
+  test('a failed bundle leaves every read to the chunks, and the boot chunks are fetched ahead, each once', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, fc.array(fc.tuple(range, fc.boolean()), { minLength: 1, maxLength: 12 }), fc.nat(), async (spec, reads, seed) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const ranges = reads.map(([r, early]) => [...at(disk, r), early] as const)
+          const bootBundle = await writeBootBundle(outDir, manifest, ranges.map(([offset, length]) => [offset, length]))
+          const boot = [...new Set(ranges.map(([offset]) => Math.floor(offset / CHUNK_SIZE)))].filter(index => index in manifest.chunks)
+          const loads = new Map<string, number>()
+          const base = new ChunkedDiskBase({ ...manifest, boot, bootBundle }, slowLoader(outDir, seed, loads, new Set([bootBundle.file])))
+          const read = ([offset, length]: readonly [number, number, boolean]) =>
+            base.read(offset, length).then(bytes => expect(bytes).toEqual(disk.subarray(offset, offset + length)))
+          const early = ranges.filter(([, , first]) => first).map(read)
+          await base.prefetchBoot(4)
+          // Every boot chunk is fetched by now, whether a read asked for it or not.
+          for (const index of boot)
+            expect(loads.get(manifest.chunks[index]) ?? 0).toBeGreaterThan(0)
+          await Promise.all([...early, ...ranges.filter(([, , first]) => !first).map(read)])
+          // Read again once the bundle is known to have failed.
+          await Promise.all(ranges.map(read))
+          expect(loads.get(bootBundle.file)).toBe(1)
+          const perFile = indicesPerFile(manifest)
+          for (const [file, count] of loads) {
+            if (file !== bootBundle.file)
+              expect(count).toBeLessThanOrEqual(perFile.get(file) ?? 0)
+          }
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 20 },
+    )
+  }, 120_000)
+
+  test('without a boot trace nothing is fetched ahead of the guest', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, fc.array(range, { minLength: 1, maxLength: 8 }), fc.nat(), async (spec, reads, seed) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          expect(manifest.boot).toBeUndefined()
+          expect(manifest.bootBundle).toBeUndefined()
+          const loads = new Map<string, number>()
+          const base = new ChunkedDiskBase(manifest, slowLoader(outDir, seed, loads))
+          await base.prefetchBoot(4)
+          expect(loads.size).toBe(0)
+          for (const [offset, length] of reads.map(r => at(disk, r)))
+            expect(await base.read(offset, length)).toEqual(disk.subarray(offset, offset + length))
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 10 },
+    )
+  }, 120_000)
+})
+
+describe('chunk cache', () => {
+  /** A disk of small chunks made up by the loader, so a test can read more chunks than the cache holds. */
+  const CHUNK = 4096
+  const content = (index: number) => {
+    const bytes = new Uint8Array(CHUNK)
+    let state = (index + 1) * 2654435761 >>> 0
+    for (let at = 0; at < CHUNK; at++) {
+      state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+      bytes[at] = state >>> 24
+    }
+    return bytes
+  }
+  const manifestOf = (count: number, boot: number[]): DiskManifest => ({
+    format: MANIFEST_FORMAT,
+    label: 'kwdata',
+    unkernel: 'test',
+    inputHash: 'test',
+    size: count * CHUNK,
+    chunkSize: CHUNK,
+    encoding: 'gzip',
+    chunks: Object.fromEntries(Array.from({ length: count }, (_, index) => [index, `chunks/${index}.gz`])),
+    boot,
+    stats: { nonZeroChunks: count, uniqueChunks: count, rawBytes: count * CHUNK, compressedBytes: count * CHUNK },
+  })
+
+  const plan = fc.integer({ min: 96, max: 192 }).chain(count => fc.record({
+    count: fc.constant(count),
+    boot: fc.uniqueArray(fc.nat(count - 1), { minLength: 1, maxLength: 48, size: 'max' }),
+    /** Chunks the guest reads before any boot chunk: usually more than the cache holds besides the boot chunks. */
+    others: fc.array(fc.nat(count - 1), { minLength: 64, maxLength: 192, size: 'max' }),
+    concurrency: fc.integer({ min: 1, max: 8 }),
+    seed: fc.nat(),
+  }))
+
+  test('a prefetched chunk is downloaded once, however many other chunks the guest reads before it', async () => {
+    await fc.assert(
+      fc.asyncProperty(plan, async ({ count, boot, others, concurrency, seed }) => {
+        const loads = new Map<string, number>()
+        const base = new ChunkedDiskBase(manifestOf(count, boot), async (file) => {
+          loads.set(file, (loads.get(file) ?? 0) + 1)
+          const index = Number(/\d+/.exec(file)![0])
+          await new Promise(resolve => setTimeout(resolve, (index * 7 + seed) % 3))
+          return content(index)
+        })
+        const read = (index: number) => base.read(index * CHUNK, CHUNK).then(bytes => expect(bytes).toEqual(content(index)))
+        const prefetching = base.prefetchBoot(concurrency)
+        await Promise.all(others.filter(index => !boot.includes(index)).map(read))
+        await prefetching
+        await Promise.all(boot.map(read))
+        for (const index of boot)
+          expect(loads.get(`chunks/${index}.gz`)).toBe(1)
+      }),
+      { numRuns: 50 },
+    )
+  }, 120_000)
+})
+
+describe('copy-on-write over the published disk', () => {
+  const SECTORS_PER_IO = 64
+  const op = fc.record({
+    write: fc.boolean(),
+    position: fc.double({ min: 0, max: 1, noNaN: true }),
+    sectors: fc.integer({ min: 1, max: SECTORS_PER_IO }),
+    fill: fc.nat(255),
+  })
+
+  test('the guest reads back what it wrote, and the published bytes everywhere else', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, fc.array(fc.record({ position: fc.double({ min: 0, max: 1, noNaN: true }), length: fc.integer({ min: 1, max: 96 * 1024 }) }), { maxLength: 8 }), fc.array(op, { minLength: 1, maxLength: 24 }), fc.nat(), async (spec, bootReads, ops, seed) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const sectors = disk.length / SECTOR
+          const reads = bootReads.map(({ position, length }): [number, number] => {
+            const offset = Math.min(disk.length - 1, Math.floor(position * disk.length))
+            return [offset, Math.min(length, disk.length - offset)]
+          })
+          const bootBundle = await writeBootBundle(outDir, manifest, reads)
+          const base = new ChunkedDiskBase({ ...manifest, bootBundle }, slowLoader(outDir, seed, new Map()))
+          void base.prefetchBoot(4)
+          const cow = new CowDisk(base)
+          const model = disk.slice()
+          for (const { write, position, sectors: count, fill } of ops) {
+            const first = Math.min(sectors - 1, Math.floor(position * sectors))
+            const offset = first * SECTOR
+            const length = Math.min(count, sectors - first) * SECTOR
+            if (write) {
+              const bytes = new Uint8Array(length).map((_, k) => (fill + k) & 0xFF)
+              await cow.write(offset, [bytes])
+              model.set(bytes, offset)
+            }
+            else {
+              const out = new Uint8Array(length)
+              await cow.read(offset, [out])
+              expect(out).toEqual(model.subarray(offset, offset + length))
+            }
+          }
         }
         finally {
           await cleanup()

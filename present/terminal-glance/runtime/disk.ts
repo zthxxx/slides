@@ -31,10 +31,11 @@ export interface DiskManifest {
 
 export const MANIFEST_FORMAT = 'terminal-glance/disk@1'
 
-/** Decompressed chunks kept in memory; the guest's page cache holds what it reads often anyway. */
+/**
+ * Decompressed chunks kept in memory, besides prefetched ones the guest has not read yet;
+ * the guest's page cache holds what it reads often anyway.
+ */
 const CACHED_CHUNKS = 32
-/** Room kept for chunks read after boot, on top of the boot chunks, which must not be evicted before the guest reads them. */
-const CACHE_HEADROOM = 8
 /** Boot chunks fetched at once: enough to keep a high-latency link busy, few enough not to starve the kernel's own download. */
 export const BOOT_PREFETCH_CONCURRENCY = 6
 /** Chunks fetched ahead of a missed read, so a sequential read (a binary starting) is pipelined. */
@@ -51,9 +52,10 @@ export class ChunkedDiskBase implements DiskBase {
   readonly #chunks: Record<string, string>
   readonly #load: ChunkLoader
   readonly #cache = new Map<number, Promise<Uint8Array>>()
-  readonly #capacity: number
   /** Chunks queued by prefetch() and not started yet: a guest read starts its chunk at once instead of fetching it again. */
   readonly #queued = new Map<number, () => void>()
+  /** Prefetched chunks the guest has not read yet: never evicted, so none is downloaded twice. */
+  readonly #unread = new Set<number>()
   readonly #manifest: DiskManifest
   /** Each boot-bundle block's offset in the bundle file. */
   readonly #bundled = new Map<number, number>()
@@ -65,7 +67,6 @@ export class ChunkedDiskBase implements DiskBase {
     this.#chunkSize = manifest.chunkSize
     this.#chunks = manifest.chunks
     this.#load = load
-    this.#capacity = Math.max(CACHED_CHUNKS, (manifest.boot?.length ?? 0) + CACHE_HEADROOM)
     this.#manifest = manifest
     let rank = 0
     for (const [first, count] of manifest.bootBundle?.runs ?? []) {
@@ -76,12 +77,19 @@ export class ChunkedDiskBase implements DiskBase {
 
   /**
    * Starts downloading what the guest reads up to its first prompt: the boot bundle (one file) when the manifest
-   * has one, else the boot chunks, `concurrency` at a time.
+   * has one, else, or when the bundle fails, the boot chunks, `concurrency` at a time.
    */
-  prefetchBoot(concurrency: number): Promise<void> {
-    if (this.#bundled.size)
-      return this.#loadBundle().then(() => {}, () => {})
-    return this.prefetch(this.#manifest.boot ?? [], concurrency)
+  async prefetchBoot(concurrency: number): Promise<void> {
+    if (this.#bundled.size) {
+      try {
+        await this.#loadBundle()
+        return
+      }
+      catch {
+        // The chunks hold the same bytes.
+      }
+    }
+    await this.prefetch(this.#manifest.boot ?? [], concurrency)
   }
 
   /**
@@ -101,6 +109,7 @@ export class ChunkedDiskBase implements DiskBase {
         this.#queued.delete(index)
         start()
       })
+      this.#unread.add(index)
       this.#remember(index, started.then(() => this.#load(file)))
       queue.push(index)
     }
@@ -151,6 +160,7 @@ export class ChunkedDiskBase implements DiskBase {
     const cached = this.#cache.get(index)
     if (cached) {
       this.#queued.get(index)?.()
+      this.#unread.delete(index)
       // Map order is the LRU order: move a hit to the end.
       this.#cache.delete(index)
       this.#cache.set(index, cached)
@@ -205,16 +215,18 @@ export class ChunkedDiskBase implements DiskBase {
 
   #remember(index: number, loading: Promise<Uint8Array>): void {
     loading.catch(() => {
-      if (this.#cache.get(index) === loading)
-        this.#cache.delete(index)
+      if (this.#cache.get(index) !== loading)
+        return
+      this.#cache.delete(index)
+      this.#unread.delete(index)
     })
     this.#cache.set(index, loading)
+    // Unread chunks are all in the cache and stay; the others are held to CACHED_CHUNKS, oldest out first.
     for (const [oldest] of this.#cache) {
-      if (this.#cache.size <= this.#capacity)
+      if (this.#cache.size - this.#unread.size <= CACHED_CHUNKS)
         break
-      this.#cache.delete(oldest)
-      // An evicted chunk still queued is started anyway; its lane awaits a promise nobody else holds.
-      this.#queued.get(oldest)?.()
+      if (!this.#unread.has(oldest))
+        this.#cache.delete(oldest)
     }
   }
 }
