@@ -1,20 +1,40 @@
 听说终端能响应鼠标交互？怎么响应的
 
-<div class="text-[26px] w-full">
-
-| 步骤 | 字节 | 方向 |
-| --- | --- | --- |
-| 申请 | `CSI ? 1000 h` 点击、`1002 h` 拖动、`1003 h` 任意移动；`CSI ? 1006 h` 换成 SGR 编码 | 程序 → 终端 |
-| 上报 | `CSI < 0 ; 12 ; 5 M`：左键在第 12 列第 5 行按下，结尾 `m` 是松开；滚轮是按钮 64 / 65 | 终端 → 程序 |
-| 解码 | 和按键在同一个 stdin 里，按 `CSI <` 前缀区分 | 程序自己：tmux、htop、nvim |
-
+<div class="mouse-flow">
+<div class="step">
+  <div class="dir">① 程序申请 · 程序 → 终端</div>
+  <code>CSI ?1000h</code>
+  <div class="how">打开鼠标上报</div>
+  <code>CSI ?1006h</code>
+  <div class="how">改用 SGR 编码</div>
+</div>
+<div class="arrow">→</div>
+<div class="step">
+  <div class="dir">② 终端上报 · 终端 → 程序</div>
+  <code>CSI &lt;0;12;5M</code>
+  <div class="how">左键在第 12 列第 5 行按下</div>
+  <code>CSI &lt;0;12;5m</code>
+  <div class="how">结尾小写 m 是松开</div>
+</div>
+<div class="arrow">→</div>
+<div class="step">
+  <div class="dir">③ 程序解码 · tmux、htop、nvim</div>
+  <code>read(0, …)</code>
+  <div class="how">和按键从同一个 stdin 读到</div>
+  <code>CSI &lt;</code>
+  <div class="how">以它开头的就是鼠标事件</div>
+</div>
 </div>
 
-<div class="text-[26px] mt-4">鼠标事件也只是输入流里的字节；程序没有申请时，终端把拖动当作选中文字</div>
+<div class="text-[24px] mt-6 opacity-80">鼠标事件也只是输入流里的字节；程序没有申请时，终端把拖动当作选中文字</div>
 
 <style>
-  th:first-child, td:first-child { white-space: nowrap; }
-  th:last-child, td:last-child { white-space: nowrap; }
+.mouse-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 14px; width: 100%; margin-top: 20px; text-align: left; }
+.mouse-flow .step { border: 1px solid rgb(127 127 127 / 0.3); border-radius: 14px; padding: 16px 20px; background: rgb(127 127 127 / 0.06); }
+.mouse-flow .dir { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+.mouse-flow code { font-size: 21px; }
+.mouse-flow .how { font-size: 18px; opacity: 0.75; margin: 4px 0 12px; }
+.mouse-flow .arrow { align-self: center; font-size: 34px; opacity: 0.5; }
 </style>
 
 <!--
@@ -40,6 +60,7 @@ while read -rsk c; do print -rn -- ${(V)c}; done' />
 </ShellDemo>
 
 <!--
+- 为什么要申请两个编号：两件事分开开关。1000 打开鼠标上报，终端从此把按下和松开写进输入流，不开它什么都不会发；1006 只选编码格式，换成 SGR 的十进制写法。只开 1000 时用默认编码，按钮和坐标各加 32 后作为单个字节发出，屏幕上是一串难读的字符，坐标超过 223 也表示不了，松开时还分不出是哪个键
 - 第一步声明 ESC、CSI、OSC、ST，申请 1000 和 1006，并关掉 TTY 的回显；第二行是 zsh 的循环：`read -k` 每次读一个字符，`${(V)c}` 把控制字符显示成 `^[` 这样的可见形式，和 `cat -v` 的写法一样，字节一到就打印
 - 演讲者在终端里点几下、滚一滚滚轮：每个动作立刻出现 `^[[<0;12;5M^[[<0;12;5m` 这样的序列，`^[` 就是 ESC。左键按下以 M 结尾，松开以 m 结尾，右键是 2，滚轮是 `<64;` 和 `<65;`，坐标从 1 开始
 - `^C` 结束循环：ISIG 还开着，Ctrl-C 照常变成 SIGINT。随后关掉 1006 和 1000，`stty sane` 恢复 TTY 设置；不关的话，点击产生的字节会落进 zsh 的输入行

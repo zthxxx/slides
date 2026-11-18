@@ -1,4 +1,4 @@
-一个 Agent，多条输入路径
+Botmux WebShell: 一个 Agent，多条输入路径
 
 <AgentGatewayDiagram />
 

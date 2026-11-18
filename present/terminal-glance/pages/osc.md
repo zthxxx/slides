@@ -59,9 +59,9 @@ OSC：程序也能向终端提问
   <ShellStep run="agent-status-demo" />
   <ShellStep keys="⏎" />
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["; OSC="${ESC}]"; ST="${ESC}\\"
-printf "${OSC}7501;state=working:app=demo-agent${ST}"' />
-  <ShellStep run='printf "${OSC}7501;state=blocked:app=demo-agent:kind=permission${ST}"' />
-  <ShellStep run='printf "${OSC}7501;state=done:app=demo-agent${ST}"' />
+printf "${OSC}7501;state=working:app=ClaudeCode${ST}"' />
+  <ShellStep run='printf "${OSC}7501;state=blocked:app=ClaudeCode:kind=permission${ST}"' />
+  <ShellStep run='printf "${OSC}7501;state=done:app=ClaudeCode${ST}"' />
   <ShellStep run='printf "${OSC}7501;state=clear${ST}"' />
 </ShellDemo>
 
@@ -69,7 +69,7 @@ printf "${OSC}7501;state=working:app=demo-agent${ST}"' />
 - 这里运行的是离线的 shell 协议演示脚本 agent-status-demo，没有模型参与；PTY、控制字节、宿主解析和标题栏显示都是真实运行的
 - 运行 agent-status-demo：脚本发 working，2 秒后发 blocked:kind=permission 并等待输入。看标题栏从 working 变成 blocked
 - 演讲者按 Enter，脚本继续并发 done。Enter 仍是普通终端输入；状态控制序列没有另开消息通道
-- 后面四条 printf 把脚本发出的报告逐条手动再发一遍：声明 ESC、OSC、ST 后发 `${OSC}7501;state=working:app=demo-agent${ST}`，再发 blocked 和 done，最后 `state=clear` 移除状态。标题栏跟着变化，状态只是程序输出里的一段字节，终端没有去查 /proc 推断工作进展
+- 后面四条 printf 把脚本发出的报告逐条手动再发一遍：声明 ESC、OSC、ST 后发 `${OSC}7501;state=working:app=ClaudeCode${ST}`，再发 blocked 和 done，最后 `state=clear` 移除状态。标题栏跟着变化，状态只是程序输出里的一段字节，终端没有去查 /proc 推断工作进展
 - 页面只演示根程序的状态报告；完整网关还要处理子任务层级、启动阶段、异常退出与消息调度
 - 来源：[botmux cb8ff44b2 · probe 与状态分流](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/worker.ts#L20790-L20829)
 -->

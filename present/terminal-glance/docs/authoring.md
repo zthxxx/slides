@@ -19,8 +19,11 @@ Both components are auto-registered from `components/`.
 | Prop | Default | Meaning |
 | --- | --- | --- |
 | `terminals` | `"a"` | Space-separated terminal names, stacked top to bottom. Each name is one shell on its own pty. |
+| `heights` | equal | Space-separated height ratios of the stacked terminals, e.g. `heights="3 2"` for a large terminal over a smaller control terminal. Each keeps at least about ten rows, and a height dragged in the page takes precedence. |
 
 The steps column appears only when the demo has steps. The demo takes the slide's remaining height, so a one-line caption above it is fine; longer text pushes the terminals smaller.
+
+Give every demo slide that one-line title, saying what the demo shows (e.g. "往 A 的 pts 写一个 ^C"). Keep a demo to about 11 steps: more than that and the steps column scrolls. A step the presenter should pause on, such as entering the alternate screen, is a step of its own rather than a `sleep` inside a command.
 
 `<Terminal name="a" />` can also be used alone, without steps.
 
@@ -35,7 +38,7 @@ A step is sent in this order: `keys`, then `type`, then `run` followed by Enter.
 | `type` | Text typed as a person would, without a final Enter (input for a running program, or a half-typed line). |
 | `run` | A command typed as a person would, then Enter. A line break in the text is typed as Enter; the guest's empty `PS2`/`RPS2` keeps multiline input free of continuation prefixes while preserving its indentation. `run=""` presses Enter only. |
 
-The typing schedule spans at most 1.2 s: up to 12 ms per character for short text, faster for long text, and up to 80 ms after each pressed key before the next input. Shell execution time is outside this budget.
+The typing schedule spans at most 600 ms: up to 6 ms per character for short text, faster for long text, and up to 40 ms after each pressed key before the next input. Long text goes out in at most about 24 writes, so even a step of a few hundred characters is typed and echoed within about 0.7 s of the click. Shell execution time is outside this budget.
 
 The terminal-name badge on a step (`A`, `B`) and the name in a terminal's title bar appear only when the demo has more than one terminal.
 
@@ -87,6 +90,20 @@ Later steps on the same terminal reuse the variables; the names live in that ter
 | Overview, next-slide preview, export | Stand-in box | Inert |
 
 A terminal's shell is spawned the first time its slide is shown, so pty numbers follow the order slides are visited. Returning to a slide reattaches the same shell with its history.
+
+## Figures
+
+A new diagram component renders its SVG inside `<DiagramFrame>` (`components/diagrams/DiagramFrame.vue`), which gives it the shared diagram styles and the zoom button. Any other picture gets the button by wrapping it in `<Zoomable>`, with blank lines around the markdown image so it is still parsed as markdown:
+
+```md
+<Zoomable class="history-photo">
+
+![Teletype](/images/Teletype.jpg)
+
+</Zoomable>
+```
+
+Size the picture through the wrapper's class; when zoomed, the picture fills the slide with a 20 px margin and keeps its aspect ratio.
 
 ## Speaker notes
 

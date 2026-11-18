@@ -1,15 +1,45 @@
 Claude Code / Codex / Neovim 怎样控制整屏？
 
-<div class="text-[30px] w-full">
-
-| 层次 | 机制 | 谁处理 |
-| --- | --- | --- |
-| 逐键输入 | [termios](https://man7.org/linux/man-pages/man3/termios.3.html)：关闭行缓冲、回显等 | 内核 TTY |
-| 屏幕绘制 | CSI：光标定位、清行、颜色；`?1049h/l` 备用屏幕 | 终端模拟器 |
-| 交互事件 | 鼠标 `1000/1006`、粘贴 `2004`、焦点 `1004` | 终端编码，程序读取 |
-| 批量重绘 | `?2026h/l` synchronized output | 终端延后显示中间帧 |
-
+<div class="tui-cards">
+<div class="card">
+  <span class="who kernel">内核 TTY</span>
+  <div class="what">逐键读输入</div>
+  <code>stty -icanon -echo</code>
+  <div class="how">不等回车，每个键立刻交给程序；回显由程序自己画</div>
 </div>
+<div class="card">
+  <span class="who emulator">终端模拟器</span>
+  <div class="what">画满整屏</div>
+  <code>CSI ?1049h · CSI r;cH · CSI 2J</code>
+  <div class="how">切到备用屏幕，按坐标画字；退出时 <code>?1049l</code> 恢复原屏幕</div>
+</div>
+<div class="card">
+  <span class="who emulator">终端模拟器</span>
+  <div class="what">鼠标、粘贴、焦点</div>
+  <code>CSI ?1000h · ?2004h · ?1004h</code>
+  <div class="how">程序申请后，终端把这些事件编码成字节送回输入流</div>
+</div>
+<div class="card">
+  <span class="who emulator">终端模拟器</span>
+  <div class="what">一帧一次显示</div>
+  <code>CSI ?2026h … CSI ?2026l</code>
+  <div class="how">一批重绘先缓着，结束时一起显示，减少闪烁</div>
+</div>
+</div>
+
+<div class="text-[24px] mt-5 opacity-80">程序能用的只有两样：用 termios 改 TTY 的行为，往输出里写控制序列</div>
+
+<style>
+.tui-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 16px; text-align: left; }
+.tui-cards .card { border: 1px solid rgb(127 127 127 / 0.3); border-radius: 14px; padding: 16px 22px; background: rgb(127 127 127 / 0.06); }
+.tui-cards .who { display: inline-block; font-size: 16px; line-height: 1.6; padding: 0 10px; border-radius: 999px; }
+.tui-cards .who.kernel { color: rgb(8 145 178); background: rgb(8 145 178 / 0.12); }
+.tui-cards .who.emulator { color: rgb(217 119 6); background: rgb(217 119 6 / 0.12); }
+.tui-cards .what { font-size: 30px; font-weight: 600; margin: 6px 0 8px; }
+.tui-cards .card > code { font-size: 20px; }
+.tui-cards .how { font-size: 19px; opacity: 0.75; margin-top: 8px; }
+.tui-cards .how code { font-size: 17px; }
+</style>
 
 <!--
 - TUI 组合多种机制：内核 termios 决定怎样交付按键；程序用 VT/ANSI 兼容控制序列把字符画到指定位置

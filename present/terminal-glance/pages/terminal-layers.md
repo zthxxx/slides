@@ -1,3 +1,49 @@
+iTerm2 / Ghostty / kitty / Warp 是什么
+
+<div class="text-[28px] mt-2">它们都是<b>终端模拟器</b>：持有 ptmx，把按键编成字节，把收到的字节画成字符格子</div>
+
+<div class="emu-grid">
+<div class="emu-col">
+  <div class="emu-head">它们差在哪</div>
+  <div class="row"><span class="k">绘制</span><span>GPU：Ghostty (Metal / OpenGL)、kitty、Alacritty、WezTerm、Warp，iTerm2 也有 GPU 渲染选项<br/>不用 GPU：xterm，本页的 ghostty-web 画在 Canvas 2D 上</span></div>
+  <div class="row"><span class="k">形态</span><span>独立 App：iTerm2、Ghostty、kitty、Warp<br/>可嵌入的库：libghostty、xterm.js (VS Code 的终端)、VTE (GNOME Terminal)</span></div>
+  <div class="row"><span class="k">界面</span><span>Warp 的命令 block 和输入框、iTerm2 的 tmux 集成、kitty 的 kittens、WezTerm 内置复用器</span></div>
+  <div class="row"><span class="k">协议</span><span>各自的扩展序列：iTerm2 的 OSC 1337，kitty 的键盘和图片协议</span></div>
+</div>
+<div class="emu-col">
+  <div class="emu-head">和 shell 的关系</div>
+  <div class="box emu">终端模拟器<small>iTerm2 · Ghostty · kitty · Warp</small><small>按键 → 字节 · 字节 → 像素</small></div>
+  <div class="link">/dev/ptmx ⇄ 内核 TTY ⇄ /dev/pts/N</div>
+  <div class="box sh">shell<small>zsh · bash · fish</small><small>读命令、解析、启动程序</small></div>
+  <div class="note">终端不解析命令，所以它不是 shell：同一个 iTerm2 里能跑 zsh、bash、htop、ssh，同一个 zsh 放进哪个终端都一样</div>
+</div>
+</div>
+
+<style>
+.emu-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 28px; width: 100%; margin-top: 18px; text-align: left; }
+.emu-head { font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+.emu-col .row { display: grid; grid-template-columns: 3.2em 1fr; gap: 10px; font-size: 19px; line-height: 1.5; padding: 8px 0; border-top: 1px solid rgb(127 127 127 / 0.25); }
+.emu-col .row .k { font-weight: 600; opacity: 0.7; }
+.emu-col .box { border: 1px solid rgb(127 127 127 / 0.35); border-radius: 12px; padding: 10px 16px; font-size: 22px; font-weight: 600; text-align: center; }
+.emu-col .box small { display: block; font-size: 16px; font-weight: 400; opacity: 0.75; }
+.emu-col .box.emu { background: rgb(217 119 6 / 0.1); }
+.emu-col .box.sh { background: rgb(8 145 178 / 0.1); }
+.emu-col .link { text-align: center; font-family: var(--slidev-code-font-family, monospace); font-size: 17px; opacity: 0.7; padding: 8px 0; }
+.emu-col .note { font-size: 18px; line-height: 1.5; opacity: 0.8; margin-top: 12px; }
+</style>
+
+<!--
+- 一句话：iTerm2、Ghostty、kitty、Warp 都是终端模拟器，在架构里处在同一层，下面的 PTY、内核 TTY 和 shell 都一样
+- 它们的差别在这一层内部。绘制：Ghostty 在 macOS 上用 Metal、Linux 上用 OpenGL，kitty、Alacritty、WezTerm 也是 GPU 渲染，Warp 用 Rust 直接在 Metal 上画，iTerm2 在设置里有 GPU Rendering 开关；xterm 和本页的 ghostty-web 不走 GPU
+- 形态：有的是给用户用的 App，有的是给别的程序嵌入的库。libghostty 是 Ghostty 的核心库，ghostty-web 把其中的 VT 解析部分编译成 WebAssembly；VS Code 的内置终端是 xterm.js；GNOME Terminal 用的是 GTK 组件 VTE
+- 界面和协议：Warp 把每条命令和输出放进独立的 block，提示符处的输入框是它自己的编辑器；iTerm2 能用 `tmux -CC` 把 tmux 的窗口变成原生窗口；kitty 有 kittens 小工具；WezTerm 自带复用器。扩展协议仍是字节流里的转义序列，要程序和终端两边都支持
+- 和 shell 的关系：终端模拟器启动时，在 pts 上起一个程序，默认是用户的 login shell；也可以直接起 htop 或 ssh。提示符、历史、补全、别名属于 shell；字体、配色、选中复制、标签页属于终端。终端从不解析命令，所以它不是 shell
+- Warp 的输入框接管了提示符处的编辑，但命令文本仍然交给 zsh、bash 或 fish 执行，shell 还在 pts 上
+- 来源：[Ghostty README · Metal / OpenGL、libghostty](https://github.com/ghostty-org/ghostty#readme)、[Ghostty features](https://ghostty.org/docs/features)、[kitty](https://sw.kovidgoyal.net/kitty/)、[Alacritty README](https://github.com/alacritty/alacritty#readme)、[WezTerm README](https://github.com/wezterm/wezterm#readme)、[How Warp Works · Rust + Metal](https://www.warp.dev/blog/how-warp-works)、[iTerm2 · GPU Rendering](https://iterm2.com/documentation-preferences-general.html)、[xterm.js README · WebGL addon](https://github.com/xtermjs/xterm.js#readme)、[VTE](https://gitlab.gnome.org/GNOME/vte)、[iTerm2 Proprietary Escape Codes](https://iterm2.com/documentation-escape-codes.html)、[kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/)
+-->
+
+---
+
 接口固定，实现可换
 
 <TerminalLayersDiagram />
@@ -13,36 +59,6 @@
 
 ---
 
-iTerm2 / Ghostty / kitty / Warp 是什么
-
-<div class="text-[26px] w-full">
-
-| 终端 | 所在的层 | 自己加的扩展 |
-| --- | --- | --- |
-| iTerm2 | 终端模拟器 (macOS) | `OSC 1337` 私有序列：内联图片、标记、当前目录；`OSC 133` shell integration |
-| Ghostty | 终端模拟器 | 核心库 libghostty；kitty 键盘和图形协议；本页的 ghostty-web 用它的 VT 解析器 |
-| kitty | 终端模拟器 | kitty keyboard protocol (`CSI > flags u`)、kitty graphics protocol |
-| Warp | 终端模拟器 | 自带输入编辑器；shell hook 发 DCS 把每条命令切成 block；内置 Agent |
-
-</div>
-
-<div class="text-[26px] mt-4">都在终端模拟器这一层：持有 ptmx 或连着 sshd，把按键编码成字节，把输出解析成字符格子再绘制</div>
-
-<style>
-  th:first-child, td:first-child { white-space: nowrap; }
-</style>
-
-<!--
-- 回答开头的问题：iTerm2、Ghostty、kitty、Warp 都是终端模拟器，处在架构图最左边那一层。它们之间的差别在渲染、界面和各自扩展的协议，下面的 PTY、内核和 shell 完全一样
-- 扩展协议都还是字节流里的转义序列，需要程序和终端两边都支持。iTerm2 用 `OSC 1337` 做内联图片、标记和当前目录上报，用 FinalTerm 开创的 `OSC 133` 标出提示符、命令和输出的边界
-- kitty 定义了自己的键盘协议 (程序用 `CSI > flags u` 开启，能区分 Ctrl-I 和 Tab 这类组合键) 和图形协议；Ghostty、WezTerm、iTerm2、Warp 等也实现了这两个协议的部分或全部
-- Ghostty 的核心是可嵌入的库 libghostty，其中的 VT 解析部分 (libghostty-vt) 可以单独使用；ghostty-web 把它编译成 WebAssembly 放进浏览器，后面讲的 herdr 也内置了一份
-- Warp 用 zsh 的 precmd、preexec 这类 hook 在每条命令前后发一段自定义 DCS，自己据此把每条命令和输出放进独立的 block；输入框是它自己的编辑器，不再由 shell 的 zle 负责，所以 shell 里再启动的交互程序得不到这些功能
-- 来源：[iTerm2 Proprietary Escape Codes](https://iterm2.com/documentation-escape-codes.html)、[Ghostty About · libghostty](https://ghostty.org/docs/about)、[Libghostty Is Coming](https://mitchellh.com/writing/libghostty-is-coming)、[kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/)、[kitty graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/)、[How Warp Works](https://www.warp.dev/blog/how-warp-works)、[Will Richardson · Warp 的输入编辑器只作用于 shell 提示符](https://willhbr.net/2023/08/02/warp-terminal/)、[Warp · Block Model](https://www.warp.dev/blog/block-model-behind-warps-agentic-development-environment)
--->
-
----
-
 tmux / herdr：终端里又装了一层终端
 
 <MultiplexerDiagram />
@@ -53,6 +69,36 @@ tmux / herdr：终端里又装了一层终端
 - tmux client 启动后通过 unix socket 把自己 tty 的 fd 交给 server，之后 server 直接读这个 fd 拿按键、往里写画面。detach 时 client 退出，server 和 pane 里的进程继续运行，所以 ssh 断线不丢会话
 - 因为 server 是 pane 的终端，pane 里程序发出的 DA1、OSC 11 这类查询由 tmux 自己回答，程序问到的是 tmux 的能力和颜色。要把序列原样送到外层终端，得包一层 passthrough：`ESC P tmux; … ESC \`，并打开 `allow-passthrough`。后面 botmux 的握手时序问题就出在这一层
 - 来源：[tmux 3.7c client.c · 发送 stdin/stdout 的 fd](https://github.com/tmux/tmux/blob/3.7c/client.c#L476-L483)、[server-client.c · 接收 fd](https://github.com/tmux/tmux/blob/3.7c/server-client.c#L2501-L2504)、[tty.c · server 读写 client 的 tty](https://github.com/tmux/tmux/blob/3.7c/tty.c#L284-L285)、[spawn.c · 每个 pane 一个 pty](https://github.com/tmux/tmux/blob/3.7c/spawn.c#L391)、[input.c · 自己回答 DA1](https://github.com/tmux/tmux/blob/3.7c/input.c#L1557-L1567)、[tmux(1) · allow-passthrough](https://github.com/tmux/tmux/blob/3.7c/tmux.1#L5691-L5696)
+-->
+
+---
+
+tmux：两个客户端看同一个会话，会话里再开 shell
+
+<ShellDemo terminals="a b" heights="3 2">
+  <ShellStep to="a" run="tty" />
+  <ShellStep to="a" run="tmux new -s demo" />
+  <ShellStep to="a" run="tty" />
+  <ShellStep to="b" run="tmux attach -t demo" />
+  <ShellStep to="b" run="echo typed in B" />
+  <ShellStep to="a" keys="^S l" />
+  <ShellStep to="a" run="tty" />
+  <ShellStep to="a" run="tmux list-clients -F '#{client_tty}'" />
+  <ShellStep to="a" run="ls -l /proc/$(tmux display -p '#{pid}')/fd 2>/dev/null | grep -oE '/dev/(ptmx|pts/[0-9]+)'" />
+  <ShellStep to="b" keys="^S d" />
+  <ShellStep to="a" run="tmux kill-session" />
+</ShellDemo>
+
+<!--
+- A 里 `tty`：记下 A 自己的 pts
+- A `tmux new -s demo`：A 的 zsh 启动 tmux client，client 连上 tmux server；server 开一对新的 PTY，在里面起一个新的 zsh。再 `tty`，已经是另一个 pts：shell 套进了 tmux
+- B `tmux attach -t demo`：B 也成为这个会话的 client，画面和 A 一样。在 B 里敲 echo，A 上同步出现：两个 client 的按键都送进同一个 pane，server 把同一份画面分别画给两个 client
+- A 按 `^S l` 向右分屏 (prefix 是 Ctrl-S)：server 再开一对 PTY 和一个 zsh，A、B 都多了一个 pane；新 pane 里 `tty` 又是一个新的 pts
+- `list-clients`：两个 client 分别在 A、B 原来的 pts 上
+- 看 tmux server 打开的 fd (`#{pid}` 是 server 的 pid)：两个 /dev/ptmx，每个 pane 一个 master 端；另外是两个 client 交过来的 pts，server 直接往里写画面。`2>/dev/null` 丢掉 ls 读到一半就关闭的临时 fd 的报错
+- B 按 `^S d` detach：B 回到自己原来的 shell，会话和 pane 里的 shell 都还在，A 照常使用；断线后 attach 回来就是靠这一点。最后 A `tmux kill-session` 结束会话，回到 A 原来的 shell
+- 对照上一页的图：外层终端 → client 的 pts → tmux server → 每个 pane 的 ptmx / pts → shell
+- 来源：[tmux(1) 3.7c · attach、list-clients、FORMATS](https://github.com/tmux/tmux/blob/3.7c/tmux.1)
 -->
 
 ---
@@ -82,30 +128,4 @@ tmux 和 herdr 有什么特别
 - herdr 为 Agent 加了两样东西：按每种 Agent 的 manifest 匹配 pane 底部的屏幕文字，判断它在工作、等待确认还是空闲；另一个 `herdr.sock` 提供 JSON API，Agent 可以用 CLI 开新 pane、给别的 pane 发提示词、等待某个 Agent 进入 blocked
 - tmux 不理解 pane 里的程序，它提供的是通用的接口：`pipe-pane` 把输出复制给外部程序，control mode 让程序用文本命令操作 tmux。后面 botmux 的默认后端用的就是 `pipe-pane` 读输出、`send-keys` 写输入
 - 来源：[herdr README](https://github.com/herdrdev/herdr/blob/ee5bfb5041bb3e4a49d591c72308aae3c81ecdde/README.md)、[herdr headless server](https://github.com/herdrdev/herdr/blob/ee5bfb5041bb3e4a49d591c72308aae3c81ecdde/src/server/headless.rs#L1-L15)、[herdr 状态检测](https://github.com/herdrdev/herdr/blob/ee5bfb5041bb3e4a49d591c72308aae3c81ecdde/src/detect/mod.rs#L1-L4)、[herdr 内置的 libghostty-vt](https://github.com/herdrdev/herdr/blob/ee5bfb5041bb3e4a49d591c72308aae3c81ecdde/vendor/libghostty-vt.vendor.json)、[tmux(1)](https://github.com/tmux/tmux/blob/3.7c/tmux.1)；tmux 对应镜像里的 3.7c，herdr 核对的版本是 0.9.5 (ee5bfb5)
--->
-
----
-
-在 tmux 里看它持有的 PTY
-
-<ShellDemo>
-  <ShellStep run="tmux new -s layers" />
-  <ShellStep keys="^S l" />
-  <ShellStep run="tmux list-panes -F '#{pane_index} #{pane_tty} #{pane_pid}'" />
-  <ShellStep run="tmux list-clients -F '#{client_tty} #{client_termname}'" />
-  <ShellStep run="ls -l /proc/$(tmux display -p '#{pid}')/fd | grep -E 'ptmx|pts'" />
-  <ShellStep keys="^S d" />
-  <ShellStep run="tmux ls" />
-  <ShellStep run="tmux attach -t layers" />
-  <ShellStep run="tmux kill-session -t layers" />
-</ShellDemo>
-
-<!--
-- 用镜像里真实的 tmux 验证上一页的结构；prefix 是 Ctrl-S，`^S l` 向右分屏
-- `list-panes`：两个 pane 各有自己的 pts，`pane_pid` 是各自 zsh 的 pid
-- `list-clients`：client 所在的 tty 是页面这个终端原来的 pts，TERM 是 xterm-256color
-- `ls -l /proc/<server pid>/fd`：`#{pid}` 是 tmux server 的 pid。server 打开着两个 /dev/ptmx (每个 pane 一个 master 端)，还有 client 交过来的那个 pts，和 `list-clients` 显示的一致
-- `^S d` detach：回到原来的 zsh，`tmux ls` 显示 layers 会话还在，pane 里的 shell 没有退出；`tmux attach` 回到原样
-- 最后 `kill-session` 关掉这个演示会话
-- 来源：[tmux(1) · FORMATS 中的 pid、pane_tty、client_tty](https://github.com/tmux/tmux/blob/3.7c/tmux.1)
 -->

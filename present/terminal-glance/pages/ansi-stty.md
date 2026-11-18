@@ -95,6 +95,58 @@ ${CSI}35;1m         # 参数组合：紫色粗体
 
 ---
 
+在另一个终端里移动光标、写字、擦除
+
+<ShellDemo terminals="a b" heights="3 2">
+  <ShellStep to="a" run="clear; sleep 600" />
+  <ShellStep to="b" run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
+printf "${CSI}4;8H" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='printf "Hello, Terminal" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='printf "${CSI}8D" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='printf "World" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='printf "${CSI}K" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='printf "${CSI}2B${CSI}12D(down 2, left 12)" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run="printf '\a' > /dev/pts/{a.pts}" />
+  <ShellStep to="b" run='printf "${CSI}2J${CSI}H" > /dev/pts/{a.pts}' />
+  <ShellStep to="a" keys="^C" />
+</ShellDemo>
+
+<!--
+- A 清屏后跑一个 `sleep 600`，屏幕上什么都不输出，只剩光标；接下来 A 屏幕上的变化全部来自 B 写进 A 的 pts 的字节，A 里的程序一个字节都没写
+- B 声明 ESC、CSI 后发 `${CSI}4;8H`：A 的光标跳到第 4 行第 8 列
+- 写 `Hello, Terminal`：字从光标处开始，光标停在末尾
+- `${CSI}8D` 左移 8 格停在 T 上，再写 `World`：覆盖成 `Hello, Worldnal`。终端只是在格子里改字，没有「插入」的概念
+- `${CSI}K` 擦掉光标到行尾：剩下 `Hello, World`
+- `${CSI}2B${CSI}12D` 下移 2 行、左移 12 列，回到第 8 列再写一段：相对移动和绝对定位可以组合
+- `printf '\a'` 发一个 BEL (0x07)：终端模拟器响一声，标题栏出现铃铛图标，过几秒消失，和 iTerm2、Ghostty 的提示方式一样
+- `${CSI}2J${CSI}H` 清屏并把光标放回左上角；最后 A 按 `Ctrl-C` 结束 sleep，zsh 在左上角重新画提示符
+- 来源：[ANSI escape code · CSI 序列](https://en.wikipedia.org/wiki/ANSI_escape_code#Control_Sequence_Introducer_commands)、[XTerm Control Sequences · BEL](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Single-character-functions)
+-->
+
+---
+
+用 SGR 给文字加粗、上色
+
+<ShellDemo>
+  <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
+printf "${CSI}1mbold${CSI}0m ${CSI}2mdim${CSI}0m ${CSI}3mitalic${CSI}0m ${CSI}4munderline${CSI}0m ${CSI}7mreverse${CSI}0m\n"' />
+  <ShellStep run='printf "${CSI}31mred ${CSI}32mgreen ${CSI}33myellow ${CSI}34mblue${CSI}0m ${CSI}30;46m black on cyan ${CSI}0m\n"' />
+  <ShellStep run='printf "${CSI}1;35mbold purple${CSI}0m ${CSI}4;32munderlined green${CSI}0m ${CSI}1;37;41m ERROR ${CSI}0m\n"' />
+  <ShellStep run='for i in {16..51}; do printf "${CSI}48;5;${i}m "; done; printf "${CSI}0m\n"' />
+  <ShellStep run='for i in {0..47}; do printf "${CSI}48;2;$((i*5));80;$((255-i*5))m "; done; printf "${CSI}0m\n"' />
+</ShellDemo>
+
+<!--
+- 第一步声明 ESC、CSI，再逐个试样式：1 粗体、2 暗淡、3 斜体、4 下划线、7 反色，每段后面用 `0m` 重置
+- 30–37 是前景色，40–47 是背景色；`30;46` 一次设两个参数：黑字青底
+- 参数可以叠加：`1;35` 粗体紫色，`4;32` 下划线绿色，`1;37;41` 白色粗体红底，常见的 ERROR 标签就是这么来的
+- `48;5;N` 选 256 色表里的第 N 色作背景，这里画 16 到 51 号；`48;2;R;G;B` 直接给 24 位真彩色，循环里改 R 和 B 得到一条渐变
+- 颜色最终长什么样由终端模拟器的调色板决定：同样的 `31m`，在深色和浅色主题下是两种红；点标题栏的主题按钮再看一次就能对比
+- 来源：[ANSI escape code · SGR](https://en.wikipedia.org/wiki/ANSI_escape_code#Select_Graphic_Rendition_parameters)
+-->
+
+---
+
 可以发送快捷键给另一个终端吗？
 
 <!--
@@ -104,7 +156,9 @@ ${CSI}35;1m         # 参数组合：紫色粗体
 
 ---
 
-<ShellDemo terminals="a b">
+往 A 的 pts 写一个 ^C
+
+<ShellDemo terminals="a b" heights="3 2">
   <ShellStep to="a" run="sleep 100" />
   <ShellStep to="b" run="printf '\003' > /dev/pts/{a.pts}" />
   <ShellStep to="b" run="stty -F /dev/pts/{a.pts} -a | grep icanon" />
@@ -206,6 +260,8 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
 
 ---
 
+动手改 TTY 开关：回显、规范模式、备用屏幕
+
 <ShellDemo>
   <ShellStep run="stty -a" />
   <ShellStep run='read input; echo "you typed: $input"' />
@@ -217,9 +273,8 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
   <ShellStep type="b" />
   <ShellStep keys="^C" run="stty icanon" />
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
-printf "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"; sleep 3; printf "${CSI}?1049l"' />
-  <ShellStep run="htop" />
-  <ShellStep type="q" />
+printf "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"' />
+  <ShellStep run='printf "${CSI}?1049l"' />
 </ShellDemo>
 
 <!--
@@ -230,6 +285,6 @@ printf "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"; sleep 3;
 2. `read input` 后输入 `secret`：输入时正常回显
 3. `stty -echo` 后再 `read`：屏幕上看不到输入，但程序照样读到了。输入密码就是这样实现的，回显是 TTY 的功能
 4. `stty -icanon; cat` 后依次输入 `a`、`b`：显示 `aabb`。关掉规范模式后不再按行缓冲，每个字符一到就交给 cat：`a` 先由 TTY 回显一次，cat 读到后再输出一次，`b` 也一样；`Ctrl-C` 退出后 `stty icanon` 恢复
-5. 声明 ESC、CSI 后，`${CSI}?1049h` 切到备用屏幕 (`${CSI}H` 把光标移到左上角)，停 3 秒再 `${CSI}?1049l` 切回，原来的内容原样恢复；旧写法是 `?47h` / `?47l`
-6. `htop`，按 `q` 退出：全屏程序 (htop、vim、less) 都是这样进出备用屏幕的，退出后屏幕复原
+5. 声明 ESC、CSI 后，`${CSI}?1049h` 切到备用屏幕 (`${CSI}H` 把光标移到左上角) 并写一行字，zsh 的提示符也画在备用屏幕里；停在这里讲一讲，再点下一步 `${CSI}?1049l` 切回，原来的内容原样恢复。旧写法是 `?47h` / `?47l`
+6. 全屏程序 (htop、vim、less) 都是这样进出备用屏幕的，退出后屏幕复原；后面 TUI 那页实际运行 nvim 和 less
 -->

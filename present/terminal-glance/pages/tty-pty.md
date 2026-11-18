@@ -73,6 +73,8 @@ done
 
 ---
 
+前台和后台：谁读输入、谁收到 Ctrl-C
+
 <ShellDemo terminals="a b">
   <ShellStep to="a" run="for i in {1..10}; do
   echo $i
@@ -142,6 +144,8 @@ ssh & pts
 -->
 
 ---
+
+两个终端：tty 就是一个文件
 
 <ShellDemo terminals="a b">
   <ShellStep to="a" run="tty" />
