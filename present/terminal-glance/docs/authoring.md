@@ -37,12 +37,13 @@ A step is sent in this order: `keys`, then `type`, then `run` followed by Enter.
 | `keys` | Space-separated keys sent as pressed, e.g. `"^C"`, `"^S l"`, `"↑ ⏎"`. Named keys are in `KEY_BYTES` (`runtime/steps.ts`); anything else is sent literally. |
 | `type` | Text typed as a person would, without a final Enter (input for a running program, or a half-typed line). |
 | `run` | A command typed as a person would, then Enter. A line break in the text is typed as Enter; the guest's empty `PS2`/`RPS2` keeps multiline input free of continuation prefixes while preserving its indentation. `run=""` presses Enter only. |
+| `action` | Instead of typing: `toggle-appearance` switches every terminal between dark and light, as the title bar's toggle does. |
 
 The typing schedule spans at most 600 ms: up to 6 ms per character for short text, faster for long text, and up to 40 ms after each pressed key before the next input. Long text goes out in at most about 24 writes, so even a step of a few hundred characters is typed and echoed within about 0.7 s of the click. Shell execution time is outside this budget.
 
 The terminal-name badge on a step (`A`, `B`) and the name in a terminal's title bar appear only when the demo has more than one terminal.
 
-Each terminal title bar has a shared dark/light toggle. The preference persists across reloads, separately from Slidev's page theme; see [architecture](./architecture.md#shared-terminal-appearance). For the color-query demo, run `terminal-colors`, switch theme and run it again. Run bat again to demonstrate application-selected syntax colors; reinitialize jovial with `exec zsh` when testing its startup detection.
+Each terminal title bar has a shared dark/light toggle. The preference persists across reloads, separately from Slidev's page theme; see [architecture](./architecture.md#shared-terminal-appearance). For the color-query demo, run `terminal-colors`, switch theme with `<ShellStep action="toggle-appearance" />` and run it again. Run bat again to demonstrate application-selected syntax colors; reinitialize jovial with `exec zsh` when testing its startup detection.
 
 `agent-status-demo` emits root OSC 7501 reports and waits for Enter at `blocked`. The title bar shows the latest report. Mark this as a simulated Agent: the script demonstrates protocol bytes and terminal behavior without a model service.
 

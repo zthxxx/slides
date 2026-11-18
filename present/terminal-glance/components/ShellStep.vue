@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSlideContext } from '@slidev/client'
 import { computed, inject, ref, shallowRef, watch } from 'vue'
+import { toggleTerminalAppearance } from '../runtime/appearance'
 import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
 import { relayStep } from '../runtime/relay'
 import { describeStepText, playStep } from '../runtime/session'
@@ -11,6 +12,7 @@ import { highlightShell, type ShellToken } from './shell-highlight'
  * A button that types into a terminal of the same slide: `keys` are pressed first,
  * then `type` is typed, then `run` is typed and Enter pressed.
  * `{a.pts}` / `{a.pid}` in the text become terminal `a`'s pty number / shell pid.
+ * A step with `action` types nothing and does that instead.
  */
 const props = defineProps<{
   /** Target terminal name; defaults to the first terminal of the demo. */
@@ -19,7 +21,15 @@ const props = defineProps<{
   keys?: string
   type?: string
   run?: string
+  /**
+   * `toggle-appearance`: switch every terminal between dark and light, as the title bar's toggle does. The
+   * preference syncs to the other windows through localStorage (runtime/appearance.ts), so the presenter's click
+   * needs no relay.
+   */
+  action?: 'toggle-appearance'
 }>()
+
+const ACTION_LABELS = { 'toggle-appearance': 'Switch dark / light theme' } as const
 
 const demo = inject(shellDemoKey, undefined)
 const { $page, $renderContext } = useSlideContext()
@@ -48,6 +58,10 @@ function play(event: MouseEvent) {
   // A focused button switches off Slidev's keyboard navigation.
   (event.currentTarget as HTMLElement).blur()
   played.value = true
+  if (props.action) {
+    toggleTerminalAppearance()
+    return
+  }
 
   const step = { keys: props.keys, type: props.type, run: props.run }
   if ($renderContext.value === 'presenter')
@@ -60,8 +74,12 @@ function play(event: MouseEvent) {
 <template>
   <li class="shell-step" :class="{ played }">
     <button :disabled="!clickable" :title="text" @click="play">
-      <span v-if="namesTerminals(demo)" class="shell-step-target" :style="{ backgroundColor: accent }">{{ target.toUpperCase() }}</span>
-      <span class="shell-step-input">
+      <span v-if="namesTerminals(demo) && !action" class="shell-step-target" :style="{ backgroundColor: accent }">{{ target.toUpperCase() }}</span>
+      <span v-if="action" class="shell-step-action">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" /></svg>
+        {{ ACTION_LABELS[action] }}
+      </span>
+      <span v-else class="shell-step-input">
         <kbd v-for="key in keys" :key="key">{{ key }}</kbd>
         <code v-if="text && lines"><template v-for="(line, row) in lines" :key="row"><template v-if="row">{{ '\n' }}</template><span v-for="(token, column) in line" :key="column" :style="token.style">{{ token.content }}</span></template></code>
         <code v-else-if="text">{{ text }}</code>
@@ -168,6 +186,26 @@ button {
     font-family: inherit;
     font-size: inherit;
     line-height: 1.3;
+  }
+}
+
+.shell-step-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  /* Set apart from the typed commands: an action, in the page's sans-serif. */
+  font-family: var(--slidev-theme-font-sans, system-ui), sans-serif;
+
+  svg {
+    flex: none;
+    color: var(--step-muted);
+    width: 1.05em;
+    height: 1.05em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+
+    path { fill: currentColor }
   }
 }
 

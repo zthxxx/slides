@@ -224,14 +224,15 @@ const download = computed(() => {
   }
 })
 
+/** Until its shell runs, the screen shows Linux booting and its downloads; later downloads show in the title bar. */
+const booting = computed(() => live && (session?.status.value === 'idle' || session?.status.value === 'starting'))
+
 const status = computed(() => {
+  if (booting.value)
+    return ''
   if (download.value)
     return download.value.text
-  switch (session?.status.value) {
-    case 'starting': return 'booting Linux…'
-    case 'failed': return 'unavailable'
-    default: return ''
-  }
+  return session?.status.value === 'failed' ? 'unavailable' : ''
 })
 </script>
 
@@ -254,7 +255,7 @@ const status = computed(() => {
         </svg>
       </span>
       <span class="terminal-status">{{ status }}</span>
-      <span v-if="download" class="terminal-progress" role="progressbar" :aria-valuetext="download.text"><i :style="{ width: download.width }" /></span>
+      <span v-if="download && !booting" class="terminal-progress" role="progressbar" :aria-valuetext="download.text"><i :style="{ width: download.width }" /></span>
       <!-- Keyed by its text, so every change mounts it anew and replays the pop animation. -->
       <span
         v-if="programStatus"
@@ -287,7 +288,18 @@ const status = computed(() => {
         <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" /></svg>
       </button>
     </header>
-    <div v-if="live" ref="screen" class="terminal-screen" />
+    <div v-if="live" ref="screen" class="terminal-screen">
+      <div v-if="booting" class="terminal-boot" role="status">
+        <p class="terminal-boot-title">
+          <span class="terminal-boot-prompt" aria-hidden="true">❯</span>
+          Booting Linux…
+        </p>
+        <template v-if="download">
+          <p class="terminal-boot-detail">{{ download.text }}</p>
+          <span class="terminal-boot-progress"><i :style="{ width: download.width }" /></span>
+        </template>
+      </div>
+    </div>
     <div v-else class="terminal-screen terminal-stand-in">
       Linux runs in the slide window; steps clicked here are typed there
     </div>
@@ -415,25 +427,25 @@ const status = computed(() => {
 /* A stamp laid over the title bar's right side, overlapping the screen a little, so the state reads from afar. */
 .terminal-program-status {
   position: absolute;
-  top: 0.5rem;
+  top: 0.55rem;
   right: 5.4rem;
   z-index: 3;
   max-width: 60%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding: 0.25rem 0.9rem;
+  padding: 0.15rem 0.65rem;
   border: 2px solid currentColor;
-  border-radius: 0.55rem;
+  border-radius: 0.45rem;
   color: #c9cbd8;
   background: color-mix(in srgb, currentColor 20%, rgb(30 31 41 / 0.72));
   backdrop-filter: blur(3px);
   box-shadow: 0 0.4rem 1.2rem rgb(0 0 0 / 0.35);
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  rotate: -10deg;
-  animation: program-status-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  rotate: -5deg;
+  animation: program-status-pop 0.6s ease-out;
 
   &[data-program-state="working"] { color: #bd93f9 }
   &[data-program-state="done"] { color: #50fa7b }
@@ -441,10 +453,13 @@ const status = computed(() => {
   &[data-program-state="error"] { color: #ff5555 }
 }
 
+/* A jelly bounce: squash wide, stretch tall, settle. */
 @keyframes program-status-pop {
-  0% { scale: 0.4; opacity: 0 }
-  55% { scale: 1.18; opacity: 1 }
-  78% { scale: 0.95 }
+  0% { scale: 0.6; opacity: 0 }
+  30% { scale: 1.16 0.86; opacity: 1 }
+  50% { scale: 0.92 1.1 }
+  68% { scale: 1.05 0.96 }
+  84% { scale: 0.98 1.02 }
   100% { scale: 1 }
 }
 
@@ -475,8 +490,8 @@ const status = computed(() => {
   100% { opacity: 0 }
 }
 
+/* The stamp's bounce and the boot prompt's blink stay: they are short, small, and the only sign that something changed or is loading. */
 @media (prefers-reduced-motion: reduce) {
-  .terminal-program-status { animation: none }
   .terminal-bell { animation: terminal-bell-fade 2.6s ease-in forwards }
 }
 
@@ -485,6 +500,9 @@ const status = computed(() => {
   .terminal-appearance { color: #505971 }
   .terminal-appearance:hover { background: rgb(0 0 0 / 0.08) }
   .terminal-bell { color: #8a6100 }
+  .terminal-boot { color: #687187 }
+  .terminal-boot-prompt { color: #247247 }
+  .terminal-boot-progress i { background: #176e80 }
   .terminal-program-status {
     color: #505971;
     background: color-mix(in srgb, currentColor 14%, rgb(255 255 255 / 0.78));
@@ -497,6 +515,7 @@ const status = computed(() => {
 }
 
 .terminal-screen {
+  position: relative;
   flex: 1;
   min-height: 0;
   /* No right padding: the canvas, and the scrollbar ghostty-web draws at its right edge, end at the window's edge. */
@@ -504,6 +523,67 @@ const status = computed(() => {
   border-radius: 0 0 0.6rem 0.6rem;
   /* The emulator's host is enlarged by the slide scale and scaled back down (runtime/emulator.ts). */
   overflow: hidden;
+}
+
+/* Centered over the screen while Linux boots; it fades in late, so a shell spawned on a running machine shows none. */
+.terminal-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  color: #6272a4;
+  font-family: "Hack Nerd Font Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  animation: terminal-boot-in 0.3s ease-out 0.2s both;
+
+  p { margin: 0 }
+}
+
+.terminal-boot-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 20px;
+}
+
+/* A shell prompt's arrow, blinking like a cursor until the real prompt arrives. */
+.terminal-boot-prompt {
+  color: #50fa7b;
+  font-size: 26px;
+  font-weight: 700;
+  animation: terminal-boot-blink 1.1s ease-in-out infinite;
+}
+
+.terminal-boot-detail {
+  font-size: 15px;
+}
+
+.terminal-boot-progress {
+  width: min(16rem, 60%);
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(98 114 164 / 0.25);
+  overflow: hidden;
+
+  i {
+    display: block;
+    height: 100%;
+    background: #8be9fd;
+    transition: width 0.2s linear;
+  }
+}
+
+@keyframes terminal-boot-in {
+  from { opacity: 0 }
+}
+
+@keyframes terminal-boot-blink {
+  50% { opacity: 0.3 }
 }
 
 /* Over the screen's bottom padding, so it covers no row of text. */

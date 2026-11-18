@@ -59,6 +59,7 @@ When the manifest is missing (a fresh checkout without `pnpm build:image`), the 
 ### A terminal, once per slide
 
 - A session is keyed by `<slide number>/<terminal name>` (`sessionKey`). The registry is kept across HMR.
+- Until its shell runs, a terminal's screen shows, centered, a blinking green `❯` with `Booting Linux…`, and Linux's downloads in flight (files done / total, MB, a progress bar). It fades in after 0.2 s, so a shell spawned on a machine that is already up shows none. Downloads after the boot (a disk chunk the guest reads) show in the title bar instead.
 - When the slide becomes active, `Terminal.vue` calls `session.show(element)`: the session's host element moves into the window, the emulator opens (first time) and fits, and the shell is spawned (first time): `vm.spawn()` → `kwtty` → root's login shell, zsh with jovial.
 - pty output → `emulator.write()`; emulator input and its replies to terminal queries → `pty.write()`; emulator resize → `pty.resize()` (SIGWINCH).
 - Leaving the slide blurs the terminal; the shell keeps running. Returning shows the same shell.
@@ -153,7 +154,7 @@ Browsers keep audio muted until the page has seen a user gesture, and a bell com
 
 `program-status.ts` observes OSC 7501 in the output stream, including frames split across writes and tmux passthrough wrappers. It answers probes, updates a root program-status record for valid reports, and clears it on `state=clear` or a terminal reset. Child records are ignored; this is a root-status demonstration rather than a full hierarchical protocol implementation. The display stream still reaches the VT parser.
 
-`session.ts` exposes the latest record to the title bar, where `Terminal.vue` lays it over the bar's right side as a stamp: larger type, a translucent background, turned 10° counter-clockwise and overlapping the screen's top edge; every change of its text replays a pop animation (none with `prefers-reduced-motion`). It is a program report, not a liveness or success check. Wire framing follows [Program Status Protocol rev 0.4](https://www.superlogical.com/rex/docs/build/program-status) and [botmux cb8ff44b2's parser](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/utils/program-status-parser.ts#L14-L120); the observer's inline references identify the derived behavior.
+`session.ts` exposes the latest record to the title bar, where `Terminal.vue` lays it over the bar's right side as a stamp: a translucent background, turned 5° counter-clockwise and overlapping the screen's top edge; every change of its text replays a short jelly bounce, kept under `prefers-reduced-motion` because it is the only sign of the change. It is a program report, not a liveness or success check. Wire framing follows [Program Status Protocol rev 0.4](https://www.superlogical.com/rex/docs/build/program-status) and [botmux cb8ff44b2's parser](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/utils/program-status-parser.ts#L14-L120); the observer's inline references identify the derived behavior.
 
 ## Loading and caching
 

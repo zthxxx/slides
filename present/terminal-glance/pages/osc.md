@@ -20,14 +20,17 @@ OSC：程序也能向终端提问
 <ShellDemo>
   <ShellStep run="terminal-colors" />
   <ShellStep run="bat /root/hello.sh" />
+  <ShellStep action="toggle-appearance" />
   <ShellStep run="exec zsh" />
+  <ShellStep run="bat /root/hello.sh" />
+  <ShellStep run="terminal-colors" />
 </ShellDemo>
 
 <!--
 - 查询字节是 `ESC ] 11 ; ? ST`，用前面声明的变量写就是 `printf "${OSC}11;?${ST}"`；回答形如 `ESC ] 11 ; rgb:2727/2929/3636 ST`，每个通道用十六进制表示
-- 现场手动演示：运行 terminal-colors，看到转义后的回复和 RGB 值；点任意终端标题栏的颜色按钮，再查询一次，颜色值随当前终端主题改变
+- 运行 terminal-colors，看到转义后的回复和 RGB 值；第 3 步切换终端深浅色 (同标题栏的颜色按钮)，最后一步再查询一次，颜色值随当前终端主题改变
 - terminal-colors 临时关闭规范模式和回显，带超时读取 BEL/ST 结尾的回复，并恢复 termios。直接在提示符运行裸 printf 只会发问，回复还可能落进 shell 的输入流
-- 手动运行 bat，再切颜色、重新运行 bat：bat 0.26.1 默认的主题就是 auto，每次启动查询终端背景色，再选择浅色或深色语法主题；文件只有几行，一屏放得下，bat 直接输出不进入 pager
+- 切换前后各运行一次 bat：bat 0.26.1 默认的主题就是 auto，每次启动查询终端背景色，再选择浅色或深色语法主题；文件只有几行，一屏放得下，bat 直接输出不进入 pager
 - jovial 在初始化时决定 prompt 配色；切换后已有 shell 的 prompt 不保证立刻换色，exec zsh 重新初始化。终端调色板变化和应用重新选择自己的配色，是两个动作
 - 颜色按钮对所有页面的终端生效，偏好保存在浏览器 localStorage。刷新保留的是颜色偏好，Linux 仍然重新开机
 - 来源：[bat v0.26.1 的主题选项](https://github.com/sharkdp/bat/blob/v0.26.1/src/bin/bat/clap_app.rs)、[jovial 终端配色检测](https://github.com/zthxxx/jovial/blob/master/jovial.zsh-theme)
