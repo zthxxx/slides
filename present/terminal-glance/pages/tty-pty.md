@@ -20,7 +20,7 @@
 1. `tty`：当前 shell 标准输入连接的终端设备，`/dev/pts/N`
 2. `echo $TERM`：`xterm-256color`，程序靠终端类型决定用哪套转义序列
 3. `ls -l /proc/$$/fd/{0..2}`：fd 0、1、2 都指向这个 pts，shell 的 stdin、stdout、stderr 就是这个 tty
-4. `ls /dev/pts/`：每打开一个伪终端就多一个编号 (上一页的终端也还在)，另外还有 `ptmx`
+4. `ls /dev/pts/`：每打开一个伪终端就多一个编号 (第 5 页那个终端的 shell 也还在)，另外还有 `ptmx`
 5. `tmux` 后按 `Ctrl-S l` 向右分屏 (镜像里是 zthxxx/tmux-config，prefix 是 Ctrl-S)，在新窗格里 `tty`：又多了一个 pts。tmux server 自己持有 ptmx，给每个窗格开一个 pts，和后面 ssh 那页的结构一样
 6. 两次 `Ctrl-D`：依次退出两个窗格里的 shell，tmux 随之结束
 -->
@@ -112,21 +112,22 @@ ssh & pts
 <SshPtsDiagram />
 
 <!--
-- ssh 登录时，sshd 认证通过后调用 `posix_openpt()` 打开 /dev/ptmx 拿到 master fd，内核同时创建 slave 设备 /dev/pts/N
+- ssh 登录时，sshd 认证通过后调用 `openpty()`，它打开 /dev/ptmx 拿到 master fd，内核同时创建 slave 设备 /dev/pts/N
 - sshd fork 出 shell，把 shell 的 0、1、2 绑到 pts/N；之后 sshd 在 ssh 协议和 ptmx fd 之间来回搬运字节
 - 终端模拟器 (iTerm2，或这个页面里的 ghostty-web) 做的是同一件事，只是不经过网络；tmux 也一样，tmux server 持有 ptmx，为每个窗格创建一个 pts
-- 连接断开时 master 被关闭，内核会给这个会话发 SIGHUP
+- 连接断开时 master 被关闭，pts 随之挂断，内核给以它为控制终端的会话首进程 (这里是 shell) 发 SIGHUP
+- 来源：[openssh-portable sshpty.c · pty_allocate](https://github.com/openssh/openssh-portable/blob/master/sshpty.c)、[pty(7)](https://man7.org/linux/man-pages/man7/pty.7.html)、[The TTY demystified · hangup 与 SIGHUP](https://www.linusakesson.net/programming/tty/)
 -->
 
 ---
 
 - `/dev/console` 系统唯一控制台，系统级别显示(启动/关闭系统时)
 
-- `/dev/ttyN` 系统直连终端每次会被分配到一个新的 tty
+- `/dev/ttyN` 虚拟控制台，编号固定 (Ctrl+Alt+F1~F6)
 
-- `/dev/tty` 对每个终端独立，等价于自己的 tty
+- `/dev/tty` 指向当前进程自己的控制终端
 
-- `/dev/pts/N` ssh 等外部连接会被分配到的 tty
+- `/dev/pts/N` 伪终端的 slave 端，ssh、终端模拟器、tmux 打开 PTY 时分配
 
 - `/proc/N/fd/N` 进程打开的文件描述符
 

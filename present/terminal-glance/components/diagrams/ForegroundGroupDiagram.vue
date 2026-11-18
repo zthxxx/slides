@@ -84,7 +84,7 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
       </g>
       <text class="edge-label key danger" x="945" y="438" text-anchor="middle">R → SIGTTIN</text>
 
-      <text class="figure-tag mono" x="1380" y="528" text-anchor="end">fig · only the foreground group reads; any group may write</text>
+      <text class="figure-tag mono" x="1380" y="528" text-anchor="end">fig · only the foreground group reads; any group may write while -tostop</text>
     </svg>
   </figure>
 </template>

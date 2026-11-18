@@ -42,6 +42,7 @@
 2. `cat /etc/os-release`：完整的 Alpine Linux 3.24，后面用到的 zsh、tmux、htop、nvim 都是 apk 装好的原版软件包
 3. `nproc; free -m`：一个 CPU、约 500 MiB 内存，都跑在这个浏览器 Tab 里；刷新页面就是一台新开机的机器
 4. `echo hello`：最普通的一次输入、执行、输出
-5. `showkey -a`，再依次输入 `a`、`↑`、`Enter`：看到 `97`、`27 91 65`、`13`。到了程序这一层只剩字节：方向键是转义序列 `ESC [ A`，Enter 是 `\r` (平时被 TTY 的 icrnl 转成 `\n`)
-6. `Ctrl-D` 退出：它对应 stty 里的 `eof = ^D`，后面会讲谁在处理它
+5. `showkey -a`，再依次输入 `a`、`↑`、`Enter`：看到 `97`、`27 91 65`、`13`。到了程序这一层只剩字节：方向键是转义序列 `ESC [ A`，Enter 是 `\r`。showkey 运行时把 TTY 切到 raw 模式 (`cfmakeraw`)，关掉了行缓冲、回显、信号和 icrnl，所以 Enter 原样是 13；平时 TTY 会把它转成 `\n` (10)
+6. `Ctrl-D` 退出：raw 模式下 TTY 不处理 ^D，它只是一个字节 4，由 showkey 自己认出来后退出。平时在提示符或 cat 里按 ^D 结束输入，是 TTY 规范模式下的 `eof` 字符，后面 stty 那几页会讲
+- 来源：[busybox showkey.c · cfmakeraw 与 CTRL-D](https://git.busybox.net/busybox/tree/console-tools/showkey.c)
 -->

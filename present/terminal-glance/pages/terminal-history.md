@@ -68,7 +68,7 @@
 </style>
 
 <!--
-- 电传打字机本来用来收发电报：按键发出信号，收到的信号打印在纸带上
+- 电传打字机本来用来收发电报：按键发出信号，收到的信号打印在纸卷上 (ASR-33 还带一个纸带穿孔机和读带机)
 - Unix 要支持多用户，选了便宜的 ASR-33 当终端，所以内核里的终端设备至今叫 tty
 - 当时的链路：终端 → Modem → 线路 → UART → 计算机；内核 TTY 子系统由 UART driver、line discipline、TTY driver 三层组成
 -->
@@ -106,7 +106,7 @@
 
 ---
 
-- 终端的概念变成了现在的虚拟终端，放在内核中
+- 终端变成了软件：内核里的虚拟控制台，和图形界面里的终端模拟器
   <br/>
   <small>(`Virtual Console` / `Terminal Emulator`)</small>
   <br/>
@@ -122,6 +122,6 @@
 
 <!--
 - Virtual Console：Linux 上 Ctrl+Alt+F1~F6 切出的全屏字符界面，由内核直接提供，对应 /dev/tty1~6；图形界面崩了还能用它救火
-- Terminal Emulator：图形界面里的终端窗口，比如 iTerm2、gnome-terminal，或者这个页面里的 ghostty-web，它们通过 PTY 接入内核
+- Terminal Emulator：图形界面里的终端窗口，比如 iTerm2、gnome-terminal，或者这个页面里的 ghostty-web。它们是用户态的普通程序，不在内核里，通过 PTY 接入内核的 TTY
 - 内核里管理终端输入输出的部分统称 TTY；接入 TTY、给用户用的 App 统称终端
 -->

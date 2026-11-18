@@ -199,7 +199,7 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
 - 左边是 termios 的模式开关：lflags 管行规程 (isig、icanon、echo 系列、iexten、tostop)，iflags 管输入转换 (icrnl、ixon、iutf8)，oflags 管输出转换 (opost、onlcr)
 - isig、icanon、echo 是后面演示要动的三个开关：关掉 echo 就看不到输入，关掉 icanon 每个字节立刻交给程序，isig 决定 ^C 是否变成信号
 - icrnl 和 onlcr 解释了开头 showkey 的现象：Enter 发出的是 `\r` (13)，TTY 转成 `\n` 交给程序；程序输出 `\n` 时 TTY 补成 `\r\n`，光标才回到行首
-- 右边是特殊字符映射，都只在对应开关打开时生效：intr、quit、susp 要 isig，erase、kill、eof 要 icanon，werase、lnext 还要 iexten
+- 右边是特殊字符映射，都只在对应开关打开时生效：intr、quit、susp 要 isig，erase、kill、eof 要 icanon，werase 要 icanon 加 iexten，lnext 要 iexten，stop、start 要 ixon
 - min 和 time 只在非规范模式下有意义：程序 read 时至少等 min 个字节，或者等 time 个 0.1 秒
 - 来源：[termios(3)](https://man7.org/linux/man-pages/man3/termios.3.html)、[stty(1)](https://man7.org/linux/man-pages/man1/stty.1.html)
 -->
@@ -213,7 +213,8 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
   <ShellStep run='stty -echo; read input; stty echo; echo "you typed: $input"' />
   <ShellStep run="secret" />
   <ShellStep run="stty -icanon; cat" />
-  <ShellStep type="ab" />
+  <ShellStep type="a" />
+  <ShellStep type="b" />
   <ShellStep keys="^C" run="stty icanon" />
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
 printf "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"; sleep 3; printf "${CSI}?1049l"' />
@@ -228,7 +229,7 @@ printf "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"; sleep 3;
 1. `stty -a`：Linux 下的完整配置，和上一页 macOS 的输出对照
 2. `read input` 后输入 `secret`：输入时正常回显
 3. `stty -echo` 后再 `read`：屏幕上看不到输入，但程序照样读到了。输入密码就是这样实现的，回显是 TTY 的功能
-4. `stty -icanon; cat` 后输入 `ab`：显示 `abab`。关掉规范模式后不再按行缓冲，每个字符都立刻交给 cat；`Ctrl-C` 退出后 `stty icanon` 恢复
+4. `stty -icanon; cat` 后依次输入 `a`、`b`：显示 `aabb`。关掉规范模式后不再按行缓冲，每个字符一到就交给 cat：`a` 先由 TTY 回显一次，cat 读到后再输出一次，`b` 也一样；`Ctrl-C` 退出后 `stty icanon` 恢复
 5. 声明 ESC、CSI 后，`${CSI}?1049h` 切到备用屏幕 (`${CSI}H` 把光标移到左上角)，停 3 秒再 `${CSI}?1049l` 切回，原来的内容原样恢复；旧写法是 `?47h` / `?47l`
 6. `htop`，按 `q` 退出：全屏程序 (htop、vim、less) 都是这样进出备用屏幕的，退出后屏幕复原
 -->
