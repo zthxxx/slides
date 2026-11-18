@@ -1,7 +1,54 @@
-import type { UserConfig } from 'vite'
+import type { Plugin, ResolvedConfig, UserConfig } from 'vite'
+import type { DiskManifest } from './runtime/disk'
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import path from 'node:path'
 
 const { version: unkernelVersion } = createRequire(import.meta.url)('unkernel/package.json') as { version: string }
+
+/**
+ * Starts Linux's downloads from index.html, in parallel with the app's scripts instead of after them: the disk
+ * manifest, the boot bundle it names, and the kernel wasm. A `fetch()` of the same URL (runtime/kernel.ts via
+ * unkernel's `loadKernelModule`, runtime/disk.ts) takes over the preloaded response when destination, mode and
+ * credentials match, hence `as="fetch"` and `crossorigin`; the cache mode is not compared, so unkernel's
+ * `cache: 'no-cache'` still matches. `fetchpriority="low"` keeps them behind the scripts, styles and visible images
+ * when the server honors HTTP/2 or HTTP/3 priorities. Every window preloads; another window opened meanwhile, such
+ * as the presenter, shares the download through the HTTP cache.
+ * Ref: HTML Standard, "preload key" (https://html.spec.whatwg.org/multipage/links.html#preload-key);
+ * unkernel@0.1.0-261117-0e4b2ec `dist/_chunks/core.mjs` (`loadKernelModule`, `fetchOk`).
+ */
+function preloadLinux(): Plugin {
+  let config: ResolvedConfig
+  return {
+    name: 'terminal-glance:preload-linux',
+    apply: 'build',
+    configResolved(resolved) {
+      config = resolved
+    },
+    transformIndexHtml: {
+      // After Vite's own tags, so the browser requests the app's scripts and styles first.
+      order: 'post',
+      handler(_, { bundle }) {
+        const kernel = Object.values(bundle ?? {}).find(file => file.type === 'asset' && file.names.includes('unkernel-alpine.wasm'))
+        if (!kernel)
+          throw new Error('terminal-glance:preload-linux: no unkernel-alpine.wasm in the bundle')
+        // Missing in a fresh checkout without `pnpm build:image`; the page then boots bare Alpine.
+        const manifestFile = path.join(config.publicDir, 'linux/manifest.json')
+        const manifest = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) as DiskManifest : undefined
+        const files = [
+          ...manifest ? ['linux/manifest.json'] : [],
+          ...manifest?.bootBundle ? [`linux/${manifest.bootBundle.file}`] : [],
+          kernel.fileName,
+        ]
+        return files.map(file => ({
+          tag: 'link',
+          attrs: { rel: 'preload', as: 'fetch', crossorigin: true, fetchpriority: 'low', href: config.base + file },
+          injectTo: 'head',
+        }))
+      },
+    },
+  }
+}
 
 export default {
   define: {
@@ -13,6 +60,7 @@ export default {
     // `new URL('./unkernel-alpine.wasm', import.meta.url)`; pre-bundling would move the module away from that file.
     exclude: ['unkernel'],
   },
+  plugins: [preloadLinux()],
   build: {
     // One stylesheet instead of one per slide: the slides' own styles are scoped, so loading them all up front is safe.
     cssCodeSplit: false,
