@@ -4,7 +4,7 @@ import fc from 'fast-check'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { CHUNK_SIZE, packDisk } from '../image/pack'
+import { CHUNK_SIZE, packDisk, writeBootBundle } from '../image/pack'
 import { ChunkedDiskBase, decodeChunk } from '../runtime/disk'
 
 /**
@@ -126,6 +126,141 @@ describe('published disk image', () => {
         }
       }),
       { numRuns: 25 },
+    )
+  }, 120_000)
+})
+
+/** Reads from the published files after a delay that differs per chunk file, so fetches finish out of order. */
+function slowLoader(outDir: string, seed: number, loads: Map<string, number>) {
+  const read = readFromFiles(outDir)
+  return async (file: string) => {
+    loads.set(file, (loads.get(file) ?? 0) + 1)
+    const delay = [...file].reduce((sum, char) => (sum * 31 + char.charCodeAt(0) + seed) >>> 0, 0) % 5
+    await new Promise(resolve => setTimeout(resolve, delay))
+    return read(file)
+  }
+}
+
+describe('boot prefetch', () => {
+  const plan = fc.record({
+    /** Positions (0..1) of the chunks to prefetch, in the order to prefetch them. */
+    boot: fc.array(fc.double({ min: 0, max: 1, noNaN: true }), { maxLength: 8 }),
+    concurrency: fc.integer({ min: 1, max: 8 }),
+    seed: fc.nat(),
+    /** Guest reads, each started before or after the prefetch begins, while it runs. */
+    reads: fc.array(fc.record({ position: fc.double({ min: 0, max: 1, noNaN: true }), length: fc.integer({ min: 1, max: 2 * CHUNK_SIZE }), early: fc.boolean() }), { minLength: 1, maxLength: 8 }),
+  })
+
+  test('prefetching never changes the bytes the guest reads', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, plan, async (spec, { boot, concurrency, seed, reads }) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const chunkCount = Math.ceil(disk.length / CHUNK_SIZE)
+          const bootIndices = boot.map(position => Math.min(chunkCount - 1, Math.floor(position * chunkCount)))
+          const base = new ChunkedDiskBase({ ...manifest, boot: bootIndices }, slowLoader(outDir, seed, new Map()))
+          const read = ({ position, length }: { position: number, length: number }) => {
+            const offset = Math.min(disk.length - 1, Math.floor(position * disk.length))
+            const end = Math.min(disk.length, offset + length)
+            return base.read(offset, end - offset).then(bytes => expect(bytes).toEqual(disk.subarray(offset, end)))
+          }
+          const early = reads.filter(r => r.early).map(read)
+          const prefetching = base.prefetch(bootIndices, concurrency)
+          const late = reads.filter(r => !r.early).map(read)
+          await Promise.all([...early, prefetching, ...late])
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 20 },
+    )
+  }, 120_000)
+
+  test('a chunk wanted by the prefetch and by guest reads at the same time is fetched once', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, plan, async (spec, { boot, concurrency, seed, reads }) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const chunkCount = Math.ceil(disk.length / CHUNK_SIZE)
+          const bootIndices = boot.map(position => Math.min(chunkCount - 1, Math.floor(position * chunkCount)))
+          const loads = new Map<string, number>()
+          const base = new ChunkedDiskBase({ ...manifest, boot: bootIndices }, slowLoader(outDir, seed, loads))
+          const read = ({ position, length }: { position: number, length: number }) => {
+            const offset = Math.min(disk.length - 1, Math.floor(position * disk.length))
+            return base.read(offset, Math.min(length, disk.length - offset))
+          }
+          await Promise.all([...reads.filter(r => r.early).map(read), base.prefetch(bootIndices, concurrency), ...reads.filter(r => !r.early).map(read)])
+          // The disks here have at most 5 chunks, fewer than the cache holds, so nothing is evicted and fetched again.
+          // Chunk indices with equal contents share one file; each index is still fetched on its own.
+          const indicesPerFile = new Map<string, number>()
+          for (const file of Object.values(manifest.chunks))
+            indicesPerFile.set(file, (indicesPerFile.get(file) ?? 0) + 1)
+          for (const [file, count] of loads)
+            expect(count).toBeLessThanOrEqual(indicesPerFile.get(file) ?? 0)
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 20 },
+    )
+  }, 120_000)
+})
+
+describe('boot bundle', () => {
+  /** Byte ranges the guest reads at boot, and other reads, as positions (0..1) of the disk and lengths. */
+  const range = fc.record({ position: fc.double({ min: 0, max: 1, noNaN: true }), length: fc.integer({ min: 1, max: 96 * 1024 }) })
+  const at = (disk: Uint8Array, { position, length }: { position: number, length: number }): [number, number] => {
+    const offset = Math.min(disk.length - 1, Math.floor(position * disk.length))
+    return [offset, Math.min(length, disk.length - offset)]
+  }
+
+  test('reads return the disk\'s bytes whether the bundle covers them or not', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, fc.array(range, { minLength: 1, maxLength: 12 }), fc.array(range, { minLength: 1, maxLength: 8 }), fc.nat(), async (spec, bootReads, otherReads, seed) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const boot = bootReads.map(r => at(disk, r))
+          const bootBundle = await writeBootBundle(outDir, manifest, boot)
+          const base = new ChunkedDiskBase({ ...manifest, bootBundle }, slowLoader(outDir, seed, new Map()))
+          const prefetching = base.prefetchBoot(4)
+          await Promise.all([...boot, ...otherReads.map(r => at(disk, r))].map(([offset, length]) =>
+            base.read(offset, length).then(bytes => expect(bytes).toEqual(disk.subarray(offset, offset + length)))))
+          await prefetching
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 20 },
+    )
+  }, 120_000)
+
+  test('the reads recorded at boot download the bundle and no chunk', async () => {
+    await fc.assert(
+      fc.asyncProperty(diskSpec, fc.array(range, { minLength: 1, maxLength: 12 }), fc.nat(), async (spec, bootReads, seed) => {
+        const disk = render(spec)
+        const { manifest, outDir, cleanup } = await publish(disk)
+        try {
+          const boot = bootReads.map(r => at(disk, r))
+          const bootBundle = await writeBootBundle(outDir, manifest, boot)
+          const loads = new Map<string, number>()
+          const base = new ChunkedDiskBase({ ...manifest, bootBundle }, slowLoader(outDir, seed, loads))
+          void base.prefetchBoot(4)
+          // Any part of a recorded read is covered as well: the guest may split a read differently.
+          await Promise.all(boot.map(([offset, length]) => base.read(offset + Math.floor(length / 3), Math.max(1, Math.floor(length / 2)))))
+          expect([...loads.keys()]).toEqual([bootBundle.file])
+          expect(loads.get(bootBundle.file)).toBe(1)
+        }
+        finally {
+          await cleanup()
+        }
+      }),
+      { numRuns: 20 },
     )
   }, 120_000)
 })

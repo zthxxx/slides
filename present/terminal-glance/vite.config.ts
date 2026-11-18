@@ -13,4 +13,24 @@ export default {
     // `new URL('./unkernel-alpine.wasm', import.meta.url)`; pre-bundling would move the module away from that file.
     exclude: ['unkernel'],
   },
+  build: {
+    // One stylesheet instead of one per slide: the slides' own styles are scoped, so loading them all up front is safe.
+    cssCodeSplit: false,
+    rolldownOptions: {
+      output: {
+        // The deck is read over links where each request may stall for seconds, so the page loads as two scripts
+        // instead of about 80 (Slidev's per-slide and per-route chunks). `terminal` holds ghostty-web (its wasm is
+        // inlined) and unkernel's loader; `app` holds everything else, including every slide, so moving between
+        // slides needs no request. `codeSplitting` replaces the `manualChunks` Slidev sets, whose groups
+        // (shiki, vue, icons) end up in `app`.
+        // Ref: @slidev/cli@53.1.0 `dist/serve-*.mjs` (manualChunks), rolldown@1.2.19 `output.codeSplitting`.
+        codeSplitting: {
+          groups: [
+            { name: 'terminal', test: /[\\/]node_modules[\\/](?:ghostty-web|unkernel)[\\/]/, priority: 2 },
+            { name: 'app', test: () => true, priority: 1 },
+          ],
+        },
+      },
+    },
+  },
 } satisfies UserConfig

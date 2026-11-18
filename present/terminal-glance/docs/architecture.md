@@ -27,7 +27,7 @@ runtime/                  plain TypeScript; no templates
    palette.ts             two synchronized VT parsers, selected by the terminal preference
    program-status.ts      stream observer for root OSC 7501 reports
    kernel.ts              the page's one VM, booted once per tab
-   disk.ts                the published disk image, fetched lazily, under an in-memory copy-on-write layer
+   disk.ts                the published disk image: the boot bundle up front, other chunks lazily, under an in-memory copy-on-write layer
    steps.ts               pure: step → bytes, `{a.pts}` references
    relay.ts               presenter window → slide window (BroadcastChannel)
    demo.ts                ShellDemo context and terminal accent colors
@@ -46,7 +46,8 @@ Dependencies point down only. `runtime/` never imports from `components/`; `step
 ### Boot, once per tab
 
 1. Slidev mounts every slide about 3 s after the deck opens (hidden with `v-show`). The first live `Terminal` calls `useLinux()`, so the VM boots in the background, usually before the talk reaches a demo.
-2. `useLinux()` (`kernel.ts`) checks browser support, fetches `<base>/linux/manifest.json`, wraps the chunks in `CowDisk(ChunkedDiskBase)` and calls `createKernel({ disks })`. Writes stay in memory: a reload is a fresh machine.
+2. `useLinux()` (`kernel.ts`) checks browser support and calls `createKernel({ kernel, disks })` once two downloads, started together by `prefetchLinux()`, are ready: the kernel wasm, compiled while it streams, and the disk, whose boot bundle (the bytes the guest reads up to its first prompt, one file) is fetched as soon as the manifest arrives (image.md). The disk is `CowDisk(ChunkedDiskBase)`; writes stay in memory, so a reload is a fresh machine.
+   `prefetchLinux()` runs no kernel, so any window may call it to start the downloads early; only the audience window boots.
 3. The initramfs `/init` mounts the disk labelled `kwdata` and makes `/` an overlay of the initramfs and the disk (image.md). busybox `init` starts `kwtty serve`.
 
 `useLinux()` is memoized and kept across Vite HMR (`import.meta.hot.data`): a thread can run only one kernel.
@@ -147,6 +148,20 @@ Browsers keep audio muted until the page has seen a user gesture, and a bell com
 `program-status.ts` observes OSC 7501 in the output stream, including frames split across writes and tmux passthrough wrappers. It answers probes, updates a root program-status record for valid reports, and clears it on `state=clear` or a terminal reset. Child records are ignored; this is a root-status demonstration rather than a full hierarchical protocol implementation. The display stream still reaches the VT parser.
 
 `session.ts` exposes the latest record to the title bar, where `Terminal.vue` lays it over the bar's right side as a stamp: larger type, a translucent background, turned 10° counter-clockwise and overlapping the screen's top edge; every change of its text replays a pop animation (none with `prefers-reduced-motion`). It is a program report, not a liveness or success check. Wire framing follows [Program Status Protocol rev 0.4](https://www.superlogical.com/rex/docs/build/program-status) and [botmux cb8ff44b2's parser](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/utils/program-status-parser.ts#L14-L120); the observer's inline references identify the derived behavior.
+
+## Loading and caching
+
+The deck is often opened over slow links where any single request may stall for seconds, so the build keeps the number of requests small:
+
+| Setting | Where | Effect |
+| --- | --- | --- |
+| `build.rolldownOptions.output.codeSplitting` | `vite.config.ts` | The page is two scripts plus rolldown's tiny runtime: `terminal` (ghostty-web with its inlined wasm, and unkernel's loader) and `app` (Slidev, Vue, shiki and every slide). Moving between slides loads nothing. It replaces Slidev's own `manualChunks`. |
+| `build.cssCodeSplit: false` | `vite.config.ts` | One stylesheet instead of one per slide; slide styles are scoped, so loading them all at once is safe. |
+| `preloadImages: false` | `slides.md` headmatter | Slide pictures load with their slides, which Slidev mounts about 3 s after opening, instead of competing with the scripts. |
+
+Linux loads separately and on demand: `unkernel-alpine.wasm` (12.5 MB, about 7 MB gzipped) when the first terminal mounts, and the disk image's 1 MiB chunks as the guest reads them (image.md).
+
+All of it is cached by the browser's HTTP cache. Script, stylesheet and wasm names carry a content hash and disk chunks are named by content, so they can be cached for as long as the host allows; `index.html` and `linux/manifest.json` keep a short lifetime so a new deploy is picked up. Once the long-lived files are cached, a reload over a link with 400 ms of latency renders the slide in under 0.5 s and Linux spawns its first shell in 1 to 2 s.
 
 ## Keyboard and focus
 

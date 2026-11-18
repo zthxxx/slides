@@ -1,6 +1,9 @@
 ---
 theme: eloc
 routerMode: hash
+# The pictures load with their slides, which Slidev mounts a few seconds after the deck opens, instead of competing
+# with the deck's scripts for bandwidth while it starts.
+preloadImages: false
 ---
 
 ## Terminal 概览 (其一)

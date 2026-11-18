@@ -26,9 +26,10 @@ A disk built on another unkernel version makes `/init` rebase it at boot or fall
 
 ```
 image/
-  build.ts            Bun. Orchestrates: input hash, skip when up to date, provision, pack.
+  build.ts            Bun. Orchestrates: input hash, skip when up to date, provision, pack, trace the boot.
   pack.ts             Bun. Raw disk → public/linux/{manifest.json, chunks/*.gz}. Exports the manifest type.
   vm/provision.ts     Node >= 24. Boots unkernel with network + a fresh data disk, runs guest/setup.sh, powers off.
+  vm/trace-boot.ts    Node >= 24. Boots the published disk offline as the page does; prints what it reads up to the first prompt.
   guest/              Mounted read-only at /provision inside the build VM.
     setup.sh          Runs in the guest (busybox ash): apk, login shell, checks, zinit, cleanup, zero free blocks.
     packages.txt      apk packages, one per line.
@@ -42,6 +43,7 @@ Outputs, all gitignored:
 | `.cache/image/kwdata.img` | The raw 4 GiB sparse ext4 disk. |
 | `public/linux/manifest.json` | The published disk's index (below). |
 | `public/linux/chunks/*.gz` | The published disk's data. |
+| `public/linux/boot/*.gz` | The boot bundle: the blocks the guest reads up to its first prompt, in one file. |
 
 Slidev copies `public/` into the deck's build, so the page fetches `<base>/linux/manifest.json`.
 
@@ -55,7 +57,8 @@ pnpm build:image            # skips when public/linux/manifest.json has the same
 pnpm build:image --force    # rebuild anyway, e.g. to pick up newer packages
 ```
 
-About 1.5 minutes on a laptop: 50 to 80 s provisioning, then 2 s packing.
+About 1.5 minutes on a laptop: 50 to 80 s provisioning, 2 s packing, then about 7 s tracing the boot.
+When the inputs are unchanged but the manifest has no boot trace yet, the build only traces the boot.
 
 The input hash covers every file under `image/` and the installed `unkernel` version.
 Packages come from the live Alpine 3.24 repositories and zinit clones jovial from its default branch, so two builds with the same hash can differ.
@@ -113,6 +116,8 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
   "chunkSize": 1048576,
   "encoding": "gzip",
   "chunks": { "<index>": "chunks/<first 16 hex of sha256(raw chunk)>.gz" },
+  "boot": [0, 2, 1920, 34, 2048, "…"],
+  "bootBundle": { "file": "boot/<first 16 hex of sha256(raw)>.gz", "blockSize": 16384, "runs": [[0, 2], ["…"]] },
   "stats": { "nonZeroChunks": 95, "uniqueChunks": 95, "rawBytes": 99614720, "compressedBytes": 28892482 }
 }
 ```
@@ -121,6 +126,10 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
 - An index missing from `chunks` is all zeros.
 - Files are named by content: equal chunks are stored once, and a file's URL never changes content, so browsers and CDNs may cache it indefinitely.
 - The packer writes the manifest last, by rename, and deletes chunk files no longer referenced.
+- `vm/trace-boot.ts` boots the published disk once, offline, the way the page does, and records what the guest reads from power-on until zsh's first prompt (and 2.5 s after it, for fast-syntax-highlighting's turbo load).
+- `boot` lists the chunks it read, in first-read order. `bootBundle` holds the bytes it read, rounded to 16 KiB blocks: `runs` are `[first block, block count]`, and the file is those blocks one after another, each 16 KiB, gzip-compressed.
+- The page downloads the bundle as soon as it has the manifest, in parallel with the kernel's own download. A read the bundle covers entirely is served from it; any other read loads its chunks lazily, as before. The boot reads only about 3 MiB of the 25 chunks it touches, so the bundle is about 1 MiB gzip where those chunks are about 6 MiB.
+- A manifest with `boot` but no bundle fetches those chunks 6 at a time instead; one with neither boots fully lazily.
 
 `test/disk.test.ts` checks this contract both ways: whatever `pack.ts` publishes, `runtime/disk.ts` reads back byte for byte.
 
@@ -135,7 +144,7 @@ Figures from the current package list:
 | Non-zero data | 95 chunks, 95 MiB |
 | Published (gzip) | **27.6 MiB** |
 
-The page downloads chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
+The page downloads the boot bundle at once, and other chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.
 
 ## Changing the image

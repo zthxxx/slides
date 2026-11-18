@@ -1,4 +1,4 @@
-[Botmux Web 终端](https://deepcoldy.github.io/botmux/web-terminal)：同一个 Agent，在浏览器里看和接着敲
+[Botmux Web 终端](https://deepcoldy.github.io/botmux/web-terminal)：一个 Agent，多条输入路径
 
 <WebFrame src="https://deepcoldy.github.io/botmux/web-terminal" crop="64 324 0 376" :fit-height="430" title="botmux docs · Web Terminal" />
 
@@ -12,7 +12,7 @@
 
 ---
 
-Botmux WebShell: 一个 Agent，多条输入路径
+[Botmux Web 终端](https://deepcoldy.github.io/botmux/web-terminal)：一个 Agent，多条输入路径
 
 <AgentGatewayDiagram />
 
