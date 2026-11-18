@@ -22,9 +22,9 @@ OSC="${ESC}]"
 ST="${ESC}\\"
 
 # CSI 参数… 结尾字母
-printf "${CSI}35;1m"
+echo -n "${CSI}35;1m"
 # OSC 编号;参数… ST (或 BEL)
-printf "${OSC}11;?${ST}"
+echo -n "${OSC}11;?${ST}"
 ```
 
 </div>
@@ -36,7 +36,7 @@ printf "${OSC}11;?${ST}"
 </style>
 
 <!--
-- ESC 是一个字节 0x1B，`\e`、`\033`、`\x1b`、`\u001b` 都是它在 printf 和 `$'…'` 里的写法；双引号里的 `"\e"` 只是反斜杠和字母 e 两个字符，交给 printf 或 `echo -e` 才会变成 ESC
+- ESC 是一个字节 0x1B，`\e`、`\033`、`\x1b`、`\u001b` 都是它在 `$'…'` 里的写法；双引号里的 `"\e"` 只是反斜杠和字母 e 两个字符，交给 zsh 的 `echo` 才变成 ESC：它自己解释 `\e`、`\a`、`\n`、`\0NNN`、`\xNN`，bash 的 `echo` 要加 `-e` 才行；`-n` 去掉结尾的换行
 - CSI 是 `ESC [`，后面跟分号分隔的数字参数和一个结尾字母，结尾字母决定功能：A 到 D 移动光标，m 设置颜色和字体样式
 - OSC 是 `ESC ]`，后面是编号和参数，以 ST (`ESC \`) 或 BEL (0x07) 结束；用来设置窗口标题、查询终端颜色等，后面 OSC 那几页展开
 - 演示里的命令都先声明 ESC、CSI、OSC、ST 这几个变量，再用它们拼序列，读起来比一串 `\e[` 清楚
@@ -100,14 +100,14 @@ ${CSI}35;1m         # 参数组合：紫色粗体
 <ShellDemo terminals="a b" heights="3 2">
   <ShellStep to="a" run="clear; sleep 600" />
   <ShellStep to="b" run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
-printf "${CSI}4;8H" > /dev/pts/{a.pts}' />
-  <ShellStep to="b" run='printf "Hello, Terminal" > /dev/pts/{a.pts}' />
-  <ShellStep to="b" run='printf "${CSI}8D" > /dev/pts/{a.pts}' />
-  <ShellStep to="b" run='printf "World" > /dev/pts/{a.pts}' />
-  <ShellStep to="b" run='printf "${CSI}K" > /dev/pts/{a.pts}' />
-  <ShellStep to="b" run='printf "${CSI}2B${CSI}12D(down 2, left 12)" > /dev/pts/{a.pts}' />
-  <ShellStep to="b" run="printf '\a' > /dev/pts/{a.pts}" />
-  <ShellStep to="b" run='printf "${CSI}2J${CSI}H" > /dev/pts/{a.pts}' />
+echo -n "${CSI}4;8H" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='echo -n "Hello, Terminal" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='echo -n "${CSI}8D" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='echo -n "World" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='echo -n "${CSI}K" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run='echo -n "${CSI}2B${CSI}12D(down 2, left 12)" > /dev/pts/{a.pts}' />
+  <ShellStep to="b" run="echo -n '\a' > /dev/pts/{a.pts}" />
+  <ShellStep to="b" run='echo -n "${CSI}2J${CSI}H" > /dev/pts/{a.pts}' />
   <ShellStep to="a" keys="^C" />
 </ShellDemo>
 
@@ -118,7 +118,7 @@ printf "${CSI}4;8H" > /dev/pts/{a.pts}' />
 - `${CSI}8D` 左移 8 格停在 T 上，再写 `World`：覆盖成 `Hello, Worldnal`。终端只是在格子里改字，没有「插入」的概念
 - `${CSI}K` 擦掉光标到行尾：剩下 `Hello, World`
 - `${CSI}2B${CSI}12D` 下移 2 行、左移 12 列，回到第 8 列再写一段：相对移动和绝对定位可以组合
-- `printf '\a'` 发一个 BEL (0x07)：终端模拟器响一声，标题栏出现铃铛图标，过几秒消失，和 iTerm2、Ghostty 的提示方式一样
+- `echo -n '\a'` 发一个 BEL (0x07)：终端模拟器响一声，标题栏出现铃铛图标，过几秒消失，和 iTerm2、Ghostty 的提示方式一样
 - `${CSI}2J${CSI}H` 清屏并把光标放回左上角；最后 A 按 `Ctrl-C` 结束 sleep，zsh 在左上角重新画提示符
 - 来源：[ANSI escape code · CSI 序列](https://en.wikipedia.org/wiki/ANSI_escape_code#Control_Sequence_Introducer_commands)、[XTerm Control Sequences · BEL](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Single-character-functions)
 -->
@@ -129,11 +129,11 @@ printf "${CSI}4;8H" > /dev/pts/{a.pts}' />
 
 <ShellDemo>
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
-printf "${CSI}1mbold${CSI}0m ${CSI}2mdim${CSI}0m ${CSI}3mitalic${CSI}0m ${CSI}4munderline${CSI}0m ${CSI}7mreverse${CSI}0m\n"' />
-  <ShellStep run='printf "${CSI}31mred ${CSI}32mgreen ${CSI}33myellow ${CSI}34mblue${CSI}0m ${CSI}30;46m black on cyan ${CSI}0m\n"' />
-  <ShellStep run='printf "${CSI}1;35mbold purple${CSI}0m ${CSI}4;32munderlined green${CSI}0m ${CSI}1;37;41m ERROR ${CSI}0m\n"' />
-  <ShellStep run='for i in {16..51}; do printf "${CSI}48;5;${i}m "; done; printf "${CSI}0m\n"' />
-  <ShellStep run='for i in {0..47}; do printf "${CSI}48;2;$((i*5));80;$((255-i*5))m "; done; printf "${CSI}0m\n"' />
+echo "\n${CSI}1mbold${CSI}0m ${CSI}2mdim${CSI}0m ${CSI}3mitalic${CSI}0m ${CSI}4munderline${CSI}0m ${CSI}7mreverse${CSI}0m"' />
+  <ShellStep run='echo "\n${CSI}31mred ${CSI}32mgreen ${CSI}33myellow ${CSI}34mblue${CSI}0m ${CSI}30;46m black on cyan ${CSI}0m"' />
+  <ShellStep run='echo "\n${CSI}1;35mbold purple${CSI}0m ${CSI}4;32munderlined green${CSI}0m ${CSI}1;37;41m ERROR ${CSI}0m"' />
+  <ShellStep run='echo; for i in {16..51}; do echo -n "${CSI}48;5;${i}m "; done; echo "${CSI}0m"' />
+  <ShellStep run='echo; for i in {0..47}; do echo -n "${CSI}48;2;$((i*5));80;$((255-i*5))m "; done; echo "${CSI}0m"' />
 </ShellDemo>
 
 <!--
@@ -160,7 +160,7 @@ printf "${CSI}1mbold${CSI}0m ${CSI}2mdim${CSI}0m ${CSI}3mitalic${CSI}0m ${CSI}4m
 
 <ShellDemo terminals="a b" heights="3 2">
   <ShellStep to="a" run="sleep 100" />
-  <ShellStep to="b" run="printf '\003' > /dev/pts/{a.pts}" />
+  <ShellStep to="b" run="echo -n '\003' > /dev/pts/{a.pts}" />
   <ShellStep to="b" run="stty -F /dev/pts/{a.pts} -a | grep icanon" />
   <ShellStep to="a" keys="^C" />
   <ShellStep to="b" run="stty -F /dev/pts/{a.pts} -a | grep icanon" />
@@ -170,7 +170,7 @@ printf "${CSI}1mbold${CSI}0m ${CSI}2mdim${CSI}0m ${CSI}3mitalic${CSI}0m ${CSI}4m
 - 答案：不能
 
 演示：
-1. A `sleep 100`，B `printf '\003' > /dev/pts/<A>`：什么都没发生，sleep 继续运行。写 slave 走的是输出方向，字节交给终端模拟器去显示；^C 只有在输入方向上经过开启了 isig 的 line discipline，才会变成 SIGINT。前面 `printf ok` 回车不执行也是这个原因：写进 pts 的字节走输出方向，没有进 A 的输入缓冲
+1. A `sleep 100`，B `echo -n '\003' > /dev/pts/<A>`：什么都没发生，sleep 继续运行。写 slave 走的是输出方向，字节交给终端模拟器去显示；^C 只有在输入方向上经过开启了 isig 的 line discipline，才会变成 SIGINT。前面 `printf ok` 回车不执行也是这个原因：写进 pts 的字节走输出方向，没有进 A 的输入缓冲
 2. B `stty -F /dev/pts/<A> -a | grep icanon`：sleep 在前台时是 `isig icanon echo`，规范模式
 3. A 按 `Ctrl-C` 结束 sleep，B 再查一次：回到提示符后变成 `-icanon -echo`，zsh 的行编辑器关掉了 tty 的行缓冲和回显，自己逐键处理 (isig 留着，Ctrl-C 仍由 TTY 转成信号)，印证前面「没有回车前的输入也传给了 shell」
 -->
@@ -273,8 +273,8 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
   <ShellStep type="b" />
   <ShellStep keys="^C" run="stty icanon" />
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
-printf "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"' />
-  <ShellStep run='printf "${CSI}?1049l"' />
+echo -n "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"' />
+  <ShellStep run='echo -n "${CSI}?1049l"' />
 </ShellDemo>
 
 <!--
