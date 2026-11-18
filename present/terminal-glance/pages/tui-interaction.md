@@ -52,9 +52,9 @@
 
 <ShellDemo>
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["; OSC="${ESC}]"; ST="${ESC}\\"
-echo -n "${CSI}?1000h${CSI}?1006h"; stty -echo
+echo "${CSI}?1000h${CSI}?1006h"; stty -echo
 while read -rsk c; do print -rn -- ${(V)c}; done' />
-  <ShellStep keys="^C" run='echo -n "${CSI}?1006l${CSI}?1000l"; stty sane' />
+  <ShellStep keys="^C" run='echo "${CSI}?1006l${CSI}?1000l"; stty sane' />
   <ShellStep run="htop" />
   <ShellStep type="q" />
 </ShellDemo>

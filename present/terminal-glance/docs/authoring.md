@@ -76,8 +76,8 @@ On each terminal of a slide, the first step that prints an escape sequence decla
 
 ```md
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["; OSC="${ESC}]"; ST="${ESC}\\"
-echo -n "${OSC}7501;state=clear${ST}"' />
-  <ShellStep run='echo -n "${OSC}7501;state=done${ST}"' />
+echo "${OSC}7501;state=clear${ST}"' />
+  <ShellStep run='echo "${OSC}7501;state=done${ST}"' />
 ```
 
 Later steps on the same terminal reuse the variables; the names live in that terminal's shell only. Slides with only cursor and color steps declare `ESC` and `CSI`; OSC slides declare all four. The vocabulary slide in `pages/ansi-stty.md` introduces the names.

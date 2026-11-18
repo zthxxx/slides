@@ -27,7 +27,7 @@ OSC：程序也能向终端提问
 </ShellDemo>
 
 <!--
-- 查询字节是 `ESC ] 11 ; ? ST`，用前面声明的变量写就是 `echo -n "${OSC}11;?${ST}"`；回答形如 `ESC ] 11 ; rgb:2727/2929/3636 ST`，每个通道用十六进制表示
+- 查询字节是 `ESC ] 11 ; ? ST`，用前面声明的变量写就是 `echo "${OSC}11;?${ST}"`；回答形如 `ESC ] 11 ; rgb:2727/2929/3636 ST`，每个通道用十六进制表示
 - 运行 terminal-colors，看到转义后的回复和 RGB 值；第 3 步切换终端深浅色 (同标题栏的颜色按钮)，最后一步再查询一次，颜色值随当前终端主题改变
 - terminal-colors 临时关闭规范模式和回显，带超时读取 BEL/ST 结尾的回复，并恢复 termios。直接在提示符用 echo 发出这段查询只会发问，回复还可能落进 shell 的输入流
 - 切换前后各运行一次 bat：bat 0.26.1 默认的主题就是 auto，每次启动查询终端背景色，再选择浅色或深色语法主题；文件只有几行，一屏放得下，bat 直接输出不进入 pager
@@ -62,17 +62,17 @@ OSC：程序也能向终端提问
   <ShellStep run="agent-status-demo" />
   <ShellStep keys="⏎" />
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["; OSC="${ESC}]"; ST="${ESC}\\"
-echo -n "${OSC}7501;state=working:app=ClaudeCode${ST}"' />
-  <ShellStep run='echo -n "${OSC}7501;state=blocked:app=ClaudeCode:kind=permission${ST}"' />
-  <ShellStep run='echo -n "${OSC}7501;state=done:app=ClaudeCode${ST}"' />
-  <ShellStep run='echo -n "${OSC}7501;state=clear${ST}"' />
+echo "${OSC}7501;state=working:app=ClaudeCode${ST}"' />
+  <ShellStep run='echo "${OSC}7501;state=blocked:app=ClaudeCode:kind=permission${ST}"' />
+  <ShellStep run='echo "${OSC}7501;state=done:app=ClaudeCode${ST}"' />
+  <ShellStep run='echo "${OSC}7501;state=clear${ST}"' />
 </ShellDemo>
 
 <!--
 - 这里运行的是离线的 shell 协议演示脚本 agent-status-demo，没有模型参与；PTY、控制字节、宿主解析和标题栏显示都是真实运行的
 - 运行 agent-status-demo：脚本发 working，2 秒后发 blocked:kind=permission 并等待输入。看标题栏从 working 变成 blocked
 - 演讲者按 Enter，脚本继续并发 done。Enter 仍是普通终端输入；状态控制序列没有另开消息通道
-- 后面四条 `echo -n` 把脚本发出的报告逐条手动再发一遍：声明 ESC、OSC、ST 后发 `${OSC}7501;state=working:app=ClaudeCode${ST}`，再发 blocked 和 done，最后 `state=clear` 移除状态。标题栏跟着变化，状态只是程序输出里的一段字节，终端没有去查 /proc 推断工作进展
+- 后面四条 echo 把脚本发出的报告逐条手动再发一遍：声明 ESC、OSC、ST 后发 `${OSC}7501;state=working:app=ClaudeCode${ST}`，再发 blocked 和 done，最后 `state=clear` 移除状态。标题栏跟着变化，状态只是程序输出里的一段字节，终端没有去查 /proc 推断工作进展
 - 页面只演示根程序的状态报告；完整网关还要处理子任务层级、启动阶段、异常退出与消息调度
 - 来源：[botmux cb8ff44b2 · probe 与状态分流](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/worker.ts#L20790-L20829)
 -->
