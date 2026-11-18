@@ -20,7 +20,7 @@ describe('typing a step', () => {
   test('sends the keys, then the text with line breaks as Enter, then Enter for a command', () => {
     fc.assert(fc.property(step, (input) => {
       const keys = (input.keys?.split(' ') ?? []).map(key => KEY_BYTES[key]).join('')
-      const asTyped = (value: string | undefined) => value?.replaceAll('\n', '\r') ?? ''
+      const asTyped = (value: string | undefined) => value?.replace(/\r?\n/g, '\r') ?? ''
       expect(sentBytes(input)).toBe(keys + asTyped(input.type) + (input.run === undefined ? '' : `${asTyped(input.run)}\r`))
     }))
   })
