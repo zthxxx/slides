@@ -54,6 +54,10 @@ src: ./pages/tui-interaction.md
 ---
 
 ---
+src: ./pages/terminal-images.md
+---
+
+---
 src: ./pages/agent-gateway.md
 ---
 
