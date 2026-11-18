@@ -3,6 +3,7 @@ import type { ImageDisk } from './disk'
 import kernelUrl from 'unkernel/alpine.wasm?url'
 import { checkSupport, createKernel, loadKernelModule } from 'unkernel/web'
 import { openImageDisk } from './disk'
+import { trackDownload } from './downloads'
 
 /**
  * The page's only Linux VM: unkernel's bundled kernel and Alpine 3.24 riscv64 initramfs,
@@ -40,8 +41,10 @@ let downloads: Downloads | undefined = import.meta.hot?.data.downloads
 export function prefetchLinux(): void {
   if (downloads)
     return
+  // unkernel counts the decoded bytes; the wire size of a gzip response would understate them.
+  const kernelProgress = trackDownload('unkernel-alpine.wasm', __KERNEL_WASM_BYTES__)
   downloads = {
-    kernel: loadKernelModule(new URL(kernelUrl, location.href)),
+    kernel: loadKernelModule(new URL(kernelUrl, location.href), { onProgress: ({ loaded, done }) => kernelProgress(loaded, done) }),
     image: openImageDisk(manifestUrl()),
   }
   // A failed download is reported by the boot that awaits it.
@@ -59,8 +62,8 @@ export function useLinux(): Promise<LinuxMachine> {
 }
 
 async function bootLinux(): Promise<LinuxMachine> {
-  // The downloads start before the support check, as they do from the page's preloads: the check costs a round
-  // trip of its own, and the browsers the deck is shown in support it.
+  // The downloads start before the support check, as the index.html preloads already do in every browser: gating
+  // them here would save no bytes, only delay them by the check.
   prefetchLinux()
   const support = await checkSupport()
   if (!support.ok)

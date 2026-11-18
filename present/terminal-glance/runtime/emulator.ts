@@ -5,7 +5,7 @@ import { watch } from 'vue'
 import { terminalAppearance, TERMINAL_THEMES } from './appearance'
 import { BellDetector } from './bell'
 import { GraphicsOverlay } from './graphics-overlay'
-import { encodeMouse, mouseProtocol } from './mouse'
+import { cursorMoveKeys, encodeMouse, mouseProtocol } from './mouse'
 import { themedGhostty } from './palette'
 import { ProgramStatusObserver } from './program-status'
 
@@ -173,6 +173,7 @@ class GhosttyEmulator implements TerminalEmulator {
       fontFamily: FONT_FAMILY,
       fontSize: fontSizeFor(scale),
       cursorBlink: true,
+      cursorStyle: 'bar',
       scrollback: 5000,
       theme: TERMINAL_THEMES[terminalAppearance.value],
     })
@@ -332,6 +333,32 @@ class GhosttyEmulator implements TerminalEmulator {
       send(encodeMouse({ action, ...cell, shift: event.shiftKey, alt: event.altKey, ctrl: event.ctrlKey }, mode))
     }
     const reporting = (event: MouseEvent) => !event.shiftKey && protocol() !== undefined
+
+    // Option(Alt)-click moves the shell's cursor to the clicked cell with arrow keys, as iTerm2 does. Only on the
+    // normal screen at the bottom of the scrollback, where the cursor's row is the one shown.
+    host.addEventListener('mousedown', (event) => {
+      const buffer = terminal.buffer.active
+      if (!event.altKey || event.button !== 0 || reporting(event) || buffer.type !== 'normal' || buffer.viewportY !== 0)
+        return
+      event.preventDefault()
+      event.stopPropagation()
+      terminal.focus()
+      const keys = cursorMoveKeys({ col: buffer.cursorX, row: buffer.cursorY }, cellAt(event), terminal.cols, terminal.getMode(1))
+      if (keys)
+        this.#dataListeners.forEach(listener => listener(keys))
+    }, { capture: true })
+
+    // ghostty-web 0.4.0 sends a user's paste without the bracketed-paste markers (`handlePaste`), so with zle's
+    // bracketed paste on, a multi-line paste ran line by line. Wrapped here while the program asks for it (`CSI ? 2004 h`).
+    host.addEventListener('paste', (event) => {
+      const text = event.clipboardData?.getData('text/plain')
+      if (!text || !terminal.hasBracketedPaste())
+        return
+      event.preventDefault()
+      event.stopPropagation()
+      const pasted = `\x1B[200~${text.replace(/\r?\n/g, '\r').replaceAll('\x1B[201~', '')}\x1B[201~`
+      this.#dataListeners.forEach(listener => listener(pasted))
+    }, { capture: true })
 
     // Capture on the host runs before ghostty-web's canvas listeners (selection, word copy, context menu).
     host.addEventListener('mousedown', (event) => {

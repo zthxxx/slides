@@ -1,10 +1,11 @@
 import type { Plugin, ResolvedConfig, UserConfig } from 'vite'
 import type { DiskManifest } from './runtime/disk'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
-const { version: unkernelVersion } = createRequire(import.meta.url)('unkernel/package.json') as { version: string }
+const require = createRequire(import.meta.url)
+const { version: unkernelVersion } = require('unkernel/package.json') as { version: string }
 
 /**
  * Starts Linux's downloads from index.html, in parallel with the app's scripts instead of after them: the disk
@@ -54,6 +55,8 @@ export default {
   define: {
     // The page compares it with the version the published disk image was provisioned on (runtime/kernel.ts).
     __UNKERNEL_VERSION__: JSON.stringify(unkernelVersion),
+    // The kernel's progress bar total (runtime/kernel.ts); the wire size is smaller when the server gzips it.
+    __KERNEL_WASM_BYTES__: JSON.stringify(statSync(require.resolve('unkernel/alpine.wasm')).size),
   },
   optimizeDeps: {
     // unkernel@0.1.0-261117-0e4b2ec `dist/web.mjs` loads its kernel as

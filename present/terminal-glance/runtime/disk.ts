@@ -1,3 +1,4 @@
+import { readCounted } from './downloads'
 import type { DiskBase } from 'unkernel/web'
 import { CowDisk } from 'unkernel/web'
 
@@ -245,7 +246,7 @@ function fetchChunks(manifestUrl: URL): ChunkLoader {
     const response = await fetch(url)
     if (!response.ok)
       throw new Error(`disk chunk ${url}: HTTP ${response.status}`)
-    return decodeChunk(new Uint8Array(await response.arrayBuffer()))
+    return decodeChunk(await readCounted(response, file))
   }
 }
 

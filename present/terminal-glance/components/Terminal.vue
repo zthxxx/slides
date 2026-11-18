@@ -4,6 +4,7 @@ import { computed, inject, ref, useTemplateRef, watch } from 'vue'
 import { terminalAppearance, TERMINAL_THEMES, toggleTerminalAppearance } from '../runtime/appearance'
 import { armBellSound } from '../runtime/bell'
 import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
+import { linuxDownloads } from '../runtime/downloads'
 import { useLinux } from '../runtime/kernel'
 import { serveRelayedSteps } from '../runtime/relay'
 import { playStep, sessionKey, useShellSession } from '../runtime/session'
@@ -211,7 +212,21 @@ function resetHeight() {
   terminalHeights.set(key, undefined)
 }
 
+/** Linux's downloads in flight: the kernel and boot bundle while it boots, a disk chunk when the guest reads one. */
+const download = computed(() => {
+  const { active, files, filesDone, loaded, total } = linuxDownloads.value
+  if (!live || !active)
+    return undefined
+  const mb = (bytes: number) => (bytes / 2 ** 20).toFixed(1)
+  return {
+    text: `downloading ${filesDone}/${files} · ${mb(loaded)} / ${mb(total)} MB`,
+    width: `${total ? Math.min(100, loaded / total * 100) : 0}%`,
+  }
+})
+
 const status = computed(() => {
+  if (download.value)
+    return download.value.text
   switch (session?.status.value) {
     case 'starting': return 'booting Linux…'
     case 'failed': return 'unavailable'
@@ -239,6 +254,7 @@ const status = computed(() => {
         </svg>
       </span>
       <span class="terminal-status">{{ status }}</span>
+      <span v-if="download" class="terminal-progress" role="progressbar" :aria-valuetext="download.text"><i :style="{ width: download.width }" /></span>
       <!-- Keyed by its text, so every change mounts it anew and replays the pop animation. -->
       <span
         v-if="programStatus"
@@ -320,6 +336,7 @@ const status = computed(() => {
 }
 
 .terminal-bar {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.8rem;
@@ -353,6 +370,22 @@ const status = computed(() => {
 .terminal-status {
   margin-left: auto;
   color: #6272a4;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Along the title bar's bottom edge. */
+.terminal-progress {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: rgb(98 114 164 / 0.25);
+
+  i {
+    display: block;
+    height: 100%;
+    background: #8be9fd;
+    transition: width 0.2s linear;
+  }
 }
 
 .terminal-appearance {

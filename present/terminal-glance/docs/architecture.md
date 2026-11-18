@@ -88,7 +88,10 @@ Only Slidev's `slide` render context outside print mode runs Linux. The presente
 | --- | --- |
 | Releasing a mouse drag copies the selection; double-click copies a word | ghostty-web, while no program asks for mouse reports; with Shift held otherwise |
 | Mouse reports for programs that enable them (tmux with `mouse on`, htop, nvim, less): presses, releases, drag motion (1002), any motion (1003), wheel as buttons 64/65, Shift/Alt/Ctrl bits, X10 (9) presses; SGR (1006) or default encoding | `emulator.ts` (`#reportMouse`) with the encoder in `mouse.ts`; ghostty-web 0.4.0 tracks these modes but never sends a report, see below |
-| URLs and OSC 8 links underline on hover; Cmd-click / Ctrl-click opens them in a new tab (a plain click opens nothing, as in Ghostty) | ghostty-web |
+| URLs in the text underline on hover; Cmd-click / Ctrl-click opens them in a new tab (a plain click opens nothing, as in Ghostty). OSC 8 hyperlinks do not open: ghostty-web 0.4.0's `getHyperlinkUri()` always returns null | ghostty-web |
+| Option(Alt)-click moves the shell's cursor to the clicked cell (arrow keys along the wrapped line, `ESC O` under DECCKM), on the normal screen at the bottom of the scrollback | `emulator.ts` with `cursorMoveKeys` in `mouse.ts` |
+| A bar cursor | `cursorStyle: 'bar'` in `emulator.ts` |
+| A user's paste wrapped in bracketed-paste markers while the program asks for them (`CSI ? 2004 h`), so zle takes a multi-line paste as one edit instead of running it line by line | `emulator.ts`; ghostty-web 0.4.0's own paste sends no markers |
 | Cursor position reports (`ESC [ 6 n`) | ghostty-web |
 | Background / foreground color queries (OSC 10/11) and primary device attributes (`ESC [ c`) | `QueryResponder` in `emulator.ts`; jovial asks both when zsh starts and would otherwise wait out a timeout |
 | Hack Nerd Font Mono, line height 1 | Local WOFF2 faces declared in `Terminal.vue`, loaded before the renderer measures the font; `emulator.ts` replaces `CanvasRenderer.measureFont()` to use a row height of one font size, rounded to whole screen CSS pixels |

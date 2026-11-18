@@ -69,6 +69,13 @@ autoload -Uz _zinit
 zinit light-mode depth=1 multisrc='*.plugin.zsh' for zthxxx/jovial
 
 
+## Delete, Home and End. zsh 5.9 binds only the arrow keys by default, and the oh-my-zsh key-bindings that would bind
+# these are left out, so zle read Delete's `ESC [ 3 ~` as an undefined key and inserted the `~`. Each key is bound
+# in both cursor-key modes, as terminals send it with and without application mode (`smkx`).
+bindkey '^[[3~' delete-char
+bindkey '^[[H' beginning-of-line '^[OH' beginning-of-line '^[[1~' beginning-of-line
+bindkey '^[[F' end-of-line '^[OF' end-of-line '^[[4~' end-of-line
+
 ## https://github.com/zdharma-continuum/fast-syntax-highlighting
 # While $FAST_WORK_DIR/secondary_theme.zsh is missing, the plugin curls it from GitHub on every
 # start (fast-syntax-highlighting.plugin.zsh, zdharma-continuum 4672ad5). The page has no network,

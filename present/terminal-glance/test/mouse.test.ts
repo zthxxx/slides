@@ -1,7 +1,7 @@
 import type { MouseAction, MouseProtocol, MouseReport } from '../runtime/mouse'
 import { describe, expect, test } from 'bun:test'
 import fc from 'fast-check'
-import { encodeMouse, MOUSE_MODES, mouseProtocol } from '../runtime/mouse'
+import { cursorMoveKeys, encodeMouse, MOUSE_MODES, mouseProtocol } from '../runtime/mouse'
 
 const button = fc.constantFrom(0 as const, 1 as const, 2 as const)
 const action: fc.Arbitrary<MouseAction> = fc.oneof(
@@ -97,6 +97,22 @@ describe('mouse reports', () => {
         return expect(protocol).toBeUndefined()
       expect<number>(MOUSE_MODES[protocol!.tracking]).toBe(Math.max(...tracking))
       expect(protocol!.encoding).toBe(set.includes(MOUSE_MODES.sgr) ? 'sgr' : 'default')
+    }))
+  })
+})
+
+describe('option-click cursor moves', () => {
+  test('walk along the wrapped line from the cursor to the clicked cell, in the cursor-key mode in effect', () => {
+    const cell = (cols: number) => fc.record({ col: fc.nat({ max: cols - 1 }), row: fc.nat({ max: 40 }) })
+    fc.assert(fc.property(fc.integer({ min: 1, max: 200 }).chain(cols => fc.tuple(fc.constant(cols), cell(cols), cell(cols), fc.boolean())), ([cols, from, to, application]) => {
+      const keys = cursorMoveKeys(from, to, cols, application)
+      const steps = keys.match(/\x1B[[O][CD]/g) ?? []
+      expect(steps.join('')).toBe(keys)
+      const position = (at: { col: number, row: number }) => at.row * cols + at.col
+      const moved = steps.reduce((sum, key) => sum + (key.endsWith('C') ? 1 : -1), 0)
+      expect(position(from) + moved).toBe(position(to))
+      expect(steps.every(key => key[1] === (application ? 'O' : '['))).toBe(true)
+      expect(new Set(steps.map(key => key.at(-1))).size).toBeLessThanOrEqual(1)
     }))
   })
 })

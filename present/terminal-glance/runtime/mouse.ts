@@ -95,3 +95,15 @@ export function encodeMouse(report: MouseReport, protocol: MouseProtocol): Uint8
 function ascii(text: string): Uint8Array {
   return Uint8Array.from(text, char => char.charCodeAt(0))
 }
+
+/**
+ * The arrow keys that move a shell's cursor from one cell to another, for Option(Alt)-click: the cursor walks along
+ * the line, wrapping at the right edge, as zle and readline move through a command that spans rows.
+ * As iTerm2's Option-click and xterm.js's `altClickMovesCursor`; `application` is DECCKM (`CSI ? 1 h`), under which
+ * the arrows are `ESC O C` / `ESC O D`.
+ */
+export function cursorMoveKeys(from: { col: number, row: number }, to: { col: number, row: number }, cols: number, application = false): string {
+  const steps = (to.row - from.row) * cols + (to.col - from.col)
+  const key = `\x1B${application ? 'O' : '['}${steps < 0 ? 'D' : 'C'}`
+  return key.repeat(Math.abs(steps))
+}
