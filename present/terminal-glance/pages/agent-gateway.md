@@ -1,3 +1,17 @@
+[Botmux Web 终端](https://deepcoldy.github.io/botmux/web-terminal)：同一个 Agent，在浏览器里看和接着敲
+
+<WebFrame src="https://deepcoldy.github.io/botmux/web-terminal" crop="64 308 0 360" title="botmux docs · Web Terminal" />
+
+<!--
+- 这是 botmux 官方文档的 Web Terminal 页面，嵌在 slide 里现场翻：页面开头的视频演示了飞书消息、Web 终端和主机上的 CLI 三方同步
+- 每个会话都有一个浏览器里的终端：能看到 CLI 的实时输出，有权限时还能直接在里面敲字；手机、平板、电脑都能打开
+- 下一页拆开它的数据流：一个 Agent 进程，飞书消息和 Web 终端是两条进入它的输入路径，输出再分发给所有观察者
+- 嵌入时只截取了文档的正文栏，顶栏和左右两侧的目录都在可见区域之外；在框里滚动、点视频都是原页面的交互，点框外面才回到 slide 的键盘翻页
+- 来源：[botmux 文档 · Web Terminal](https://deepcoldy.github.io/botmux/web-terminal)
+-->
+
+---
+
 Botmux WebShell: 一个 Agent，多条输入路径
 
 <AgentGatewayDiagram />

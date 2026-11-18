@@ -95,6 +95,10 @@ A terminal's shell is spawned the first time its slide is shown, so pty numbers 
 
 A new diagram component renders its SVG inside `<DiagramFrame>` (`components/diagrams/DiagramFrame.vue`), which gives it the shared diagram styles.
 
+## Embedded web pages
+
+`<WebFrame src="…" crop="top right bottom left" />` embeds a live page and shows only one region of it. A cross-origin page cannot be restyled, so the page is laid out at `viewport` CSS pixels wide (default 1400), shifted by the crop insets and scaled to the frame's width. Measure the insets in a browser at that width, for example the header height and the left and right edges of the content column. The page loads the first time its slide is shown; previews and export show its URL instead.
+
 ## Speaker notes
 
 Each slide's notes (the last `<!-- ... -->` of the slide) hold the talk outline. A demo slide's notes explain its steps in order, by number; the commands themselves live only in the `<ShellStep>`s, which the presenter view shows as buttons. Keep `$` inside code spans in notes, so KaTeX does not read `$...$` as math.

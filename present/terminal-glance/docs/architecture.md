@@ -12,6 +12,7 @@ components/               Vue views; know about Slidev (render context, active s
    ShellDemo.vue          a demo: stacked terminals + numbered steps; provides the terminal names
    Terminal.vue           one terminal window; adopts its session's element when its slide is active; height drag handle
    ShellStep.vue          one step button; plays here, or relays from the presenter window; shell highlighting (shell-highlight.ts)
+   WebFrame.vue           a live web page cropped to one region (e.g. a docs page without its header and sidebars)
    diagrams/              SVG diagrams for TTY, SSH, OSC and Agent gateways; DiagramFrame.vue gives each the shared light/dark styles
    │
 runtime/                  plain TypeScript; no templates
