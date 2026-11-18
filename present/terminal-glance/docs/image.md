@@ -76,7 +76,7 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 4. Checks tmux: the `tmux-256color` terminfo entry exists (`default-terminal` in the config) and the config loads without errors.
 5. Runs `zsh -i -c '@zinit-scheduler burst'`: zinit clones itself, jovial and fast-syntax-highlighting (a turbo `wait` load, which `burst` runs at once). The build fails unless zinit's plugins are exactly the ones `.zshrc` loads (`zthxxx---jovial`, `zdharma-continuum---fast-syntax-highlighting`, plus zinit's own `_local---zinit`) and no snippet file (where oh-my-zsh libs and plugins would land) exists.
 6. Fails if `node`, `python3` or `zoxide` came in as a dependency of another package.
-7. Takes the network down and starts `zsh -i` again; any stderr output fails the build, so the page starts offline cleanly. It also fails unless fast-syntax-highlighting's `$FAST_WORK_DIR` is `~/.config/fsh` and holds `secondary_theme.zsh` (see below).
+7. Takes the network down and starts `zsh -i` again; any stderr output fails the build, so the page starts offline cleanly. It also fails unless fast-syntax-highlighting's `$FAST_WORK_DIR` is `~/.config/fsh` and its `secondary_theme.zsh` there loads the plugin's secondary theme (see [The secondary theme download](#the-secondary-theme-download)).
 8. Compiles the completion dump, writes `/etc/terminal-glance-image` (input hash, unkernel version, lower image id, build time).
 9. Removes apk and shell caches, histories and temporary files.
 10. `fstrim /data`: the driver turns discards into zeros, so freed blocks become zero chunks that are not published.
@@ -86,13 +86,50 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 
 | File | Source | Changed |
 | --- | --- | --- |
-| `rootfs/root/.zshrc` | jovial [`examples/zinit.zshrc`](https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc) | Loads the jovial theme and fast-syntax-highlighting through zinit; every other plugin and ohmyzsh lib is left out. Sets fast-syntax-highlighting's `FAST_WORK_DIR` to `~/.config/fsh`. |
+| `rootfs/root/.zshrc` | jovial [`examples/zinit.zshrc`](https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc) | Loads the jovial theme and fast-syntax-highlighting through zinit; every other plugin and ohmyzsh lib is left out. Sets fast-syntax-highlighting's `FAST_WORK_DIR` to `~/.config/fsh` ([Shell start time](#shell-start-time)). |
 | `rootfs/root/.config/tmux/tmux.conf` | [zthxxx/tmux-config `tmux.conf`](https://github.com/zthxxx/tmux-config/blob/main/tmux.conf) | Every plugin is left out (TPM, resurrect, continuum, treemux). |
 
 Each file's header records the upstream commit it was taken from.
-Under the in-browser VM each zsh plugin adds to the time before the first prompt, so the image loads only the two the talk needs: the theme, and syntax highlighting to make typed commands readable. fast-syntax-highlighting loads in zinit's turbo mode, after the first prompt, which appears in 0.6 to 0.9 s. Packages the demos do not use (node, python, zoxide) are left out to keep the download small.
-While `$FAST_WORK_DIR/secondary_theme.zsh` is missing, fast-syntax-highlighting downloads it from GitHub at every start; offline, the resolver timeout holds zsh about 5 s after the first prompt and typed keys stay unechoed. Its default work dir is under `~/.cache`, which step 9 empties, so `.zshrc` sets `FAST_WORK_DIR` to `~/.config/fsh`, where the image ships that file (`rootfs/root/.config/fsh/`). The built-in theme sets no `secondary` style, so the file is never read.
 The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S l` to split right. Root's `.zshrc` adds `/usr/local/bin` to `PATH` so the demo commands are available by name.
+
+### Shell start time
+
+Under the in-browser VM each zsh plugin adds to the time before the first prompt, so the image loads only the two the talk needs: the theme, and syntax highlighting to make typed commands readable. fast-syntax-highlighting loads in zinit's turbo mode (`wait lucid`), after the first prompt, which appears in 0.6 to 0.9 s. Packages the demos do not use (node, python, zoxide) are left out to keep the download small.
+
+A turbo load runs while zsh waits at the prompt, and zsh reads no key until it returns: keys typed meanwhile are neither echoed nor run, then arrive all at once. Its duration is therefore a wait before the first typed key shows. fast-syntax-highlighting's load takes about 0.27 s in the guest, 47 ms of it binding its zle widgets. Highlighting one of the deck's command lines then takes 8 to 32 ms per redraw, and up to 0.16 s the first time a command with its own highlighter (a chroma, such as `git`) is typed.
+
+#### The secondary theme download
+
+Symptom: the first keys typed after the first prompt showed nothing for about 5 s, then ran together.
+
+Cause: fast-syntax-highlighting downloads `share/free_theme.zsh` from GitHub into `$FAST_WORK_DIR/secondary_theme.zsh` with curl (or wget) at every start while that file is missing, then touches it (`fast-syntax-highlighting.plugin.zsh` lines 366 to 377, zdharma-continuum [4672ad5](https://github.com/zdharma-continuum/fast-syntax-highlighting/blob/4672ad5/fast-syntax-highlighting.plugin.zsh#L366-L377)). The work dir defaults to `~/.cache/fast-syntax-highlighting`, or `~/.cache/fsh` when that is not writable (lines 47 to 62), and step 9 empties `~/.cache`, so every boot on the page lacked the file. The guest's `curl` is unkernel's shim over busybox wget (`/usr/local/bin/curl` in its initramfs), and on the page the guest has only a loopback interface, so wget's name lookup (musl, `nameserver 10.0.2.3`) takes 5 s to fail, where a connection by address fails at once. A trace of the turbo load showed the `curl` command taking 5.03 s.
+
+Change:
+
+- `.zshrc` sets `FAST_WORK_DIR` to `~/.config/fsh` before loading the plugin, which the plugin keeps when it is writable.
+- The image ships `rootfs/root/.config/fsh/secondary_theme.zsh`, which sources the plugin's own `share/free_theme.zsh` (`$FAST_BASE_DIR` is the plugin's directory): the same file the download fetches, read from the disk.
+- The secondary theme styles nested code, the inside of `$(…)`, backquotes and `eval` strings: the highlighter switches to it through `FAST_HIGHLIGHT_STYLES[secondary]`, which defaults to `free`, and sources the file unless `FAST_HIGHLIGHT_STYLES[freedefault]` is set (`fast-highlight`). In `"$(base64 -w0 x)"`, `base64` is drawn in `fg=180` and `-w0` in `fg=110`, as in an online install; with an empty file they have no style.
+- Step 7 fails the build unless `$FAST_WORK_DIR` is `~/.config/fsh` and sourcing its `secondary_theme.zsh` sets `freedefault`. zinit clones the plugin's default branch at every build, so a change upstream that would bring the download back stops the build instead of reaching the page.
+
+Measured in the page, the first terminal of slide 5, typing `uname -a` at 40 ms per key right after the first prompt:
+
+| Measure | Before | After |
+| --- | --- | --- |
+| First key → its echo | 5051 ms | 19 to 23 ms |
+| First prompt → `uname -a` output | 5354 ms | 650 to 666 ms |
+
+To see where a turbo load spends its time, trace it in a page terminal; each line printed ran for more than 0.1 s, with that time in front:
+
+```zsh
+cat > /tmp/turbo.zsh <<'EOF'
+zmodload zsh/datetime
+PS4='+$EPOCHREALTIME %N:%i> '
+setopt xtrace
+@zinit-scheduler burst
+EOF
+zsh -i -c 'source /tmp/turbo.zsh' 2>/tmp/turbo.trace
+awk '/^\+[0-9]/ { t = substr($1, 2); if (p && t - p > 0.1) printf "%.2f s  %s\n", t - p, last; p = t; last = $0 }' /tmp/turbo.trace
+```
 
 ## Terminal protocol demos
 
@@ -120,7 +157,7 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
   "chunks": { "<index>": "chunks/<first 16 hex of sha256(raw chunk)>.gz" },
   "boot": [0, 2, 1920, 34, 2048, "…"],
   "bootBundle": { "file": "boot/<first 16 hex of sha256(raw)>.gz", "blockSize": 16384, "runs": [[0, 2], ["…"]] },
-  "stats": { "nonZeroChunks": 95, "uniqueChunks": 95, "rawBytes": 99614720, "compressedBytes": 28892482 }
+  "stats": { "nonZeroChunks": 90, "uniqueChunks": 90, "rawBytes": 94371840, "compressedBytes": 28427274 }
 }
 ```
 
@@ -145,8 +182,8 @@ Figures from the current package list:
 | --- | --- |
 | Installed by apk | 56 MiB |
 | Overlay upper in the guest (zinit and its two plugins 10 MiB of it) | 68 MiB |
-| Non-zero data | 95 chunks, 95 MiB |
-| Published (gzip) | **27.6 MiB** |
+| Non-zero data | 90 chunks, 90 MiB |
+| Published (gzip) | **27.1 MiB** |
 | Boot bundle (gzip): the 245 blocks of 16 KiB the boot reads | 1.0 MiB |
 
 The page downloads the boot bundle at once, and other chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.

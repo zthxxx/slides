@@ -104,10 +104,13 @@ step "offline start: no network, no errors"
 ip link set eth0 down 2>/dev/null || true
 errors=$(zsh -i -c '@zinit-scheduler burst' 2>&1 </dev/null >/dev/null) || fail "zsh -i failed offline: $errors"
 [ -z "$errors" ] || fail "zsh -i printed errors offline: $errors"
-# fast-syntax-highlighting downloads its secondary theme on every start unless the work dir has it (~/.zshrc).
-fsh_work=$(zsh -i -c '@zinit-scheduler burst; print -r -- "$FAST_WORK_DIR"' </dev/null 2>/dev/null)
-[ "$fsh_work" = "$XDG_CONFIG_HOME/fsh" ] && [ -e "$fsh_work/secondary_theme.zsh" ] ||
-	fail "fast-syntax-highlighting works in [$fsh_work], not $XDG_CONFIG_HOME/fsh with secondary_theme.zsh"
+# fast-syntax-highlighting downloads its secondary theme on every start unless the work dir has it (~/.zshrc);
+# the image's copy must load the plugin's `free` styles, which the highlighter checks for (`freedefault`).
+errors=$(zsh -i -c '@zinit-scheduler burst
+	[[ $FAST_WORK_DIR == $XDG_CONFIG_HOME/fsh ]] || { print -r -- "work dir is $FAST_WORK_DIR"; exit 1 }
+	source $FAST_WORK_DIR/secondary_theme.zsh 2>&1 && (( ${+FAST_HIGHLIGHT_STYLES[freedefault]} )) ||
+		{ print -r -- "$FAST_WORK_DIR/secondary_theme.zsh sets no free styles"; exit 1 }' </dev/null 2>&1) ||
+	fail "fast-syntax-highlighting would download its secondary theme on the page: $errors"
 # The completion dump compiled ahead, so the first terminal skips that work.
 zsh -c 'for f in ~/.zcompdump*(N); do [[ $f == *.zwc ]] || zcompile "$f"; done'
 

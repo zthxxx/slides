@@ -80,7 +80,8 @@ bindkey '^[[F' end-of-line '^[OF' end-of-line '^[[4~' end-of-line
 # While $FAST_WORK_DIR/secondary_theme.zsh is missing, the plugin curls it from GitHub on every
 # start (fast-syntax-highlighting.plugin.zsh, zdharma-continuum 4672ad5). The page has no network,
 # so the resolver timeout held zsh about 5 s after the first prompt, with typed keys unechoed.
-# The image ships that file here; the built-in theme sets no `secondary`, so it is never read.
+# The default work dir is under ~/.cache, which the image build empties; the image ships the file
+# in this one, loading the theme the plugin bundles (share/free_theme.zsh, the file it downloads).
 typeset -g FAST_WORK_DIR="${XDG_CONFIG_HOME}/fsh"
 zinit light-mode depth=1 wait lucid for \
     atinit="ZINIT[COMPINIT_OPTS]=-C" \

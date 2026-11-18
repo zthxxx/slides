@@ -36,7 +36,7 @@ present/terminal-glance/
 ## Documents
 
 - [architecture.md](./architecture.md): layers, boot and session lifecycle, the terminal emulator, constraints.
-- [image.md](./image.md): what the guest image is, how it is built and published, its size, how to change it.
+- [image.md](./image.md): what the guest image is, how it is built and published, the shell's start time, its size, how to change it.
 - [authoring.md](./authoring.md): writing demo slides with `<ShellDemo>` and `<ShellStep>`, speaker notes.
 
 ## Presenting
