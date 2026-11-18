@@ -10,13 +10,15 @@ slides.md, pages/         content, demo steps, speaker notes
    │
 components/               Vue views; know about Slidev (render context, active slide, layout)
    ShellDemo.vue          a demo: stacked terminals + numbered steps; provides the terminal names
-   Terminal.vue           one terminal window; adopts its session's element when its slide is active
+   Terminal.vue           one terminal window; adopts its session's element when its slide is active; height drag handle
    ShellStep.vue          one step button; plays here, or relays from the presenter window
    diagrams/              SVG diagrams for TTY, SSH, OSC and Agent gateways; shared light/dark styles
    │
 runtime/                  plain TypeScript; no templates
    session.ts             ShellSession = one pty + one emulator; registry by slide and name; step playback
-   emulator.ts            the terminal emulator seam (ghostty-web)
+   emulator.ts            the terminal emulator seam (ghostty-web); mouse reporting
+   mouse.ts               pure: DEC mouse modes → protocol, pointer action → report bytes
+   terminal-height.ts     dragged terminal heights, clamped and kept in localStorage
    appearance.ts          shared dark/light terminal preference and color palettes
    palette.ts             two synchronized VT parsers, selected by the terminal preference
    program-status.ts      stream observer for root OSC 7501 reports
@@ -67,11 +69,12 @@ Only Slidev's `slide` render context outside print mode runs Linux. The presente
 
 ## The terminal emulator
 
-`emulator.ts` exposes the small interface `ShellSession` needs (`open`, `write`, `onData`, `onResize`, `fit`, `focus`, `blur`, `cols`, `rows`) over ghostty-web 0.4.0. What the deck relies on:
+`emulator.ts` exposes the small interface `ShellSession` needs (`open`, `write`, `onData`, `onResize`, `fit`, `focus`, `blur`, `cols`, `rows`, `cellHeight`) over ghostty-web 0.4.0. What the deck relies on:
 
 | Behavior | Provided by |
 | --- | --- |
-| Releasing a mouse drag copies the selection; double-click copies a word | ghostty-web |
+| Releasing a mouse drag copies the selection; double-click copies a word | ghostty-web, while no program asks for mouse reports; with Shift held otherwise |
+| Mouse reports for programs that enable them (tmux with `mouse on`, htop, nvim, less): presses, releases, drag motion (1002), any motion (1003), wheel as buttons 64/65, Shift/Alt/Ctrl bits, X10 (9) presses; SGR (1006) or default encoding | `emulator.ts` (`#reportMouse`) with the encoder in `mouse.ts`; ghostty-web 0.4.0 tracks these modes but never sends a report, see below |
 | URLs and OSC 8 links underline on hover; Cmd-click / Ctrl-click opens them in a new tab (a plain click opens nothing, as in Ghostty) | ghostty-web |
 | Cursor position reports (`ESC [ 6 n`) | ghostty-web |
 | Background / foreground color queries (OSC 10/11) and primary device attributes (`ESC [ c`) | `QueryResponder` in `emulator.ts`; jovial asks both when zsh starts and would otherwise wait out a timeout |
@@ -85,6 +88,20 @@ The terminal's font starts at 18 slide pixels and adjusts with the slide scale s
 Hack's ascent and descent together exceed one em. The custom baseline keeps box-drawing strokes connected at line height 1; letter descenders may extend by about one pixel into the next row. Font files, upstream version and metrics are recorded in [the font README](../public/fonts/hack-nerd-font-mono/README.md).
 
 The renderer adaptations depend on ghostty-web **0.4.0**: [`dist/index.d.ts`](../node_modules/ghostty-web/dist/index.d.ts) declares `CanvasRenderer` and its private DPR field; [`dist/ghostty-web.js`](../node_modules/ghostty-web/dist/ghostty-web.js) implements `measureFont`, `renderLine`, canvas resizing and DPR use. Re-check these methods and the query/keyboard behavior above when upgrading the package.
+
+### Mouse reporting
+
+ghostty-web 0.4.0 parses the mouse-tracking modes (`Terminal.getMode()`, `hasMouseTracking()`) but has no code that writes a mouse report to the program. A press on the canvas starts its own selection (`SelectionManager.attachEventListeners`), and the wheel scrolls its scrollback, or sends ↑ / ↓ on the alternate screen (`Terminal.handleWheel`); both are in [`dist/ghostty-web.js`](../node_modules/ghostty-web/dist/ghostty-web.js).
+
+While a program has a tracking mode set, `emulator.ts` takes the pointer first: capture listeners on the host stop ghostty-web's selection, word copy and context menu, and `attachCustomWheelEventHandler` replaces its wheel handling. `mouse.ts` encodes each action as [XTerm Control Sequences, "Mouse Tracking"](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Mouse-Tracking) defines it; the report goes to the pty like typed input. The cell is read from the canvas's on-screen rectangle divided by the grid, so it does not depend on the slide's scale. A drag that leaves the terminal keeps reporting at the edge cell until the button is released. Each 33 px of pixel wheel delta is one report, at most five per event, as in ghostty-web's own alternate-screen scrolling.
+
+Holding Shift keeps ghostty-web's local selection and scrolling, as in other terminals. The default encoding carries cells up to 223 (one byte each); beyond that only SGR reports. The UTF-8 (1005) and urxvt (1015) encodings are not implemented: tmux, ncurses programs and nvim choose SGR.
+
+### Terminal height
+
+The handle on a terminal window's bottom edge drags its height; the width follows the slide's layout. A drag is clamped to about ten rows at least and, at most, to the room left in the terminals' column (another terminal in the column keeps its own dragged height, or ten rows if it has none). The emulator refits through the window's `ResizeObserver`, so the shell gets SIGWINCH while dragging. A double-click on the handle returns the terminal to the layout's height.
+
+`terminal-height.ts` keeps the heights in slide pixels, independent of the window size, under `terminal-glance:terminal-heights` in `localStorage`, keyed by session key (`<slide number>/<terminal name>`); the presenter window follows through storage events. Slide numbers shift when slides are inserted before a demo, so a stored height then applies to whichever terminal now has that key; a stored height that no longer fits shrinks with the column instead of overflowing.
 
 ### Shared terminal appearance
 

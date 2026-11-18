@@ -43,5 +43,6 @@ present/terminal-glance/
 
 - Open the deck, then the presenter view from it (same browser). Steps clicked in the presenter view type into the slide window's terminals.
 - Click into a terminal to type by hand; click outside it before using the keyboard to change slides.
-- Selecting text in a terminal copies it. Cmd-click (Ctrl-click) opens a URL.
+- Selecting text in a terminal copies it. Cmd-click (Ctrl-click) opens a URL. While a program uses the mouse (tmux, htop), clicks and the wheel go to it; hold Shift to select text.
+- Drag a terminal's bottom edge to change its height; the height is kept after a reload. Double-click the edge to restore the layout's height.
 - Inside tmux the prefix is Ctrl-S (zthxxx/tmux-config).

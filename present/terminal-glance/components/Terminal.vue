@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useIsSlideActive, useNav, useSlideContext } from '@slidev/client'
-import { computed, inject, useTemplateRef, watch } from 'vue'
+import { computed, inject, ref, useTemplateRef, watch } from 'vue'
 import { terminalAppearance, TERMINAL_THEMES, toggleTerminalAppearance } from '../runtime/appearance'
 import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
 import { useLinux } from '../runtime/kernel'
 import { serveRelayedSteps } from '../runtime/relay'
 import { playStep, sessionKey, useShellSession } from '../runtime/session'
+import { clampHeight, terminalHeights } from '../runtime/terminal-height'
 
 const props = withDefaults(defineProps<{
   /** The terminal's name on this slide; steps address it by this name. */
@@ -21,7 +22,9 @@ const demo = inject(shellDemoKey, undefined)
 
 // Only the audience window runs Linux; the presenter, overview and export render a stand-in.
 const live = $renderContext.value === 'slide' && !isPrintMode.value
-const session = live ? useShellSession(sessionKey($page.value, props.name)) : undefined
+const key = sessionKey($page.value, props.name)
+const session = live ? useShellSession(key) : undefined
+const frame = useTemplateRef<HTMLElement>('frame')
 const screen = useTemplateRef<HTMLDivElement>('screen')
 
 if (live) {
@@ -62,6 +65,81 @@ const title = computed(() => {
   return parts.filter(Boolean).join(' · ')
 })
 
+/** Rows the drag handle keeps at least; one row is the font size in slide pixels until the emulator has measured it. */
+const MIN_ROWS = 10
+const FALLBACK_ROW_HEIGHT = 18
+
+/** The height while a drag is in progress; stored when the drag ends. */
+const draggedHeight = ref<number>()
+const height = computed(() => draggedHeight.value ?? terminalHeights.get(key))
+const frameStyle = computed(() => ({
+  '--terminal-background': theme.value.background,
+  '--terminal-foreground': theme.value.foreground,
+  ...(height.value === undefined ? {} : { height: `${height.value}px`, flex: '0 1 auto' }),
+}))
+
+/** Sizes in slide pixels (layout sizes, before Slidev's scale): about ten rows, up to the room the slide has left. */
+function heightBounds(box: HTMLElement): { min: number, max: number } {
+  const scale = box.getBoundingClientRect().height / box.offsetHeight || 1
+  const cellHeight = session?.terminal.cellHeight
+  const rowHeight = cellHeight ? cellHeight / scale : FALLBACK_ROW_HEIGHT
+  const screenElement = screen.value
+  const screenStyle = screenElement && getComputedStyle(screenElement)
+  const rowsHeight = screenElement && screenStyle
+    ? screenElement.clientHeight - Number.parseFloat(screenStyle.paddingTop) - Number.parseFloat(screenStyle.paddingBottom)
+    : 0
+  // Title bar, paddings and the part of the screen below the last whole row.
+  const chrome = box.offsetHeight - rowsHeight
+  const min = Math.ceil(chrome + MIN_ROWS * rowHeight + 1)
+
+  const column = box.parentElement
+  if (!column)
+    return { min, max: box.offsetHeight }
+  const columnStyle = getComputedStyle(column)
+  const siblings = [...column.children].filter(child => child !== box) as HTMLElement[]
+  // A sibling terminal still in the layout's flexible height may shrink to its own minimum.
+  const taken = siblings.reduce((sum, sibling) => sum + (sibling.matches('.terminal-window') && !sibling.style.height ? min : sibling.offsetHeight), 0)
+  const max = column.clientHeight
+    - Number.parseFloat(columnStyle.paddingTop) - Number.parseFloat(columnStyle.paddingBottom)
+    - (Number.parseFloat(columnStyle.rowGap) || 0) * siblings.length
+    - taken
+  return { min, max: Math.floor(max) }
+}
+
+function startResize(event: PointerEvent) {
+  const box = frame.value
+  if (!box || event.button !== 0)
+    return
+  event.preventDefault()
+  const handle = event.currentTarget as HTMLElement
+  handle.setPointerCapture(event.pointerId)
+  const scale = box.getBoundingClientRect().height / box.offsetHeight || 1
+  const startY = event.clientY
+  const startHeight = box.offsetHeight
+  const bounds = heightBounds(box)
+
+  // The terminal refits through its ResizeObserver, which also resizes the pty (SIGWINCH).
+  const move = (moveEvent: PointerEvent) => {
+    draggedHeight.value = Math.round(clampHeight(startHeight + (moveEvent.clientY - startY) / scale, bounds))
+  }
+  const end = () => {
+    handle.removeEventListener('pointermove', move)
+    handle.removeEventListener('pointerup', end)
+    handle.removeEventListener('pointercancel', end)
+    if (draggedHeight.value !== undefined && draggedHeight.value !== startHeight)
+      terminalHeights.set(key, draggedHeight.value)
+    draggedHeight.value = undefined
+  }
+  handle.addEventListener('pointermove', move)
+  handle.addEventListener('pointerup', end)
+  handle.addEventListener('pointercancel', end)
+}
+
+/** Double-click: back to the slide's own layout. */
+function resetHeight() {
+  terminalHeights.set(key, undefined)
+}
+
 const status = computed(() => {
   switch (session?.status.value) {
     case 'starting': return 'booting Linux…'
@@ -73,9 +151,10 @@ const status = computed(() => {
 
 <template>
   <figure
+    ref="frame"
     class="terminal-window"
     :data-terminal-appearance="terminalAppearance"
-    :style="{ '--terminal-background': theme.background, '--terminal-foreground': theme.foreground }"
+    :style="frameStyle"
   >
     <header class="terminal-bar">
       <span class="terminal-dots"><i /><i /><i /></span>
@@ -100,11 +179,19 @@ const status = computed(() => {
     <div v-else class="terminal-screen terminal-stand-in">
       Linux runs in the slide window; steps clicked here are typed there
     </div>
+    <div
+      v-if="live"
+      class="terminal-resize"
+      title="Drag to resize · double-click to reset"
+      @pointerdown="startResize"
+      @dblclick="resetHeight"
+    />
   </figure>
 </template>
 
 <style scoped>
 .terminal-window {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -207,9 +294,35 @@ const status = computed(() => {
 .terminal-screen {
   flex: 1;
   min-height: 0;
-  padding: 0.5rem 0.4rem 0.3rem 0.8rem;
+  padding: 0.5rem 0.4rem 8px 0.8rem;
   /* The emulator's host is enlarged by the slide scale and scaled back down (runtime/emulator.ts). */
   overflow: hidden;
+}
+
+/* Over the screen's bottom padding, so it covers no row of text. */
+.terminal-resize {
+  position: absolute;
+  inset: auto 0 0;
+  height: 8px;
+  cursor: ns-resize;
+  touch-action: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    width: 48px;
+    height: 3px;
+    border-radius: 2px;
+    background: currentColor;
+    opacity: 0;
+    transform: translateX(-50%);
+    transition: opacity 0.15s;
+  }
+
+  &:hover::after,
+  &:active::after { opacity: 0.45 }
 }
 
 .terminal-stand-in {

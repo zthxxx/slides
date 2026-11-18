@@ -40,6 +40,8 @@ const hasSteps = Boolean(useSlots().default)
   width: 100%;
   min-height: 0;
   margin-top: 12px;
+  /* The layout pads the slide's bottom as much as its top, but the windows' drop shadow takes part of that room. */
+  margin-bottom: 24px;
 
   &.with-steps {
     grid-template-columns: minmax(0, 1fr) 400px;

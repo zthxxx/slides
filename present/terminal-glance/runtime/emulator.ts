@@ -1,7 +1,9 @@
+import type { MouseAction, MouseButton } from './mouse'
 import type { ProgramStatus } from './program-status'
 import { CanvasRenderer, FitAddon, Ghostty, Terminal } from 'ghostty-web'
 import { watch } from 'vue'
 import { terminalAppearance, TERMINAL_THEMES } from './appearance'
+import { encodeMouse, mouseProtocol } from './mouse'
 import { themedGhostty } from './palette'
 import { ProgramStatusObserver } from './program-status'
 
@@ -16,19 +18,22 @@ import { ProgramStatusObserver } from './program-status'
  *   as in Ghostty;
  * - replies to terminal queries such as the cursor position report (`\e[6n`) are sent back through `onData`.
  *
- * The queries ghostty-web 0.4.0 leaves unanswered and the shell asks at start-up are answered here (`QueryResponder`).
+ * The queries ghostty-web 0.4.0 leaves unanswered and the shell asks at start-up are answered here (`QueryResponder`),
+ * and so are mouse reports, which it never sends (`#reportMouse`).
  */
 export interface TerminalEmulator {
   /** Grid size; 80×24 until the first fit. */
   readonly cols: number
   readonly rows: number
   readonly opened: boolean
+  /** Height of one row in screen pixels, once opened. */
+  readonly cellHeight: number | undefined
   /** Render into `host`, which the emulator then owns (it becomes the focusable, contenteditable input element). */
   open: (host: HTMLElement) => Promise<void>
   /** Resolves once the data is parsed; data written before open() is queued and parsed when it opens. */
   write: (data: Uint8Array | string) => Promise<void>
-  /** Keyboard input, pastes and replies to terminal queries, to send to the pty. */
-  onData: (listener: (data: string) => void) => void
+  /** Keyboard input, pastes, mouse reports and replies to terminal queries, to send to the pty. */
+  onData: (listener: (data: string | Uint8Array) => void) => void
   onResize: (listener: (size: { cols: number, rows: number }) => void) => void
   onProgramStatus: (listener: (status: ProgramStatus | undefined) => void) => void
   /** Fit the grid to the host's container; a hidden container is left alone. */
@@ -124,7 +129,7 @@ class GhosttyEmulator implements TerminalEmulator {
   #host: HTMLElement | undefined
   #pending: Array<Uint8Array | string> = []
   #queries = new QueryResponder(reply => this.#dataListeners.forEach(listener => listener(reply)))
-  #dataListeners: Array<(data: string) => void> = []
+  #dataListeners: Array<(data: string | Uint8Array) => void> = []
   #resizeListeners: Array<(size: { cols: number, rows: number }) => void> = []
   #programStatusListeners: Array<(status: ProgramStatus | undefined) => void> = []
   #programStatus = new ProgramStatusObserver({
@@ -142,6 +147,10 @@ class GhosttyEmulator implements TerminalEmulator {
 
   get opened(): boolean {
     return this.#terminal !== undefined
+  }
+
+  get cellHeight(): number | undefined {
+    return this.#terminal?.renderer?.getMetrics().height
   }
 
   async open(host: HTMLElement): Promise<void> {
@@ -178,6 +187,7 @@ class GhosttyEmulator implements TerminalEmulator {
     // Focus sits on the host, a contenteditable div, which Slidev does not count as typing, and ghostty-web
     // stops only the keys it encodes itself: without this, a space typed into the shell also turns the slide.
     host.addEventListener('keydown', event => event.stopPropagation())
+    this.#reportMouse(terminal, host)
 
     for (const data of this.#pending.splice(0))
       terminal.write(data)
@@ -204,7 +214,7 @@ class GhosttyEmulator implements TerminalEmulator {
       this.#pending.push(data)
   }
 
-  onData(listener: (data: string) => void): void {
+  onData(listener: (data: string | Uint8Array) => void): void {
     this.#dataListeners.push(listener)
   }
 
@@ -271,6 +281,92 @@ class GhosttyEmulator implements TerminalEmulator {
       this.fit()
       this.#watchDevicePixelRatio()
     }, { once: true })
+  }
+
+  /**
+   * ghostty-web 0.4.0 tracks the mouse modes a program sets (`getMode`, `hasMouseTracking`) but never reports the
+   * mouse: a press on the canvas starts a local selection, and the wheel scrolls its scrollback, or sends ↑ / ↓ on the
+   * alternate screen. Source: ghostty-web@0.4.0 `dist/ghostty-web.js` (`SelectionManager.attachEventListeners`,
+   * `Terminal.handleWheel`).
+   * While a program asks for mouse reports, presses, releases, motion and the wheel are reported instead, as in
+   * xterm and Ghostty; holding Shift keeps the local selection and scrolling.
+   */
+  #reportMouse(terminal: Terminal, host: HTMLElement): void {
+    const canvas = host.querySelector('canvas')!
+    const protocol = () => mouseProtocol(mode => terminal.getMode(mode))
+    const send = (bytes: Uint8Array | undefined) => bytes && this.#dataListeners.forEach(listener => listener(bytes))
+    let held: MouseButton | undefined
+    let lastCell = ''
+    let wheelPixels = 0
+
+    // The canvas is the grid at screen size (cols × cell width), so the cell is independent of the slide's scale.
+    const cellAt = (event: MouseEvent) => {
+      const { left, top, width, height } = canvas.getBoundingClientRect()
+      const clamp = (value: number, size: number) => Math.min(Math.max(Math.floor(value), 0), size - 1)
+      return {
+        col: clamp((event.clientX - left) / (width / terminal.cols), terminal.cols),
+        row: clamp((event.clientY - top) / (height / terminal.rows), terminal.rows),
+      }
+    }
+    const report = (event: MouseEvent, action: MouseAction) => {
+      const mode = protocol()
+      if (!mode)
+        return
+      const cell = cellAt(event)
+      lastCell = `${cell.col},${cell.row}`
+      send(encodeMouse({ action, ...cell, shift: event.shiftKey, alt: event.altKey, ctrl: event.ctrlKey }, mode))
+    }
+    const reporting = (event: MouseEvent) => !event.shiftKey && protocol() !== undefined
+
+    // Capture on the host runs before ghostty-web's canvas listeners (selection, word copy, context menu).
+    host.addEventListener('mousedown', (event) => {
+      if (!reporting(event) || event.button > 2)
+        return
+      event.preventDefault()
+      event.stopPropagation()
+      terminal.focus()
+      // The program now owns the click; a local selection left from a Shift-drag would otherwise stay on screen.
+      if (terminal.hasSelection())
+        terminal.clearSelection()
+      held = event.button as MouseButton
+      report(event, { kind: 'press', button: held })
+    }, { capture: true })
+    for (const type of ['dblclick', 'contextmenu']) {
+      host.addEventListener(type, (event) => {
+        if (reporting(event as MouseEvent)) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      }, { capture: true })
+    }
+    // On the document, so a drag that leaves the terminal still reports its motion and release (at the edge cell).
+    document.addEventListener('mouseup', (event) => {
+      if (held === undefined)
+        return
+      const button = held
+      held = undefined
+      report(event, { kind: 'release', button })
+    })
+    document.addEventListener('mousemove', (event) => {
+      if (held === undefined && !(event.target instanceof Node && canvas.contains(event.target)))
+        return
+      const cell = cellAt(event)
+      if (`${cell.col},${cell.row}` === lastCell)
+        return
+      if (held !== undefined || reporting(event))
+        report(event, { kind: 'move', button: held })
+    })
+    terminal.attachCustomWheelEventHandler((event) => {
+      if (!reporting(event))
+        return false
+      // One report per 33 px of a pixel delta, as ghostty-web's own alternate-screen scrolling; at most 5 per event.
+      wheelPixels += event.deltaMode === WheelEvent.DOM_DELTA_PIXEL ? event.deltaY : Math.sign(event.deltaY) * 33 * Math.min(Math.abs(event.deltaY), 5)
+      const steps = Math.trunc(wheelPixels / 33)
+      wheelPixels -= steps * 33
+      for (let index = 0; index < Math.min(Math.abs(steps), 5); index++)
+        report(event, { kind: 'wheel', direction: steps < 0 ? 'up' : 'down' })
+      return true
+    })
   }
 
   focus(): void {
