@@ -82,6 +82,10 @@ step "offline start: no network, no errors"
 ip link set eth0 down 2>/dev/null || true
 errors=$(zsh -i -c '@zinit-scheduler burst' 2>&1 </dev/null >/dev/null) || fail "zsh -i failed offline: $errors"
 [ -z "$errors" ] || fail "zsh -i printed errors offline: $errors"
+# fast-syntax-highlighting downloads its secondary theme on every start unless the work dir has it (~/.zshrc).
+fsh_work=$(zsh -i -c '@zinit-scheduler burst; print -r -- "$FAST_WORK_DIR"' </dev/null 2>/dev/null)
+[ "$fsh_work" = "$XDG_CONFIG_HOME/fsh" ] && [ -e "$fsh_work/secondary_theme.zsh" ] ||
+	fail "fast-syntax-highlighting works in [$fsh_work], not $XDG_CONFIG_HOME/fsh with secondary_theme.zsh"
 # The completion dump compiled ahead, so the first terminal skips that work.
 zsh -c 'for f in ~/.zcompdump*(N); do [[ $f == *.zwc ]] || zcompile "$f"; done'
 

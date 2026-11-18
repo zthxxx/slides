@@ -71,7 +71,7 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 4. Checks tmux: the `tmux-256color` terminfo entry exists (`default-terminal` in the config) and the config loads without errors.
 5. Runs `zsh -i -c '@zinit-scheduler burst'`: zinit clones itself, jovial and fast-syntax-highlighting (a turbo `wait` load, which `burst` runs at once). The build fails unless zinit's plugins are exactly the ones `.zshrc` loads (`zthxxx---jovial`, `zdharma-continuum---fast-syntax-highlighting`, plus zinit's own `_local---zinit`) and no snippet file (where oh-my-zsh libs and plugins would land) exists.
 6. Fails if `node`, `python3` or `zoxide` came in as a dependency of another package.
-7. Takes the network down and starts `zsh -i` again; any stderr output fails the build, so the page starts offline cleanly.
+7. Takes the network down and starts `zsh -i` again; any stderr output fails the build, so the page starts offline cleanly. It also fails unless fast-syntax-highlighting's `$FAST_WORK_DIR` is `~/.config/fsh` and holds `secondary_theme.zsh` (see below).
 8. Compiles the completion dump, writes `/etc/terminal-glance-image` (input hash, unkernel version, lower image id, build time).
 9. Removes apk and shell caches, histories and temporary files.
 10. `fstrim /data`: the driver turns discards into zeros, so freed blocks become zero chunks that are not published.
@@ -81,11 +81,12 @@ CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:i
 
 | File | Source | Changed |
 | --- | --- | --- |
-| `rootfs/root/.zshrc` | jovial [`examples/zinit.zshrc`](https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc) | Loads the jovial theme and fast-syntax-highlighting through zinit; every other plugin and ohmyzsh lib is left out. |
+| `rootfs/root/.zshrc` | jovial [`examples/zinit.zshrc`](https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc) | Loads the jovial theme and fast-syntax-highlighting through zinit; every other plugin and ohmyzsh lib is left out. Sets fast-syntax-highlighting's `FAST_WORK_DIR` to `~/.config/fsh`. |
 | `rootfs/root/.config/tmux/tmux.conf` | [zthxxx/tmux-config `tmux.conf`](https://github.com/zthxxx/tmux-config/blob/main/tmux.conf) | Every plugin is left out (TPM, resurrect, continuum, treemux). |
 
 Each file's header records the upstream commit it was taken from.
 Under the in-browser VM each zsh plugin adds to the time before the first prompt, so the image loads only the two the talk needs: the theme, and syntax highlighting to make typed commands readable. fast-syntax-highlighting loads in zinit's turbo mode, after the first prompt, which appears in 0.6 to 0.9 s. Packages the demos do not use (node, python, zoxide) are left out to keep the download small.
+While `$FAST_WORK_DIR/secondary_theme.zsh` is missing, fast-syntax-highlighting downloads it from GitHub at every start; offline, the resolver timeout holds zsh about 5 s after the first prompt and typed keys stay unechoed. Its default work dir is under `~/.cache`, which step 9 empties, so `.zshrc` sets `FAST_WORK_DIR` to `~/.config/fsh`, where the image ships that file (`rootfs/root/.config/fsh/`). The built-in theme sets no `secondary` style, so the file is never read.
 The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S l` to split right. Root's `.zshrc` adds `/usr/local/bin` to `PATH` so the demo commands are available by name.
 
 ## Terminal protocol demos
