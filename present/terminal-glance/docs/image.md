@@ -167,10 +167,10 @@ awk '/^\+[0-9]/ { t = substr($1, 2); if (p && t - p > 0.1) printf "%.2f s  %s\n"
 - The packer writes the manifest last, by rename, and deletes chunk files no longer referenced.
 - `vm/trace-boot.ts` boots the published disk once, offline, the way the page does, and records what the guest reads from power-on until zsh's first prompt and fast-syntax-highlighting's turbo load. `.zshrc` marks both moments with an iTerm2 SetUserVar escape (`OSC 1337 ; SetUserVar=terminal_glance_boot=<base64>`), which terminals that do not know it ignore: `prompt` from a one-shot precmd hook, `plugins` from the plugin's zinit `atload`. Without the `prompt` mark within 60 s the build fails; without the `plugins` mark the trace stops 5 s after the prompt.
 - `boot` lists the chunks it read, in first-read order. `bootBundle` holds the bytes it read, rounded to 16 KiB blocks: `runs` are `[first block, block count]`, ascending, and the file is those blocks one after another, each 16 KiB (the disk's last one padded with zeros), gzip-compressed and named by content like the chunks.
-- The page downloads the bundle as soon as it has the manifest, in parallel with the kernel's own download. A read the bundle covers entirely is served from it; any other read loads its chunks. The boot reads about 3 MiB from the 25 chunks it touches, so the bundle is about 1 MiB gzip where those chunks are about 6.5 MiB.
+- The page downloads the bundle as soon as it has the manifest, in parallel with the kernel's own download. A read the bundle covers entirely is served from it; any other read loads its chunks. The boot reads 245 blocks (3.8 MiB) from the 23 chunks it touches in the current image, so the bundle is 1.0 MiB gzip where those chunks are 4.9 MiB.
 - The guest's timing varies, so two traces of one image differ by a few blocks; on the page, such a read loads its chunk.
 - A manifest with `boot` but no bundle, or whose bundle fails to download, fetches those chunks 6 at a time instead; one with neither boots fully lazily. A prefetched chunk stays in memory until the guest has read it.
-- Once a shell has drawn its first prompt (or 5 s after the boot when no terminal is shown) and the page is idle, the page downloads every chunk not fetched yet, in disk order, two at a time at low priority, so a program's first run (htop, bat, tmux) reads from memory. Every fetched file is kept as published, gzip (`ImageFiles`), 27 MiB for the whole image; a guest read decompresses its chunk, and no file is fetched twice. The guest still has no network: these are the page's own requests for its disk.
+- When a shell first writes output (its first prompt), or 5 s after the kernel starts, whichever comes first, and once the page is idle, the page downloads every chunk not fetched yet, in disk order, two at a time (at low priority in a build), so a program's first run (htop, bat, tmux) reads from memory. Every fetched file is kept as published, gzip (`ImageFiles`), 27 MiB for the whole image; a guest read decompresses its chunk, and no file is fetched twice. The guest still has no network: these are the page's own requests for its disk.
 
 `test/disk.test.ts` checks this contract both ways: whatever `pack.ts` publishes, `runtime/disk.ts` reads back byte for byte.
 
@@ -186,7 +186,7 @@ Figures from the current package list:
 | Published (gzip) | **27.1 MiB** |
 | Boot bundle (gzip): the 245 blocks of 16 KiB the boot reads | 1.0 MiB |
 
-The page downloads the boot bundle at once, and other chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
+The page downloads the boot bundle at once, and the other chunks in the background after the first prompt; until then a read outside the bundle fetches its chunk at once.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.
 
 ## Changing the image

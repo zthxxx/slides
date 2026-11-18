@@ -9,14 +9,14 @@ const { version: unkernelVersion } = require('unkernel/package.json') as { versi
 
 /**
  * Starts Linux's downloads from index.html, in parallel with the app's scripts instead of after them: the disk
- * manifest, the boot bundle it names, and the kernel wasm. A `fetch()` of the same URL (runtime/kernel.ts via
- * unkernel's `loadKernelModule`, runtime/disk.ts) takes over the preloaded response when destination, mode and
- * credentials match, hence `as="fetch"` and `crossorigin`; the cache mode is not compared, so unkernel's
- * `cache: 'no-cache'` still matches. `fetchpriority="low"` keeps them behind the scripts, styles and visible images
+ * manifest, the boot bundle it names, and the kernel wasm. A `fetch()` of the same URL (runtime/kernel.ts, which
+ * hands the wasm's response to unkernel's `loadKernelModule`, and runtime/disk.ts) takes over the preloaded response
+ * when destination, mode and credentials match, hence `as="fetch"` and `crossorigin`; the cache mode is not
+ * compared. `fetchpriority="low"` keeps them behind the scripts, styles and visible images
  * when the server honors HTTP/2 or HTTP/3 priorities. Every window preloads; another window opened meanwhile, such
  * as the presenter, shares the download through the HTTP cache.
  * Ref: HTML Standard, "preload key" (https://html.spec.whatwg.org/multipage/links.html#preload-key);
- * unkernel@0.1.0-261117-0e4b2ec `dist/_chunks/core.mjs` (`loadKernelModule`, `fetchOk`).
+ * unkernel@0.1.0-261117-0e4b2ec `dist/_chunks/core.mjs` (`loadKernelModule` accepts a `Response`).
  */
 function preloadLinux(): Plugin {
   let config: ResolvedConfig

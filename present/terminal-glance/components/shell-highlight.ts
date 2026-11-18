@@ -11,8 +11,8 @@ let highlighter: Promise<HighlighterCore> | undefined
 /**
  * Shiki with only what the step buttons need: the shell grammar, the deck's code themes (vitesse, as set in
  * packages/slidev-theme-eloc/setup/shiki.ts) and the JavaScript regex engine, which avoids shipping oniguruma's
- * WebAssembly. Created on first use. Slidev's build puts every shiki module into its shared `modules/shiki` chunk,
- * which the page preloads, so these add to that chunk rather than load separately.
+ * WebAssembly. Created on first use. The build puts these modules into the `app` chunk (vite.config.ts
+ * `codeSplitting`), so they load with the page rather than separately.
  * Source: shiki@4.6.0 `shiki/core`, `shiki/engine/javascript`, `shiki/langs/*`, `shiki/themes/*`.
  */
 function loadHighlighter(): Promise<HighlighterCore> {

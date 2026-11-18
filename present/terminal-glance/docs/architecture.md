@@ -46,7 +46,7 @@ Dependencies point down only. `runtime/` never imports from `components/`; `step
 
 ### Boot, once per tab
 
-1. The downloads start before any script runs: a build's `index.html` preloads the disk manifest, the boot bundle it names and the kernel wasm (see [Loading and caching](#loading-and-caching)). As soon as the app runs, `setup/main.ts` calls `prefetchLinux()` in the audience window; its fetches take over the preloaded responses, and the kernel compiles while it streams.
+1. The downloads start before any script runs: a build's `index.html` preloads the disk manifest, the boot bundle it names and the kernel wasm (see [performance.md](./performance.md#starting-linuxs-downloads-early)). As soon as the app runs, `setup/main.ts` calls `prefetchLinux()` in the audience window; its fetches take over the preloaded responses, and the kernel compiles while it streams.
 2. Slidev mounts every slide about 3 s after the deck opens (hidden with `v-show`). The first live `Terminal` calls `useLinux()`, so the VM boots in the background, usually before the talk reaches a demo.
 3. `useLinux()` (`kernel.ts`) starts the downloads if nothing has yet, checks browser support, and calls `createKernel({ kernel, disks })` once two downloads, started together by `prefetchLinux()`, are ready: the kernel wasm, compiled while it streams, and the disk, whose boot bundle (the bytes the guest reads up to its first prompt, one file) is fetched as soon as the manifest arrives (image.md). The disk is `CowDisk(ChunkedDiskBase)`; writes stay in memory, so a reload is a fresh machine.
    `prefetchLinux()` runs no kernel. `setup/main.ts` still calls it only where `Terminal.vue` boots (the `play` route outside print mode): another window would compile a kernel it never boots.
@@ -71,7 +71,7 @@ When the manifest is missing (a fresh checkout without `pnpm build:image`), the 
 
 In the presenter window the button posts `{ page, to, step }` on a `BroadcastChannel`; the slide window, which runs Linux, plays it.
 
-The button shows the step text highlighted as shell by shiki (`components/shell-highlight.ts`): the `shellscript` grammar, the deck's vitesse light and dark themes, and shiki's JavaScript regex engine, created on first use; until then the text shows plain. Slidev's build puts all shiki modules into its shared, preloaded `modules/shiki` chunk, which these make about 66 KB (gzip) larger.
+The button shows the step text highlighted as shell by shiki (`components/shell-highlight.ts`): the `shellscript` grammar, the deck's vitesse light and dark themes, and shiki's JavaScript regex engine, created on first use; until then the text shows plain. In a build they are part of the `app` chunk, about 66 KB of it (gzip).
 
 ## Maximized terminal
 
@@ -158,18 +158,7 @@ Browsers keep audio muted until the page has seen a user gesture, and a bell com
 
 ## Loading and caching
 
-The deck is often opened over slow links where any single request may stall for seconds, so the build keeps the number of requests small:
-
-| Setting | Where | Effect |
-| --- | --- | --- |
-| `build.rolldownOptions.output.codeSplitting` | `vite.config.ts` | The page is two scripts plus rolldown's tiny runtime: `terminal` (ghostty-web with its inlined wasm, and unkernel's loader) and `app` (Slidev, Vue, shiki and every slide). Moving between slides loads nothing. It replaces Slidev's own `manualChunks`. |
-| `build.cssCodeSplit: false` | `vite.config.ts` | One stylesheet instead of one per slide; slide styles are scoped, so loading them all at once is safe. |
-| `preloadImages: false` | `slides.md` headmatter | Slide pictures load with their slides, which Slidev mounts about 3 s after opening, instead of competing with the scripts. |
-| `preloadLinux()` | `vite.config.ts` | `index.html` preloads `linux/manifest.json`, the boot bundle and `unkernel-alpine.wasm` (`as="fetch"`, `crossorigin`, `fetchpriority="low"`), so they download alongside the scripts instead of after them. The plain `fetch()` calls in `disk.ts` and unkernel's `loadKernelModule` take over these responses; with another `as` or without `crossorigin`, each would be a second request that only the HTTP cache can answer. Low priority lets an HTTP/2 or HTTP/3 server send the scripts, styles and visible images first. |
-
-Linux's boot downloads are `unkernel-alpine.wasm` (12.5 MB, about 7 MB gzipped) and the disk's boot bundle (about 1 MB); the disk image's other 1 MiB chunks (27 MiB gzip in all) download in the background once a shell has drawn its first prompt and the page is idle, at low priority, two at a time; a chunk the guest reads before then is fetched at once (image.md). Every window preloads, the presenter's included, but only the audience window compiles and boots. Chrome serves a second window's request for a file that is still downloading from that one download, so an audience and a presenter window opened together fetch each file once, and a presenter window opened first leaves the files in the HTTP cache for the audience window.
-
-All of it is cached by the browser's HTTP cache. Script, stylesheet and wasm names carry a content hash, and disk chunks and the boot bundle are named by content, so they can be cached for as long as the host allows; `index.html` and `linux/manifest.json` keep a short lifetime so a new deploy is picked up. Once the long-lived files are cached, a reload over a link with 400 ms of latency renders the slide in under 0.5 s and Linux spawns its first shell in 1 to 2 s.
+How the build, the downloads, the boot and the HTTP cache are arranged for slow links, with measurements: [performance.md](./performance.md).
 
 ## Keyboard and focus
 
