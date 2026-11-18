@@ -22,9 +22,9 @@ OSC="${ESC}]"
 ST="${ESC}\\"
 
 # CSI 参数… 结尾字母
-echo -n "${CSI}35;1m"
+echo "${CSI}35;1m"
 # OSC 编号;参数… ST (或 BEL)
-echo -n "${OSC}11;?${ST}"
+echo "${OSC}11;?${ST}"
 ```
 
 </div>
@@ -36,7 +36,7 @@ echo -n "${OSC}11;?${ST}"
 </style>
 
 <!--
-- ESC 是一个字节 0x1B，`\e`、`\033`、`\x1b`、`\u001b` 都是它在 `$'…'` 里的写法；双引号里的 `"\e"` 只是反斜杠和字母 e 两个字符，交给 zsh 的 `echo` 才变成 ESC：它自己解释 `\e`、`\a`、`\n`、`\0NNN`、`\xNN`，bash 的 `echo` 要加 `-e` 才行；`-n` 去掉结尾的换行
+- ESC 是一个字节 0x1B，`\e`、`\033`、`\x1b`、`\u001b` 都是它在 `$'…'` 里的写法；双引号里的 `"\e"` 只是反斜杠和字母 e 两个字符，交给 zsh 的 `echo` 才变成 ESC：它自己解释 `\e`、`\a`、`\n`、`\0NNN`、`\xNN`，bash 的 `echo` 要加 `-e` 才行
 - CSI 是 `ESC [`，后面跟分号分隔的数字参数和一个结尾字母，结尾字母决定功能：A 到 D 移动光标，m 设置颜色和字体样式
 - OSC 是 `ESC ]`，后面是编号和参数，以 ST (`ESC \`) 或 BEL (0x07) 结束；用来设置窗口标题、查询终端颜色等，后面 OSC 那几页展开
 - 演示里的命令都先声明 ESC、CSI、OSC、ST 这几个变量，再用它们拼序列，读起来比一串 `\e[` 清楚
@@ -114,7 +114,7 @@ echo -n "${CSI}4;8H" > /dev/pts/{a.pts}' />
 <!--
 - A 清屏后跑一个 `sleep 600`，屏幕上什么都不输出，只剩光标；接下来 A 屏幕上的变化全部来自 B 写进 A 的 pts 的字节，A 里的程序一个字节都没写
 - B 声明 ESC、CSI 后发 `${CSI}4;8H`：A 的光标跳到第 4 行第 8 列
-- 写 `Hello, Terminal`：字从光标处开始，光标停在末尾
+- 写 `Hello, Terminal`：字从光标处开始，光标停在末尾；这一页用 `echo -n` 去掉结尾的换行，否则 A 的光标会跳到下一行行首
 - `${CSI}8D` 左移 8 格停在 T 上，再写 `World`：覆盖成 `Hello, Worldnal`。终端只是在格子里改字，没有「插入」的概念
 - `${CSI}K` 擦掉光标到行尾：剩下 `Hello, World`
 - `${CSI}2B${CSI}12D` 下移 2 行、左移 12 列，回到第 8 列再写一段：相对移动和绝对定位可以组合
@@ -273,8 +273,8 @@ cchars: discard = ^O; dsusp = ^Y; eof = ^D; eol = <undef>;
   <ShellStep type="b" />
   <ShellStep keys="^C" run="stty icanon" />
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["
-echo -n "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"' />
-  <ShellStep run='echo -n "${CSI}?1049l"' />
+echo "${CSI}?1049h${CSI}H"; echo "alternate screen, like vim / less"' />
+  <ShellStep run='echo "${CSI}?1049l"' />
 </ShellDemo>
 
 <!--
