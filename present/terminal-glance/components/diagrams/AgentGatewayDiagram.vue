@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useId } from 'vue'
-import './diagram.css'
+import DiagramFrame from './DiagramFrame.vue'
 
 const id = useId()
 const arrow = (tone: string) => `url(#${id}-${tone})`
 </script>
 
 <template>
-  <figure class="tg-diagram">
+  <DiagramFrame>
     <svg viewBox="0 0 1440 580" role="img" aria-label="botmux tmux backend: Web terminal and IM messages reach the worker over separate input paths. The worker writes to a tmux pane via send-keys or paste-buffer and reads raw output via pipe-pane. It broadcasts output to Web viewers and observes status for scheduling; both input sources reach one Agent process.">
       <defs>
         <marker v-for="tone in ['a', 'b', 'line']" :id="`${id}-${tone}`" :key="tone" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto">
@@ -49,5 +49,5 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
       <text class="sub" x="720" y="489" text-anchor="middle">many inputs → one byte stream · one output stream → many observers</text>
       <text class="figure-tag" x="1385" y="562" text-anchor="end">botmux cb8ff44b2 · tmux-pipe-backend.ts / worker.ts</text>
     </svg>
-  </figure>
+  </DiagramFrame>
 </template>

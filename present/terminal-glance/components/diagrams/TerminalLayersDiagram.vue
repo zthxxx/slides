@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useId } from 'vue'
-import './diagram.css'
+import DiagramFrame from './DiagramFrame.vue'
 
 // Marker ids must be unique per instance: Slidev renders a slide more than once (overview, presenter).
 const id = useId()
@@ -8,7 +8,7 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
 </script>
 
 <template>
-  <figure class="tg-diagram">
+  <DiagramFrame>
     <svg
       viewBox="0 0 1440 660"
       role="img"
@@ -141,7 +141,7 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
 
       <text class="figure-tag mono" x="1420" y="652" text-anchor="end">fig · the interfaces stay, every layer can be swapped</text>
     </svg>
-  </figure>
+  </DiagramFrame>
 </template>
 
 <style scoped>

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useId } from 'vue'
-import './diagram.css'
+import DiagramFrame from './DiagramFrame.vue'
 
 const id = useId()
 const arrow = (tone: string) => `url(#${id}-${tone})`
 </script>
 
 <template>
-  <figure class="tg-diagram">
+  <DiagramFrame>
     <svg viewBox="0 0 1440 740" role="img" aria-label="Top: the Agent runs on the pane's pts; the tmux server holds the pane's ptmx and acts as the pane's terminal, so it answers the DA1 query itself within milliseconds, while the worker only sees the OSC 7501 probe through pipe-pane and answers later through send-keys. Bottom: a relay runs in the pane and holds an inner ptmx for the Agent; it writes the probe reply synchronously, then forwards the DA1 query to tmux, so tmux's DA1 reply always arrives after the probe reply.">
       <defs>
         <marker v-for="tone in ['a', 'b', 'line', 'danger']" :id="`${id}-${tone}`" :key="tone" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto">
@@ -66,5 +66,5 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
 
       <text class="figure-tag" x="1388" y="728" text-anchor="end">botmux cb8ff44b2 · program-status-probe-relay.ts / program-status-relay.ts</text>
     </svg>
-  </figure>
+  </DiagramFrame>
 </template>

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useSlideContext } from '@slidev/client'
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, shallowRef, watch } from 'vue'
 import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
 import { relayStep } from '../runtime/relay'
 import { describeStepText, playStep } from '../runtime/session'
 import { splitKeys } from '../runtime/steps'
+import { highlightShell, type ShellToken } from './shell-highlight'
 
 /**
  * A button that types into a terminal of the same slide: `keys` are pressed first,
@@ -30,6 +31,16 @@ const text = computed(() => {
   const raw = props.run ?? props.type
   return raw && $renderContext.value === 'slide' ? describeStepText($page.value, raw) : raw
 })
+/** Shell highlighting of `text`; the plain text shows until the highlighter has loaded. */
+const lines = shallowRef<ShellToken[][]>()
+watch(text, async (value) => {
+  lines.value = undefined
+  if (!value)
+    return
+  const highlighted = await highlightShell(value).catch(() => undefined)
+  if (text.value === value)
+    lines.value = highlighted
+}, { immediate: true })
 const clickable = $renderContext.value === 'slide' || $renderContext.value === 'presenter'
 const played = ref(false)
 
@@ -52,7 +63,8 @@ function play(event: MouseEvent) {
       <span v-if="namesTerminals(demo)" class="shell-step-target" :style="{ backgroundColor: accent }">{{ target.toUpperCase() }}</span>
       <span class="shell-step-input">
         <kbd v-for="key in keys" :key="key">{{ key }}</kbd>
-        <code v-if="text">{{ text }}</code>
+        <code v-if="text && lines"><template v-for="(line, row) in lines" :key="row"><template v-if="row">{{ '\n' }}</template><span v-for="(token, column) in line" :key="column" :style="token.style">{{ token.content }}</span></template></code>
+        <code v-else-if="text">{{ text }}</code>
         <span v-if="run" class="shell-step-enter">⏎</span>
       </span>
     </button>
@@ -167,6 +179,19 @@ button {
 
 <style>
 /* Colour tokens live outside the scoped block: Vue's scoped `:global()` would drop the `.shell-step` part of a dark-mode selector. */
+/* Shiki's dual-theme tokens carry both colors as custom properties (shiki `defaultColor: false`). */
+.shell-step-input code span {
+  color: var(--shiki-light);
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+}
+
+html.dark .shell-step-input code span {
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+}
+
 .shell-step {
   --step-fg: #27272a;
   --step-muted: #a1a1aa;

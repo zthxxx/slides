@@ -15,4 +15,5 @@ catalog:
   postcss: 8.5.2
   rimraf: 6.0.1
   rxjs: 8.0.0-alpha.14
+  shiki: 4.6.0
   unkernel: 0.1.0-261117-0e4b2ec

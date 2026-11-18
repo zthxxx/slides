@@ -9,6 +9,7 @@
   "dependencies": {
     "@slidev/cli": "catalog:",
     "ghostty-web": "catalog:",
+    "shiki": "catalog:",
     "slidev-theme-eloc": "workspace:*",
     "unkernel": "catalog:"
   },

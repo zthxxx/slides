@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useId } from 'vue'
-import './diagram.css'
+import DiagramFrame from './DiagramFrame.vue'
 
 const id = useId()
 const arrow = (tone: string) => `url(#${id}-${tone})`
 </script>
 
 <template>
-  <figure class="tg-diagram">
+  <DiagramFrame>
     <svg viewBox="0 0 1440 520" role="img" aria-label="OSC query round trip: a remote program writes a query through its PTY and SSH to the client terminal emulator. The emulator writes its reply back through the same transport to the program's terminal input.">
       <defs>
         <marker v-for="tone in ['a', 'b']" :id="`${id}-${tone}`" :key="tone" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto">
@@ -42,5 +42,5 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
       <text class="sub" x="716" y="470" text-anchor="middle">protocol endpoints: Program ↔ Terminal emulator</text>
       <text class="figure-tag" x="1390" y="505" text-anchor="end">SSH carries terminal bytes; OSC is inside that channel</text>
     </svg>
-  </figure>
+  </DiagramFrame>
 </template>

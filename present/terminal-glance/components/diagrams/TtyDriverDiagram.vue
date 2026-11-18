@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useId } from 'vue'
-import './diagram.css'
+import DiagramFrame from './DiagramFrame.vue'
 
 // Marker ids must be unique per instance: Slidev renders a slide more than once (overview, presenter).
 const id = useId()
@@ -8,7 +8,7 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
 </script>
 
 <template>
-  <figure class="tg-diagram">
+  <DiagramFrame>
     <svg
       viewBox="0 0 1400 600"
       role="img"
@@ -92,5 +92,5 @@ const arrow = (tone: string) => `url(#${id}-${tone})`
 
       <text class="figure-tag mono" x="1380" y="588" text-anchor="end">fig · one terminal, one tty, many processes</text>
     </svg>
-  </figure>
+  </DiagramFrame>
 </template>
