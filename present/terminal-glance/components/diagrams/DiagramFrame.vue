@@ -1,20 +1,17 @@
 <script setup lang="ts">
-// The frame every diagram renders into: the shared look from diagram.css, and a zoom button.
-import Zoomable from '../Zoomable.vue'
+// The frame every diagram renders into, with the shared look from diagram.css.
 import './diagram.css'
 </script>
 
 <template>
-  <Zoomable class="tg-diagram-zoom">
-    <figure class="tg-diagram">
-      <slot />
-    </figure>
-  </Zoomable>
+  <figure class="tg-diagram tg-diagram-frame">
+    <slot />
+  </figure>
 </template>
 
 <style scoped>
 /* A diagram takes the full width of its slide, also inside layouts that center their content. */
-.tg-diagram-zoom {
+.tg-diagram-frame {
   width: 100%;
 }
 </style>

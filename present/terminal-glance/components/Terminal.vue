@@ -37,6 +37,30 @@ if (live) {
   serveRelayedSteps(({ page, to, step }) => void playStep(page, to, step).catch(() => {}))
 }
 
+/**
+ * Maximized: the window fills the slide, 20 px from its edges, over everything else on it; the screen refits, so the
+ * shell gets the new size (SIGWINCH). `position: fixed` resolves against Slidev's scaled slide container, which is
+ * transformed, so the window stays inside the slide and keeps its scale. A placeholder holds the window's place, so
+ * other terminals on the slide keep their size. Esc stays with the shell (vim needs it); the button or a click on the
+ * backdrop restores the window.
+ */
+const maximized = ref(false)
+const placeholderHeight = ref(0)
+
+function toggleMaximized(event: MouseEvent) {
+  ;(event.currentTarget as HTMLButtonElement).blur()
+  if (!maximized.value)
+    placeholderHeight.value = frame.value?.offsetHeight ?? 0
+  maximized.value = !maximized.value
+  if (maximized.value)
+    session?.terminal.focus()
+}
+
+watch(isActive, (active) => {
+  if (!active)
+    maximized.value = false
+})
+
 watch([isActive, screen], ([active, element]) => {
   if (session && active && element)
     void session.show(element).then(updateMinHeight)
@@ -102,9 +126,17 @@ const draggedHeight = ref<number>()
 const height = computed(() => draggedHeight.value ?? terminalHeights.get(key))
 /** About ten rows, in slide pixels, once the emulator has measured its rows: a layout share never squeezes it below. */
 const minHeight = ref<number>()
-const frameStyle = computed(() => ({
-  '--terminal-background': theme.value.background,
-  '--terminal-foreground': theme.value.foreground,
+const frameStyle = computed(() => maximized.value
+  ? {
+      '--terminal-background': theme.value.background,
+      '--terminal-foreground': theme.value.foreground,
+    }
+  : {
+      '--terminal-background': theme.value.background,
+      '--terminal-foreground': theme.value.foreground,
+      ...layoutStyle.value,
+    })
+const layoutStyle = computed(() => ({
   ...(minHeight.value === undefined ? {} : { minHeight: `${minHeight.value}px` }),
   ...(height.value !== undefined
     ? { height: `${height.value}px`, flex: '0 1 auto' }
@@ -189,9 +221,12 @@ const status = computed(() => {
 </script>
 
 <template>
+  <div v-if="maximized" class="terminal-placeholder" :style="{ ...layoutStyle, height: `${placeholderHeight}px`, flex: '0 0 auto' }" />
+  <div v-if="maximized" class="terminal-backdrop" @click="maximized = false" />
   <figure
     ref="frame"
     class="terminal-window"
+    :class="{ maximized }"
     :data-terminal-appearance="terminalAppearance"
     :style="frameStyle"
   >
@@ -213,6 +248,21 @@ const status = computed(() => {
         title="Latest OSC 7501 report; this does not check whether the process is alive"
         aria-live="polite"
       >{{ programStatusText }}</span>
+      <button
+        v-if="live"
+        class="terminal-appearance terminal-maximize"
+        type="button"
+        :aria-label="maximized ? 'Restore the terminal' : 'Maximize the terminal over the slide'"
+        :title="maximized ? 'Restore' : 'Maximize'"
+        @click="toggleMaximized"
+      >
+        <svg v-if="maximized" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" />
+        </svg>
+        <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+        </svg>
+      </button>
       <button class="terminal-appearance" type="button" :aria-label="appearanceLabel" :title="appearanceLabel" @click="toggleAppearance">
         <svg v-if="terminalAppearance === 'dark'" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="4" />
@@ -226,7 +276,7 @@ const status = computed(() => {
       Linux runs in the slide window; steps clicked here are typed there
     </div>
     <div
-      v-if="live"
+      v-if="live && !maximized"
       class="terminal-resize"
       title="Drag to resize · double-click to reset"
       @pointerdown="startResize"
@@ -249,6 +299,24 @@ const status = computed(() => {
   background: var(--terminal-background);
   color: var(--terminal-foreground);
   box-shadow: 0 0.6rem 1.6rem rgb(0 0 0 / 0.25);
+}
+
+.terminal-window.maximized {
+  position: fixed;
+  inset: 20px;
+  z-index: 41;
+  height: auto;
+  min-height: 0;
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.45);
+}
+
+.terminal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgb(18 18 18 / 0.55);
+  backdrop-filter: blur(4px);
+  cursor: zoom-out;
 }
 
 .terminal-bar {
@@ -315,7 +383,7 @@ const status = computed(() => {
 .terminal-program-status {
   position: absolute;
   top: 0.5rem;
-  right: 3.4rem;
+  right: 5.4rem;
   z-index: 3;
   max-width: 60%;
   overflow: hidden;

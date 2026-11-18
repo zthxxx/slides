@@ -32,24 +32,16 @@
 
 ---
 
-<Zoomable class="history-photo">
-
 ![ENIAC-console-panel](/images/ENIAC-console-panel.jpg)
-
-</Zoomable>
 
 早期的电子管电脑，有一堆按钮组成的控制台 (`Console`)
 
 <style>
   p {
     @apply w-full flex justify-center items-center;
-  }
-
-  .history-photo {
-    @apply w-1/2 mx-auto;
 
     img {
-      @apply w-full;
+      @apply max-w-1/2;
     }
   }
 </style>
@@ -61,24 +53,16 @@
 
 ---
 
-<Zoomable class="history-photo">
-
 ![Teletype](/images/Teletype.jpg)
-
-</Zoomable>
 
 后来有了键盘，可以输入，打字在纸上 (`Teletype`)
 
 <style>
   p {
     @apply w-full flex justify-center items-center;
-  }
-
-  .history-photo {
-    @apply w-1/2 mx-auto;
 
     img {
-      @apply w-full;
+      @apply max-w-1/2;
     }
   }
 </style>
@@ -91,24 +75,16 @@
 
 ---
 
-<Zoomable class="history-photo">
-
 ![DECVT100-terminal](/images/DECVT100-terminal.jpg)
-
-</Zoomable>
 
 再往后有了显示器，和键盘一起组成多用户输入输出 `Terminal`，系统级别才显示到 `Console`
 
 <style>
   p {
     @apply w-full;
-  }
-
-  .history-photo {
-    @apply w-1/2 mx-auto;
 
     img {
-      @apply w-full;
+      @apply max-w-1/2 mx-auto;
     }
   }
 </style>

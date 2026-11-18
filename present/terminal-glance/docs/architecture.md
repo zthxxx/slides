@@ -12,8 +12,7 @@ components/               Vue views; know about Slidev (render context, active s
    ShellDemo.vue          a demo: stacked terminals + numbered steps; provides the terminal names
    Terminal.vue           one terminal window; adopts its session's element when its slide is active; height drag handle
    ShellStep.vue          one step button; plays here, or relays from the presenter window; shell highlighting (shell-highlight.ts)
-   Zoomable.vue           a figure with a zoom button: enlarges its content over the whole slide
-   diagrams/              SVG diagrams for TTY, SSH, OSC and Agent gateways; DiagramFrame.vue gives each the shared light/dark styles and zoom
+   diagrams/              SVG diagrams for TTY, SSH, OSC and Agent gateways; DiagramFrame.vue gives each the shared light/dark styles
    │
 runtime/                  plain TypeScript; no templates
    session.ts             ShellSession = one pty + one emulator; registry by slide and name; step playback
@@ -69,9 +68,9 @@ In the presenter window the button posts `{ page, to, step }` on a `BroadcastCha
 
 The button shows the step text highlighted as shell by shiki (`components/shell-highlight.ts`): the `shellscript` grammar, the deck's vitesse light and dark themes, and shiki's JavaScript regex engine, created on first use; until then the text shows plain. Slidev's build puts all shiki modules into its shared, preloaded `modules/shiki` chunk, which these make about 66 KB (gzip) larger.
 
-## Figures
+## Maximized terminal
 
-`Zoomable.vue` wraps a figure with a zoom button. Zooming moves the figure's content into an overlay inside the slide's `.slidev-page`, 20 px from the slide's edges, so it scales with the slide; it is not the browser's fullscreen. The content is moved, not copied, so SVG marker ids stay unique. Esc, the button or a click on the overlay closes it; Esc is captured on `window` first, so Slidev never sees it. Leaving the slide closes it. Only the `slide` render context outside print mode shows the button.
+The maximize button in a terminal's title bar lays the window over its whole slide, 20 px from the slide's edges, over a dimmed backdrop; it is not the browser's fullscreen. The window becomes `position: fixed`, which resolves against Slidev's scaled slide container because that container is transformed, so the window keeps the slide's scale. The screen refits, so the shell gets the new size (SIGWINCH); a placeholder keeps the window's place, so other terminals on the slide keep theirs. Esc stays with the shell; the button, a click on the backdrop or leaving the slide restores the window. Only the live `slide` render context shows the button.
 
 ## Where Linux runs
 

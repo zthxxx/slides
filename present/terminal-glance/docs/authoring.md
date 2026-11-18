@@ -93,17 +93,7 @@ A terminal's shell is spawned the first time its slide is shown, so pty numbers 
 
 ## Figures
 
-A new diagram component renders its SVG inside `<DiagramFrame>` (`components/diagrams/DiagramFrame.vue`), which gives it the shared diagram styles and the zoom button. Any other picture gets the button by wrapping it in `<Zoomable>`, with blank lines around the markdown image so it is still parsed as markdown:
-
-```md
-<Zoomable class="history-photo">
-
-![Teletype](/images/Teletype.jpg)
-
-</Zoomable>
-```
-
-Size the picture through the wrapper's class; when zoomed, the picture fills the slide with a 20 px margin and keeps its aspect ratio.
+A new diagram component renders its SVG inside `<DiagramFrame>` (`components/diagrams/DiagramFrame.vue`), which gives it the shared diagram styles.
 
 ## Speaker notes
 
