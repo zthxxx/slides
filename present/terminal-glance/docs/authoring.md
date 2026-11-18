@@ -33,7 +33,7 @@ A step is sent in this order: `keys`, then `type`, then `run` followed by Enter.
 | `to` | Target terminal name. Default: the first terminal of the demo. |
 | `keys` | Space-separated keys sent as pressed, e.g. `"^C"`, `"^S l"`, `"↑ ⏎"`. Named keys are in `KEY_BYTES` (`runtime/steps.ts`); anything else is sent literally. |
 | `type` | Text typed as a person would, without a final Enter (input for a running program, or a half-typed line). |
-| `run` | A command typed as a person would, then Enter. A line break in the text is typed as Enter, so a multi-line command goes in line by line through the shell's continuation prompt. `run=""` presses Enter only. |
+| `run` | A command typed as a person would, then Enter. A line break in the text is typed as Enter; the guest's empty `PS2`/`RPS2` keeps multiline input free of continuation prefixes while preserving its indentation. `run=""` presses Enter only. |
 
 The typing schedule spans at most 1.2 s: up to 12 ms per character for short text, faster for long text, and up to 80 ms after each pressed key before the next input. Shell execution time is outside this budget.
 

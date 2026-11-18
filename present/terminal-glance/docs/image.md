@@ -110,7 +110,7 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
   "chunkSize": 1048576,
   "encoding": "gzip",
   "chunks": { "<index>": "chunks/<first 16 hex of sha256(raw chunk)>.gz" },
-  "stats": { "nonZeroChunks": 91, "uniqueChunks": 91, "rawBytes": 95420416, "compressedBytes": 28411938 }
+  "stats": { "nonZeroChunks": 91, "uniqueChunks": 91, "rawBytes": 95420416, "compressedBytes": 28303939 }
 }
 ```
 
@@ -130,7 +130,7 @@ Figures from the current package list:
 | Installed by apk | 56 MiB |
 | Overlay upper in the guest (zinit and its two plugins 10 MiB of it) | 68 MiB |
 | Non-zero data | 91 chunks, 91 MiB |
-| Published (gzip) | **27.1 MiB** |
+| Published (gzip) | **27.0 MiB** |
 
 The page downloads chunks only when the guest reads inside them: a viewer who never runs `nvim` never downloads neovim.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.

@@ -40,6 +40,10 @@ export PATH="/usr/local/bin:$PATH"
 #                  ZSH Config                     #
 # ----------------------------------------------- #
 
+# zsh 5.9 zshparam(1), PS2/RPS2: keep multiline demos free of parser-context prompts.
+PS2=''
+RPS2=''
+
 
 # Zinit
 #
