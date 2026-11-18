@@ -22,8 +22,8 @@ import { CowDisk, createKernel } from 'unkernel/node'
 const { values: options } = parseArgs({
   options: {
     'manifest': { type: 'string' },
-    /** Reads this long after the first prompt still count: fast-syntax-highlighting loads in zinit's turbo mode. */
-    'settle-ms': { type: 'string', default: '2500' },
+    /** The longest wait after the first prompt for the turbo-loaded plugins' mark; their reads still count. */
+    'settle-ms': { type: 'string', default: '5000' },
     'timeout-ms': { type: 'string', default: '60000' },
   },
 })
@@ -79,6 +79,9 @@ const pty = await vm.spawn(undefined, undefined, { cols: 100, rows: 30 })
 const decoder = new TextDecoder()
 let output = ''
 let prompt = 0
+let plugins = 0
+/** The marks `.zshrc` sends as iTerm2 SetUserVar escapes: `prompt` before the first prompt, `plugins` after the turbo loads. */
+const MARK = /\x1B\]1337;SetUserVar=terminal_glance_boot=([A-Za-z0-9+/=]*)\x07/g
 void pty.output.pipeTo(new WritableStream({
   write(bytes) {
     const text = decoder.decode(bytes, { stream: true })
@@ -92,9 +95,13 @@ void pty.output.pipeTo(new WritableStream({
       void pty.write('\x1B[?62;22c')
     if (text.includes('\x1B[6n'))
       void pty.write('\x1B[1;1R')
-    // jovial's prompt arrow; its glyphs are split by escape sequences, the arrow is not.
-    if (!prompt && output.includes('─➤'))
-      prompt = performance.now()
+    for (const [, value] of output.matchAll(MARK)) {
+      const mark = Buffer.from(value, 'base64').toString()
+      if (mark === 'prompt' && !prompt)
+        prompt = performance.now()
+      if (mark === 'plugins' && !plugins)
+        plugins = performance.now()
+    }
   },
 })).catch(() => {})
 
@@ -106,9 +113,14 @@ if (!prompt) {
   process.exit(1)
 }
 const atPrompt = order.length
-await new Promise(resolve => setTimeout(resolve, Number(options['settle-ms'])))
+const settle = Date.now() + Number(options['settle-ms'])
+while (!plugins && Date.now() < settle)
+  await new Promise(resolve => setTimeout(resolve, 20))
+// The plugin's own first redraw reads right after its load.
+await new Promise(resolve => setTimeout(resolve, 300))
 
-log(`first prompt after ${((prompt - t0) / 1000).toFixed(1)} s; ${atPrompt} chunks read by then, ${order.length} after ${options['settle-ms']} ms more; ${(readBytes / 2 ** 20).toFixed(1)} MiB read`)
+const after = plugins ? `plugins loaded ${((plugins - prompt) / 1000).toFixed(1)} s later` : `no plugins mark within ${options['settle-ms']} ms`
+log(`first prompt after ${((prompt - t0) / 1000).toFixed(1)} s, ${after}; ${atPrompt} chunks read by the prompt, ${order.length} in all; ${(readBytes / 2 ** 20).toFixed(1)} MiB read`)
 process.stdout.write(`${JSON.stringify({ boot: order, atPrompt, reads })}\n`)
 await vm.stop()
 process.exit(0)

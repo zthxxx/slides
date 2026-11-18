@@ -77,4 +77,21 @@ zinit light-mode depth=1 multisrc='*.plugin.zsh' for zthxxx/jovial
 typeset -g FAST_WORK_DIR="${XDG_CONFIG_HOME}/fsh"
 zinit light-mode depth=1 wait lucid for \
     atinit="ZINIT[COMPINIT_OPTS]=-C" \
+    atload=".terminal-glance-mark cGx1Z2lucw==" \
         zdharma-continuum/fast-syntax-highlighting
+
+
+## Start-up marks for image/vm/trace-boot.ts, which records what the boot reads from the disk (docs/image.md).
+# iTerm2's SetUserVar escape (OSC 1337), the usual way for a shell to signal its terminal; terminals that do not
+# know it ignore it, so nothing shows. `prompt` is sent once, from the last precmd hook before the first prompt;
+# `plugins` once the turbo (wait) loads above have run. The values are base64, as SetUserVar requires, written out
+# so that the boot runs no extra process: cHJvbXB0 is `prompt`, cGx1Z2lucw== is `plugins`.
+.terminal-glance-mark() {
+    print -n "\e]1337;SetUserVar=terminal_glance_boot=$1\a"
+}
+.terminal-glance-first-prompt() {
+    add-zsh-hook -d precmd .terminal-glance-first-prompt
+    .terminal-glance-mark cHJvbXB0
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd .terminal-glance-first-prompt
