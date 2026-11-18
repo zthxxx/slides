@@ -3,9 +3,9 @@ theme: eloc
 routerMode: hash
 ---
 
-## CLI 概览 (其一)
+## Terminal 概览 (其一)
 
-Terminal / 输入输出
+Terminal / Shell / 输入输出
 
 <!--
 - 本系列想把每天都在用、却说不清的几个概念讲明白：Terminal、TTY、Shell，以及它们和进程怎么协作
@@ -15,20 +15,15 @@ Terminal / 输入输出
 
 ---
 
-本栏目可能含有以下场景
-
-**思维跳跃**　　**越偏越远**
-
-**概念无数**　　**手忙脚乱**
-
-<!--
-- 打个预防针：名词很多 (console、tty、pty、ptmx、pts、shell)，话题也会经常跳
-- 今天的目标是建立直觉和整体图景，不用逐个背定义；一时没跟上没关系，结尾有参考资料
--->
+- 我们常说的 Terminal / Shell / Console / TUI / CLI 具体是什么？
+- Claude Code / Codex TUI 启动时占满独立全屏怎么实现的？
+- Herdr / Tmux 看起是里面又装了一层 Terminal ？
+- Botmux Agent 网关能让自己和用户同时在一个终端中输入，是怎么实现的？
+- Terminal / Shell 还有什么能力？
 
 ---
 
-[在浏览器地址栏输入URL到页面展示，背后发生了什么？](https://www.zhihu.com/question/34873227)
+#### [在浏览器地址栏输入URL到页面展示，背后发生了什么？](https://www.zhihu.com/question/34873227)
 
 <!--
 - 经典面试题：从输入 URL 到页面展示，要经过 DNS、TCP、TLS、HTTP、渲染，每一层都能无限展开
@@ -39,7 +34,7 @@ Terminal / 输入输出
 
 简化亿点
 
-*在地址栏敲下第一个按键到显示出字母发生了什么*
+#### *在地址栏敲下第一个按键到显示出字母发生了什么*
 
 <!--
 - 再缩小一点：只看敲下第一个按键，到屏幕上显示出这个字母
@@ -79,7 +74,7 @@ showkey -a      # 依次按 a、↑、Enter
 
 ---
 
-终端 (Terminal) 是什么
+## 终端 (Terminal) 是什么
 
 <!--
 - 日常说的「终端」混了好几层：硬件、内核里的 TTY 子系统、终端模拟器 App，以及在里面跑的 shell
@@ -438,12 +433,11 @@ stty -F /dev/pts/0 -a | grep icanon
 
 ---
 
+- 输入但没有回车前的命令也是传给 shell 了
 
-输入但没有回车前的命令也是传给 shell 了，
+- 只是因为没有换行符号，所以 shell 没有立刻解析执行
 
-只是因为没有换行符号，所以 shell 没有立刻解析执行，
-
-因为 shell 在交互模式 (interactive) 下，所以才能控制光标编辑命令
+- 因为 shell 在交互模式 (interactive) 下，所以才能控制光标编辑命令
 
 <!--
 - 交互模式下，shell 的行编辑器 (zsh 的 zle、bash 的 readline) 把 tty 切到非规范模式 (`-icanon -echo`)，每个按键都立刻交给 shell
@@ -461,13 +455,18 @@ stty -F /dev/pts/0 -a | grep icanon
 
   ```bash
   ESC="\u001b"
+  ESC="\x1b"
+  ESC="\033"
   ESC="\e"
-  CSI="${ESC}["
 
-  # Cursor Up        <ESC>[{COUNT}A
-  # Cursor Down      <ESC>[{COUNT}B
-  # Cursor Right     <ESC>[{COUNT}C
-  # Cursor Left      <ESC>[{COUNT}D
+  CSI="${ESC}["
+  OSC="${ESC}]"
+  ST="${ESC}\\"
+
+  # Cursor Up        <CSI>{COUNT}A
+  # Cursor Down      <CSI>{COUNT}B
+  # Cursor Right     <CSI>{COUNT}C
+  # Cursor Left      <CSI>{COUNT}D
   ```
 
   </div>
@@ -478,6 +477,7 @@ stty -F /dev/pts/0 -a | grep icanon
 
   ```bash
   <ESC>[<Front>;<Background>m
+  <CSI><Front>;<Background>m
   ```
 
   </div>

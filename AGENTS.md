@@ -13,10 +13,12 @@ This repo ships a **multi-deck Slidev site** deployed to https://slides.zthxxx.m
     Each file may contain one or more slides and is included by the main `slides.md` file.
   - `artboard/<page-name>/*.md`: optional, used for batch-discussing different visual styles for the same page with users;
     Use this only when the user explicitly requests a batch style demonstration.
-  - `public/`: optional, static assets like `images/` `sounds/` `images/`; Organize them by category instead of just laying them all out flat.
+  - `public/`: optional, static assets like `images/` `sounds/` `video/`;
+    - Organize assets by category instead of just laying them all out flat.
+    - Binary assets like images or sounds / video should be stored in Git LFS instead of pure Git.
   - `components/`: optional, Vue components
   - `package.json`: optional, for specifying dependencies or scripts
-  - `.logs`, `.playwright-cli`: optional, log files by Coding Agent
+  - `.logs`, `.playwright-cli`: optional, log files by Coding Agent; not managed in git
 
 
 ## Commands

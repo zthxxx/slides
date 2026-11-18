@@ -53,7 +53,7 @@ OSC 7501：程序主动汇报状态
 
 ---
 
-模拟 Agent：观察终端标题栏的状态
+OSC 7501 - 模拟 Agent，观察终端标题栏的状态
 
 <ShellDemo>
   <ShellStep run="agent-status-demo" />
@@ -72,13 +72,13 @@ OSC 7501：程序主动汇报状态
 
 ---
 
-less / Neovim / Claude Code 怎样控制整屏？
+Claude Code / Codex / Neovim 怎样控制整屏？
 
 <div class="text-[30px] w-full">
 
 | 层次 | 机制 | 谁处理 |
 | --- | --- | --- |
-| 逐键输入 | termios：关闭行缓冲、回显等 | 内核 TTY |
+| 逐键输入 | [termios](https://man7.org/linux/man-pages/man3/termios.3.html)：关闭行缓冲、回显等 | 内核 TTY |
 | 屏幕绘制 | CSI：光标定位、清行、颜色；`?1049h/l` 备用屏幕 | 终端模拟器 |
 | 交互事件 | 鼠标 `1000/1006`、粘贴 `2004`、焦点 `1004` | 终端编码，程序读取 |
 | 批量重绘 | `?2026h/l` synchronized output | 终端延后显示中间帧 |
@@ -130,9 +130,9 @@ less / Neovim / Claude Code 怎样控制整屏？
 
 ---
 
-用户继续敲，Gateway 也能写入
+<div class="text-[28px]">用户继续敲，Gateway 也能写入</div>
 
-<div class="text-[24px] opacity-70">A：用户终端　B：网关控制端　共享程序：zsh (代替 Agent)</div>
+<div class="text-[24px] opacity-70 m-3">A: 用户终端 ｜ B: 网关控制端 ｜ 共享 Agent：zsh</div>
 
 <ShellDemo terminals="a b">
   <ShellStep to="a" run="tmux new-session -A -s gateway-demo" />
@@ -164,10 +164,10 @@ Gateway 怎样知道 Agent 在等什么？
 
 | 观察 | 能知道什么 | 边界 |
 | --- | --- | --- |
-| OSC 7501 | 程序自报 working / blocked / done | 需要程序支持，没有心跳 |
 | Hooks / transcript | 某个执行阶段或完成事件 | 按适配器语义校准 |
 | 输出静默 / 屏幕 | 一段时间没有变化、出现提示符 | 仍可能在计算或等网络 |
 | PTY 退出 / 连接断开 | 进程结束或传输不可用 | 不代表任务成功 |
+| OSC 7501 | 程序自报 working / blocked / done | 需要程序支持，可轮询 |
 
 </div>
 
