@@ -87,7 +87,7 @@ The deck's `build` script runs `build:image` before `slidev build`, so the site 
 
 | File | Source | Changed |
 | --- | --- | --- |
-| `rootfs/root/.zshrc` | jovial's README, [Manually Install Without oh-my-zsh](https://github.com/zthxxx/jovial#manually-install-without-oh-my-zsh) | Sources the jovial theme and `jovial.plugin.zsh` directly, with no plugin manager and no completion system, and loads fast-syntax-highlighting right after the first prompt. Sets fast-syntax-highlighting's `FAST_WORK_DIR` to `~/.config/fsh` ([Shell start time](#shell-start-time)). |
+| `rootfs/root/.zshrc` | jovial's README, [Manually Install Without oh-my-zsh](https://github.com/zthxxx/jovial#manually-install-without-oh-my-zsh); history from Oh My Zsh's [`lib/history.zsh`](https://github.com/ohmyzsh/ohmyzsh/blob/c0140703a53eb0d22be44f7bac318d0baacc927c/lib/history.zsh) | Sources the jovial theme and `jovial.plugin.zsh` directly, with no plugin manager and no completion system, and loads fast-syntax-highlighting right after the first prompt. Sets fast-syntax-highlighting's `FAST_WORK_DIR` to `~/.config/fsh` ([Shell start time](#shell-start-time)). History goes to `~/.zsh_history`, 200 entries, with Oh My Zsh's options except `hist_expire_dups_first`; terminals share it, and it lasts until the page reloads, as the guest disk's writes live in memory. |
 | `rootfs/root/.config/tmux/tmux.conf` | [zthxxx/tmux-config `tmux.conf`](https://github.com/zthxxx/tmux-config/blob/main/tmux.conf) | Every plugin is left out (TPM, resurrect, continuum, treemux). |
 
 Each file's header records the upstream commit it was taken from.

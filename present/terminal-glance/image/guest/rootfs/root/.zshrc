@@ -19,6 +19,16 @@ export PATH="/usr/local/bin:$PATH"
 PS2=''
 RPS2=''
 
+## History, after Oh My Zsh's lib/history.zsh (ohmyzsh c014070,
+# https://github.com/ohmyzsh/ohmyzsh/blob/c0140703a53eb0d22be44f7bac318d0baacc927c/lib/history.zsh): its file and
+# options, kept to 200 entries. hist_expire_dups_first is left out, as it needs HISTSIZE above SAVEHIST to have room
+# (zshoptions(1)). The guest disk's writes live in memory, so the file lasts until the page reloads; share_history
+# gives each terminal the commands run in the others.
+HISTFILE="${HOME}/.zsh_history"
+HISTSIZE=200
+SAVEHIST=200
+setopt extended_history hist_ignore_dups hist_ignore_space hist_verify share_history
+
 # Where image/guest/setup.sh puts the plugins: not ~/.local/share/zsh/plugins, which Alpine's /etc/zsh/zshrc would
 # source before this file.
 typeset -g ZSH_PLUGINS_DIR="${XDG_DATA_HOME}/zsh-plugins"
