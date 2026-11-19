@@ -6,7 +6,9 @@
 #   example's ohmyzsh libs and plugins, zsh-history-enquirer, zsh-completions
 #   and zsh-autosuggestions are left out: under the in-browser VM each of them
 #   adds to the time before the first prompt. Everything kept is upstream's,
-#   plus FAST_WORK_DIR for fast-syntax-highlighting.
+#   plus FAST_WORK_DIR for fast-syntax-highlighting, and `compinit -C`, which
+#   trusts the completion dump the image build made instead of checking the
+#   completion functions against it (40 ms of each start in the VM).
 #
 # The image is provisioned with network, so zinit clones zinit and jovial at
 # build time (image/guest/setup.sh); the page boots offline and only loads them.
@@ -22,7 +24,7 @@
 # ----------------------------------------------- #
 #                  Common Config                  #
 # ----------------------------------------------- #
-autoload -Uz compinit && compinit
+autoload -Uz compinit && compinit -C
 
 # https://wiki.archlinux.org/title/XDG_Base_Directory
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"

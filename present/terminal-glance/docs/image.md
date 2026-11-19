@@ -75,18 +75,19 @@ The deck's `build` script runs `build:image` before `slidev build`, so the site 
    Checks `bat --version`, the demo scripts' syntax, bat's ability to render the sample file, and that `base64 -w0` reads the demo images.
 4. Checks tmux: the `tmux-256color` terminfo entry exists (`default-terminal` in the config) and the config loads without errors.
 5. Runs `zsh -i -c '@zinit-scheduler burst'`: zinit clones itself, jovial and fast-syntax-highlighting (a turbo `wait` load, which `burst` runs at once). The build fails unless zinit's plugins are exactly the ones `.zshrc` loads (`zthxxx---jovial`, `zdharma-continuum---fast-syntax-highlighting`, plus zinit's own `_local---zinit`) and no snippet file (where oh-my-zsh libs and plugins would land) exists.
-6. Fails if `node`, `python3` or `zoxide` came in as a dependency of another package.
-7. Takes the network down and starts `zsh -i` again; any stderr output fails the build, so the page starts offline cleanly. It also fails unless fast-syntax-highlighting's `$FAST_WORK_DIR` is `~/.config/fsh` and its `secondary_theme.zsh` there loads the plugin's secondary theme (see [The secondary theme download](#the-secondary-theme-download)).
-8. Compiles the completion dump, writes `/etc/terminal-glance-image` (input hash, unkernel version, lower image id, build time).
-9. Removes apk and shell caches, histories and temporary files.
-10. `fstrim /data`: the driver turns discards into zeros, so freed blocks become zero chunks that are not published.
-11. Removes the overlay's boot markers (`attempts`, `safe`), so the first boot on the page is a clean one.
+6. Compiles what zsh reads at start with `zcompile`: `.zshrc`, the completion dump, zinit's scripts, jovial's, and the files fast-syntax-highlighting sources or autoloads at load (see [Shell start time](#shell-start-time)).
+7. Fails if `node`, `python3` or `zoxide` came in as a dependency of another package.
+8. Takes the network down and starts `zsh -i` again, on the compiled files; any stderr output fails the build, so the page starts offline cleanly. It also fails unless fast-syntax-highlighting's `$FAST_WORK_DIR` is `~/.config/fsh` and its `secondary_theme.zsh` there loads the plugin's secondary theme (see [The secondary theme download](#the-secondary-theme-download)), and when a compiled file is older than its source, which zsh would then ignore.
+9. Writes `/etc/terminal-glance-image` (input hash, unkernel version, lower image id, build time).
+10. Removes apk and shell caches, histories and temporary files.
+11. `fstrim /data`: the driver turns discards into zeros, so freed blocks become zero chunks that are not published.
+12. Removes the overlay's boot markers (`attempts`, `safe`), so the first boot on the page is a clean one.
 
 ## Shell and tmux configuration
 
 | File | Source | Changed |
 | --- | --- | --- |
-| `rootfs/root/.zshrc` | jovial [`examples/zinit.zshrc`](https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc) | Loads the jovial theme and fast-syntax-highlighting through zinit; every other plugin and ohmyzsh lib is left out. Sets fast-syntax-highlighting's `FAST_WORK_DIR` to `~/.config/fsh` ([Shell start time](#shell-start-time)). |
+| `rootfs/root/.zshrc` | jovial [`examples/zinit.zshrc`](https://github.com/zthxxx/jovial/blob/master/examples/zinit.zshrc) | Loads the jovial theme and fast-syntax-highlighting through zinit; every other plugin and ohmyzsh lib is left out. Sets fast-syntax-highlighting's `FAST_WORK_DIR` to `~/.config/fsh` and runs `compinit -C` ([Shell start time](#shell-start-time)). |
 | `rootfs/root/.config/tmux/tmux.conf` | [zthxxx/tmux-config `tmux.conf`](https://github.com/zthxxx/tmux-config/blob/main/tmux.conf) | Every plugin is left out (TPM, resurrect, continuum, treemux). |
 
 Each file's header records the upstream commit it was taken from.
@@ -94,7 +95,20 @@ The tmux prefix in this config is **Ctrl-S**; the deck's tmux step uses `Ctrl-S 
 
 ### Shell start time
 
-Under the in-browser VM each zsh plugin adds to the time before the first prompt, so the image loads only the two the talk needs: the theme, and syntax highlighting to make typed commands readable. fast-syntax-highlighting loads in zinit's turbo mode (`wait lucid`), after the first prompt, which appears in 0.6 to 0.9 s. Packages the demos do not use (node, python, zoxide) are left out to keep the download small.
+Under the in-browser VM each zsh plugin adds to the time before the first prompt, so the image loads only the two the talk needs: the theme, and syntax highlighting to make typed commands readable. fast-syntax-highlighting loads in zinit's turbo mode (`wait lucid`), after the first prompt. Packages the demos do not use (node, python, zoxide) are left out to keep the download small.
+
+zsh also parses every script it sources, at every start. Step 6 compiles every script zsh reads at start: zsh reads `file.zwc` in place of a sourced script, a startup file or an autoloaded function when it is newer ([zshbuiltins(1), `zcompile`](https://zsh.sourceforge.io/Doc/Release/Shell-Builtin-Commands.html)), and zinit compiles only each plugin's main file. `.zshrc` runs `compinit -C`, which loads the completion dump the build made without checking the completion functions against it; the image's functions do not change after the build. Measured in the guest, a nested `zsh -i` from its start to the end of `.zshrc`, same page and VM:
+
+| Part | Before | After |
+| --- | ---: | ---: |
+| `compinit` | 115 to 117 ms | 47 to 53 ms |
+| sourcing `zinit.zsh` | 177 to 190 ms | 121 to 138 ms |
+| loading jovial through zinit | 100 to 127 ms | 71 to 84 ms |
+| start → end of `.zshrc` | 441 to 474 ms | 284 to 302 ms |
+
+With jovial's first precmd, the prompt is ready (`zle-line-init`) 390 to 405 ms after the start; on the image before this change it took 500 to 600 ms.
+
+The page starts spare shells ahead, so only the first terminal and `exec zsh` wait for this ([performance.md](./performance.md#opening-another-terminal)).
 
 A turbo load runs while zsh waits at the prompt, and zsh reads no key until it returns: keys typed meanwhile are neither echoed nor run, then arrive all at once. Its duration is therefore a wait before the first typed key shows. fast-syntax-highlighting's load takes about 0.27 s in the guest, 47 ms of it binding its zle widgets. Highlighting one of the deck's command lines then takes 8 to 32 ms per redraw, and up to 0.16 s the first time a command with its own highlighter (a chroma, such as `git`) is typed.
 
@@ -167,10 +181,10 @@ awk '/^\+[0-9]/ { t = substr($1, 2); if (p && t - p > 0.1) printf "%.2f s  %s\n"
 - The packer writes the manifest last, by rename, and deletes chunk files no longer referenced.
 - `vm/trace-boot.ts` boots the published disk once, offline, the way the page does, and records what the guest reads from power-on until zsh's first prompt and fast-syntax-highlighting's turbo load. `.zshrc` marks both moments with an iTerm2 SetUserVar escape (`OSC 1337 ; SetUserVar=terminal_glance_boot=<base64>`), which terminals that do not know it ignore: `prompt` from a one-shot precmd hook, `plugins` from the plugin's zinit `atload`. Without the `prompt` mark within 60 s the build fails; without the `plugins` mark the trace stops 5 s after the prompt.
 - `boot` lists the chunks it read, in first-read order. `bootBundle` holds the bytes it read, rounded to 16 KiB blocks: `runs` are `[first block, block count]`, ascending, and the file is those blocks one after another, each 16 KiB (the disk's last one padded with zeros), gzip-compressed and named by content like the chunks.
-- The page downloads the bundle as soon as it has the manifest, in parallel with the kernel's own download. A read the bundle covers entirely is served from it; any other read loads its chunks. The boot reads 245 blocks (3.8 MiB) from the 23 chunks it touches in the current image, so the bundle is 1.0 MiB gzip where those chunks are 4.9 MiB.
+- The page downloads the bundle as soon as it has the manifest, in parallel with the kernel's own download. A read the bundle covers entirely is served from it; any other read loads its chunks. The boot reads 247 blocks (3.9 MiB) from the 26 chunks it touches in the current image, so the bundle is 1.1 MiB gzip where those chunks are 5.9 MiB.
 - The guest's timing varies, so two traces of one image differ by a few blocks; on the page, such a read loads its chunk.
 - A manifest with `boot` but no bundle, or whose bundle fails to download, fetches those chunks 6 at a time instead; one with neither boots fully lazily. A prefetched chunk stays in memory until the guest has read it.
-- When a shell first writes output (its first prompt), or 5 s after the kernel starts, whichever comes first, and once the page is idle, the page downloads every chunk not fetched yet, in disk order, two at a time (at low priority in a build), so a program's first run (htop, bat, tmux) reads from memory. Every fetched file is kept as published, gzip (`ImageFiles`), 27 MiB for the whole image; a guest read decompresses its chunk, and no file is fetched twice. The guest still has no network: these are the page's own requests for its disk.
+- When a shell first writes output (its first prompt), or 5 s after the kernel starts, whichever comes first, and once the page is idle, the page downloads every chunk not fetched yet, in disk order, two at a time (at low priority in a build), so a program's first run (htop, bat, tmux) reads from memory. Every fetched file is kept as published, gzip (`ImageFiles`), 28 MiB for the whole image; a guest read decompresses its chunk, and no file is fetched twice. The guest still has no network: these are the page's own requests for its disk.
 
 `test/disk.test.ts` checks this contract both ways: whatever `pack.ts` publishes, `runtime/disk.ts` reads back byte for byte.
 
@@ -181,10 +195,10 @@ Figures from the current package list:
 | Measure | Size |
 | --- | --- |
 | Installed by apk | 56 MiB |
-| Overlay upper in the guest (zinit and its two plugins 10 MiB of it) | 68 MiB |
-| Non-zero data | 90 chunks, 90 MiB |
-| Published (gzip) | **27.1 MiB** |
-| Boot bundle (gzip): the 245 blocks of 16 KiB the boot reads | 1.0 MiB |
+| Overlay upper in the guest (zinit and its two plugins 11 MiB of it) | 70 MiB |
+| Non-zero data | 94 chunks, 94 MiB |
+| Published (gzip) | **27.7 MiB** |
+| Boot bundle (gzip): the 247 blocks of 16 KiB the boot reads | 1.1 MiB |
 
 The page downloads the boot bundle at once, and the other chunks in the background after the first prompt; until then a read outside the bundle fetches its chunk at once.
 GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.

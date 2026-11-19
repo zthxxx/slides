@@ -95,6 +95,17 @@ snippets=$(find "$zinit_home/snippets" -type f 2>/dev/null)
 [ -z "$snippets" ] || fail "zinit snippet files present: $snippets"
 ls -A "$zinit_home" "$zinit_home/plugins"
 
+step "compile what zsh reads at start"
+# Parsing is most of zsh's start in the VM. zsh reads file.zwc in place of a sourced script, a startup file or an
+# autoloaded function when it is newer (zshbuiltins(1), zcompile); zinit compiles only each plugin's main file. The
+# offline start below then runs on the compiled files.
+zsh -c 'zinit=$XDG_DATA_HOME/zinit fsh=$XDG_DATA_HOME/zinit/plugins/zdharma-continuum---fast-syntax-highlighting
+	for f in ~/.zshrc ~/.zcompdump $zinit/zinit.git/zinit*.zsh $zinit/plugins/zthxxx---jovial/*.(zsh|zsh-theme) \
+		$fsh/fast-syntax-highlighting.plugin.zsh $fsh/fast-highlight $fsh/fast-string-highlight $fsh/fast-theme; do
+		zcompile "$f" || { print -u2 -r -- "cannot compile $f"; exit 1 }
+		print -r -- "$f.zwc"
+	done' || fail "zcompile failed"
+
 step "no unwanted tools pulled in as dependencies"
 for cmd in node python3 zoxide; do
 	! command -v "$cmd" >/dev/null || fail "$cmd is installed ($(command -v "$cmd")), the image must not ship it"
@@ -111,8 +122,9 @@ errors=$(zsh -i -c '@zinit-scheduler burst
 	source $FAST_WORK_DIR/secondary_theme.zsh 2>&1 && (( ${+FAST_HIGHLIGHT_STYLES[freedefault]} )) ||
 		{ print -r -- "$FAST_WORK_DIR/secondary_theme.zsh sets no free styles"; exit 1 }' </dev/null 2>&1) ||
 	fail "fast-syntax-highlighting would download its secondary theme on the page: $errors"
-# The completion dump compiled ahead, so the first terminal skips that work.
-zsh -c 'for f in ~/.zcompdump*(N); do [[ $f == *.zwc ]] || zcompile "$f"; done'
+# Every compiled file is still newer than its source, so zsh keeps reading it.
+stale=$(zsh -c 'for f in ~/**/*.zwc(D.N); do [[ ${f%.zwc} -nt $f ]] && print -r -- $f; done; exit 0')
+[ -z "$stale" ] || fail "compiled files older than their sources: $stale"
 
 step "image stamp"
 cat > /etc/terminal-glance-image <<EOF
