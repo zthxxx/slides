@@ -28,14 +28,26 @@ Package manager is pnpm with `pnpm-workspace.yaml`, Node.js >=22, and Bun runs t
 - `pnpm dev` — serve the root index deck (`slides.md`) with HMR.
 - `pnpm dev <slide-name>` — serve a single deck under `present/<slide-name>/slides.md`.
 - `pnpm build` — build the entire site into `.site/`. Runs all decks in parallel.
+- `pnpm test` — run the `test` script of every workspace package that defines one.
 - `pnpm clean` — remove build artifacts.
 
 A single deck can also be developed in isolation by `cd present/<slide-name> && pnpm dev` (needs its own deps has a local `package.json` for scripts and dependencies).
 
 
+### Package scripts that the root commands pick up
+
+The root commands do not name any deck or package; a package opts in through the scripts in its own `package.json`.
+
+- `test`: `pnpm test` runs it; packages without one are skipped.
+- `build` in a package under `packages/`: `pnpm build` runs it before any deck builds.
+- `build` in a deck (`present/<slide-name>/`): `pnpm build` runs it in the deck's directory instead of the default `slidev build --base /present/<slide-name>/ slides.md`.
+  It gets the base path in `SLIDES_BASE` (`/present/<slide-name>/`) and must leave the built deck in `dist/`, which `scripts/build.ts` copies to `.site/present/<slide-name>/`.
+  Use it when a deck needs a step before `slidev build`, e.g. [`terminal-glance`](./present/terminal-glance/package.json) builds its guest disk image first.
+
+
 ## CI / Deploy
 
-Every push and PR runs `pnpm build`. On `master`, `.site/` is published to the `gh-pages`. see `.github/workflows/build.yml`
+Every push and PR runs `pnpm test` and `pnpm build`. On `master`, `.site/` is published to the `gh-pages`. see `.github/workflows/build.yml`
 
 
 ## Adding a new deck

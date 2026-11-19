@@ -13,7 +13,7 @@ Run from the repository root unless noted.
 | Build the guest image (first checkout, or after changing `image/`) | `pnpm -C present/terminal-glance build:image` |
 | Rebuild the image regardless of its inputs | `pnpm -C present/terminal-glance build:image --force` |
 | Run the tests | `pnpm -C present/terminal-glance test` |
-| Build the whole site | `pnpm build` |
+| Build the whole site (builds the guest image first when its inputs changed) | `pnpm build` |
 
 Without a built image the page still runs, on bare Alpine (busybox ash), and says so in every terminal.
 

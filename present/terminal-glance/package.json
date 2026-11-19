@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "slidev --log info --open",
+    "build": "pnpm run build:image && slidev build --base \"${SLIDES_BASE:-/}\"",
     "build:image": "bun image/build.ts",
     "test": "bun test"
   },

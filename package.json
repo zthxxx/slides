@@ -21,6 +21,7 @@
   "scripts": {
     "dev": "bun scripts/dev.ts",
     "build": "bun scripts/build.ts",
+    "test": "pnpm -r --if-present run test",
     "clean": "rm -rf index.html .site present/*/index.html present/*/dist"
   },
   "dependencies": {

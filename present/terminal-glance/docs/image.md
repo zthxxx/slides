@@ -65,7 +65,7 @@ Most of the time is apk downloading packages, so the build first downloads the g
 The input hash covers every file under `image/` and the installed `unkernel` version.
 Packages come from the live Alpine 3.24 repositories and zinit clones jovial from its default branch, so two builds with the same hash can differ.
 
-CI (`.github/workflows/build.yml`) runs `pnpm -C present/terminal-glance build:image` on every push, before `pnpm build`.
+The deck's `build` script runs `build:image` before `slidev build`, so the site build (`pnpm build` at the repository root, which CI runs on every push) always ships a current image.
 
 ## What `guest/setup.sh` does
 
