@@ -5,7 +5,7 @@ import { terminalAppearance, TERMINAL_THEMES, toggleTerminalAppearance } from '.
 import { armBellSound } from '../runtime/bell'
 import { namesTerminals, shellDemoKey, terminalAccent } from '../runtime/demo'
 import { linuxDownloads } from '../runtime/downloads'
-import { useLinux } from '../runtime/kernel'
+import { linuxBoot, useLinux } from '../runtime/kernel'
 import { serveRelayedSteps } from '../runtime/relay'
 import { playStep, sessionKey, useShellSession } from '../runtime/session'
 import { clampHeight, terminalHeights } from '../runtime/terminal-height'
@@ -63,7 +63,12 @@ watch(isActive, (active) => {
     maximized.value = false
 })
 
+/** Shown before Linux was up: the screen shows the boot stages until the shell's first prompt. */
+const shownDuringBoot = ref(false)
+
 watch([isActive, screen], ([active, element]) => {
+  if (active && linuxBoot.boot.state !== 'done')
+    shownDuringBoot.value = true
   if (session && active && element)
     void session.show(element).then(updateMinHeight)
   if (session && !active)
@@ -225,8 +230,13 @@ const download = computed(() => {
   }
 })
 
-/** Until its shell's first prompt, the screen shows Linux's boot stages; later downloads show in the title bar. */
-const booting = computed(() => live && session?.status.value !== 'failed' && !session?.ready.value)
+/**
+ * While Linux boots, and until the first prompt on a terminal shown during the boot, the screen shows the boot stages;
+ * later downloads show in the title bar. A terminal shown later only waits for its shell, a spare one at its prompt
+ * (runtime/spare-shells.ts), so it shows no boot screen.
+ */
+const booting = computed(() => live && session?.status.value !== 'failed' && !session?.ready.value
+  && (linuxBoot.boot.state !== 'done' || shownDuringBoot.value))
 
 const status = computed(() => {
   if (booting.value)
@@ -509,7 +519,7 @@ const status = computed(() => {
   flex: 1;
   min-height: 0;
   /* No right padding: the canvas, and the scrollbar ghostty-web draws at its right edge, end at the window's edge. */
-  padding: 0.5rem 0 8px 0.8rem;
+  padding: 8px 4px;
   border-radius: 0 0 0.6rem 0.6rem;
   /* The emulator's host is enlarged by the slide scale and scaled back down (runtime/emulator.ts). */
   overflow: hidden;

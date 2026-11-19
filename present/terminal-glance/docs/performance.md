@@ -1,6 +1,6 @@
 # Performance
 
-The deck is often opened over slow or high-latency links, where a single request can stall for seconds. Its heaviest part is Linux: the kernel wasm is 7.2 MB on the wire, and the disk of preinstalled tools 28.4 MB. Three goals shape everything here:
+The deck is often opened over slow or high-latency links, where a single request can stall for seconds. Its heaviest part is Linux: the kernel wasm is 7.2 MB on the wire, and the disk of preinstalled tools 29.0 MB. Three goals shape everything here:
 
 - The slide renders in seconds, whatever Linux is doing.
 - Linux reaches its first prompt as soon as the link can carry the kernel.
@@ -26,7 +26,7 @@ Sizes from the current build; "wire" is what GitHub Pages sends (gzip).
 | `assets/unkernel-alpine-*.wasm`: the kernel and its initramfs | 7.2 MB | from the start, at low priority |
 | `linux/manifest.json` and the boot bundle | 1.1 MB | from the start, at low priority |
 | Hack Nerd Font Mono, regular and bold | 2 × 1.25 MB | before the first terminal draws |
-| `linux/chunks/*.gz`: the whole disk, 90 chunks of 1 MiB before gzip | 28.4 MB | after the first prompt, in the background |
+| `linux/chunks/*.gz`: the whole disk, 94 chunks of 1 MiB before gzip | 29.0 MB | after the first prompt, in the background |
 
 The kernel wasm decides how soon Linux can start: 19 s at 3 Mbps, 2.3 s at 25 Mbps.
 
@@ -90,7 +90,7 @@ The first slide renders later because the emulated link shares its bandwidth equ
 
 ### The boot bundle
 
-At build time `image/vm/trace-boot.ts` boots the disk offline and records what the guest reads until zsh's first prompt and its plugin load, marked by `.zshrc` with `OSC 1337 SetUserVar` escapes. The boot reads 245 blocks of 16 KiB (3.8 MiB). They go into one gzip file of 1.1 MB, against 5.1 MB for the 23 chunks they come from in the current image. The page downloads it alongside the kernel, so the guest reads its boot from memory instead of waiting one round trip per chunk ([image.md](./image.md#the-published-format)).
+At build time `image/vm/trace-boot.ts` boots the disk offline and records what the guest reads until zsh's first prompt and its plugin load, marked by `.zshrc` with `OSC 1337 SetUserVar` escapes. The boot reads 247 blocks of 16 KiB (3.9 MiB). They go into one gzip file of 1.1 MB, against 6.2 MB for the 26 chunks they come from in the current image. The page downloads it alongside the kernel, so the guest reads its boot from memory instead of waiting one round trip per chunk ([image.md](./image.md#the-published-format)).
 
 Measured locally at 400 ms latency and 3 Mbps, cold load of slide 5. Before is `7d99b43`; times run from the manifest request, since that baseline also lacked the merged scripts.
 
@@ -109,25 +109,29 @@ Two rules keep a failed or long boot from costing extra downloads:
 
 ### The shell's start
 
-The image loads two zsh plugins: the jovial theme, and fast-syntax-highlighting in zinit's turbo mode, after the first prompt, which appears 0.6 to 0.9 s after zsh starts. node, python3 and zoxide are left out, and the build fails if they come back as a dependency: without them the published image is 22.7 MiB gzip instead of 58.5 MiB (at `ce872b1`).
+The image loads two zsh plugins: the jovial theme, and fast-syntax-highlighting in zinit's turbo mode, after the first prompt. node, python3 and zoxide are left out, and the build fails if they come back as a dependency: without them the published image is 22.7 MiB gzip instead of 58.5 MiB (at `ce872b1`).
+
+The image build compiles every script zsh reads at start (`zcompile`), and `.zshrc` loads the completion dump without checking it (`compinit -C`). A zsh then reaches its prompt 390 to 405 ms after it starts in the guest, against 500 to 600 ms before. The saving splits between parsing zinit and jovial, about 85 ms, and the completion check, about 65 ms ([image.md](./image.md#shell-start-time)).
 
 The image ships fast-syntax-highlighting's secondary theme in `~/.config/fsh`. Without the file, the plugin tries to download it at every start, and with no network that holds typed keys for 5 s. The first typed key echoes after 19 to 23 ms; without the file it took 5051 ms ([image.md](./image.md#shell-start-time)).
 
 ### The boot screen
 
-Until its shell's first output, a terminal shows the boot stages:
+A terminal shown before Linux is up shows the boot stages until its shell's first output:
 - download kernel and download disk, with their bytes;
 - boot Linux, with its time;
 - start shell.
 
 The screen uses the system's monospace font. The terminal font is `font-display: block`, so text set in it would stay invisible until its 1.25 MB file arrives.
 
+A terminal shown once Linux is up shows no boot screen: it takes a spare shell already at its prompt ([Opening another terminal](#opening-another-terminal)).
+
 
 ## After the first prompt
 
 ### The whole disk in the background
 
-When a shell first writes output (its first prompt), or 5 s after the kernel starts, whichever comes first, and once the page is idle, every chunk not fetched yet downloads in disk order. In a build it runs at low priority, two at a time, and it stays out of the terminals' progress bar. Fetched files are kept as published, gzip, 28.4 MB for the whole image; a read decompresses its chunk. A program's first run then reads from memory.
+When a shell first writes output (its first prompt), or 5 s after the kernel starts, whichever comes first, and once the page is idle, every chunk not fetched yet downloads in disk order. In a build it runs at low priority, two at a time, and it stays out of the terminals' progress bar. Fetched files are kept as published, gzip, 29.0 MB for the whole image; a read decompresses its chunk. A program's first run then reads from memory.
 
 Until the background download has a chunk, a guest read of it fetches it at once at normal priority, with the next two chunks. A chunk the background download is already fetching is not requested again; the read waits for that fetch.
 
@@ -138,6 +142,23 @@ Measured locally at 200 ms latency and 1.5 MB/s (12 Mbps), cold load of slide 5:
 | First prompt | 13.7 s | 13.95 s |
 | Whole disk downloaded | never; each chunk on its first read | 38.7 s |
 | `htop`'s first run after the download: requests | one per chunk it reads | 0 |
+
+### Opening another terminal
+
+Each terminal used to spawn its zsh when its slide was first shown, and showed the boot screen at "Start shell" until the prompt. In the VM, zsh takes 0.4 to 0.6 s to its first prompt; on a slide with two terminals both shells start together and share the VM's one CPU, so each takes about 1 s. fast-syntax-highlighting then loads for another 0.3 to 0.6 s, during which typed keys do not echo.
+
+The page now keeps two spare shells, each a zsh at its prompt with its plugins loaded, on a pty of 80 × 8 ([architecture.md](./architecture.md#spare-shells)). A terminal takes one and resizes it to its own size; zsh redraws its prompt for that width with the current time, and the terminal shows the spare's held output with that redraw in one write. The spares start one at a time, after the first terminal's shell has settled and once every terminal has printed nothing for 1 s, so they never slow the first prompt or a command being typed.
+
+Measured on the dev server, from the slide becoming active to the prompt drawn; plugins loaded is when typed keys echo at once:
+
+| Measure | Before | After |
+| --- | ---: | ---: |
+| One terminal (slide 14): prompt | 880 ms | 19 to 30 ms |
+| Two terminals (slides 18, 21, 25, 28): prompt | 1290 to 1380 ms | 32 to 88 ms |
+| One terminal: plugins loaded | 867 ms | at the prompt |
+| Two terminals: plugins loaded | 1890 to 1970 ms | at the prompt |
+
+A terminal may take a spare that is still starting, then shows the rest of its start as it comes: with two-terminal slides 3 s apart, the second terminal's prompt came after 167 to 169 ms and its plugins after 221 to 231 ms. When terminals open faster than the spares start, three slides of terminals within about a second, a terminal spawns its own shell on a blank screen: its prompt took 0.4 s, and 1.1 s while a spare was starting.
 
 ### Steps
 
@@ -181,6 +202,7 @@ With the cache warm, `fc871bf` rendered the slide in 0.08 to 0.24 s and drew the
 - **The terminal font.** Hack Nerd Font Mono's regular and bold files are 1.25 MB each, and the first terminal waits for both.
 - **Fira Code** comes from Google Fonts through a stylesheet that blocks rendering (the theme's `fonts.mono`), one more host to reach before the first slide.
 - **Slide 1 loads the `terminal` chunk** (322 KB, 0.86 s at 3 Mbps) because the slides import the terminal components statically. Importing `ghostty-web` and `unkernel/web` dynamically would take it off slide 1's path.
-- **The whole disk downloads on every cold visit:** 28.4 MB after the first prompt, about 100 s at 2.2 Mbps, kept in page memory for the session with up to 32 decompressed 1 MiB chunks.
+- **The whole disk downloads on every cold visit:** 29.0 MB after the first prompt, about 105 s at 2.2 Mbps, kept in page memory for the session with up to 32 decompressed 1 MiB chunks.
 - **The wasm relies on GitHub Pages' gzip,** which GitHub does not document. Served uncompressed, it would grow by 5.5 MB, about 15 s at 3 Mbps; a zopfli `.wasm.gz` decoded with `DecompressionStream('gzip')` would remove that dependence.
 - **After 10 minutes** every file is revalidated with one round trip.
+- **Each zsh start** still takes about 0.4 s in the VM before its first prompt, a third of it loading zinit (120 to 140 ms). The spares hide this from every terminal but the first, and from none of the `exec zsh` steps.

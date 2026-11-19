@@ -131,7 +131,8 @@ export function downloadRestOfDisk(): void {
   void downloads.image.then(image => image && whenIdle().then(image.downloadRest)).catch(() => {})
 }
 
-function whenIdle(): Promise<void> {
+/** Resolves when the page is idle, or after 2 s at most. */
+export function whenIdle(): Promise<void> {
   return new Promise((resolve) => {
     if (typeof requestIdleCallback === 'function')
       requestIdleCallback(() => resolve(), { timeout: 2000 })

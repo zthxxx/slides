@@ -8,6 +8,7 @@ import { GraphicsOverlay } from './graphics-overlay'
 import { cursorMoveKeys, encodeMouse, mouseProtocol } from './mouse'
 import { themedGhostty } from './palette'
 import { ProgramStatusObserver } from './program-status'
+import { QueryResponder } from './queries'
 
 /**
  * The terminal emulator a shell session renders into: ghostty-web, Ghostty's VT parser compiled to WebAssembly
@@ -20,8 +21,8 @@ import { ProgramStatusObserver } from './program-status'
  *   as in Ghostty;
  * - replies to terminal queries such as the cursor position report (`\e[6n`) are sent back through `onData`.
  *
- * The queries ghostty-web 0.4.0 leaves unanswered and the shell asks at start-up are answered here (`QueryResponder`),
- * and so are mouse reports, which it never sends (`#reportMouse`).
+ * The queries ghostty-web 0.4.0 leaves unanswered and the shell asks at start-up are answered here (`QueryResponder`,
+ * runtime/queries.ts), and so are mouse reports, which it never sends (`#reportMouse`).
  */
 export interface TerminalEmulator {
   /** Grid size; 80×24 until the first fit. */
@@ -133,7 +134,7 @@ class GhosttyEmulator implements TerminalEmulator {
   #pending: Array<Uint8Array | string> = []
   /** Inline images (iTerm2, kitty), which ghostty-web 0.4.0 does not draw; all output reaches the terminal through it. */
   #graphics: GraphicsOverlay | undefined
-  #queries =new QueryResponder(reply => this.#dataListeners.forEach(listener => listener(reply)))
+  #queries = new QueryResponder(reply => this.#dataListeners.forEach(listener => listener(reply)), () => TERMINAL_THEMES[terminalAppearance.value])
   #dataListeners: Array<(data: string | Uint8Array) => void> = []
   #resizeListeners: Array<(size: { cols: number, rows: number }) => void> = []
   #programStatusListeners: Array<(status: ProgramStatus | undefined) => void> = []
@@ -482,64 +483,4 @@ function applyCounterScale(host: HTMLElement, scale: number): void {
   host.style.height = `${scale * 100}%`
   host.style.transform = scale === 1 ? '' : `scale(${1 / scale})`
   host.style.transformOrigin = '0 0'
-}
-
-/**
- * Answers the color and device-attribute queries ghostty-web 0.4.0 ignores, as xterm and Ghostty do.
- * jovial (the zsh theme) sends `ESC ] 11 ; ? ST` then `ESC [ c` when it loads, to pick its dark or light palette;
- * the DA1 reply marks the end of the answers, so without both the first prompt waits out jovial's timeout.
- * Refs: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html (OSC 10/11, DA1),
- * jovial `jovial.zsh-theme` (`@jov.theme-query-send`).
- */
-class QueryResponder {
-  #tail = ''
-  readonly #reply: (data: string) => void
-
-  constructor(reply: (data: string) => void) {
-    this.#reply = reply
-  }
-
-  scan(data: Uint8Array | string): void {
-    const hasEscape = typeof data === 'string' ? data.includes('\x1B') : data.includes(0x1B)
-    if (!this.#tail && !hasEscape)
-      return
-
-    const text = this.#tail + (typeof data === 'string' ? data : BYTES_AS_TEXT.decode(data))
-    let answered = 0
-    for (const match of text.matchAll(QUERY)) {
-      this.#reply(answer(match))
-      answered = match.index + match[0].length
-    }
-    // A query split across two writes is completed by the next one.
-    this.#tail = ''
-    for (let start = Math.max(answered, text.length - QUERY_MAX_LENGTH); start < text.length; start++) {
-      const rest = text.slice(start)
-      if (rest[0] === '\x1B' && QUERIES.some(query => query.startsWith(rest))) {
-        this.#tail = rest
-        break
-      }
-    }
-  }
-}
-
-/** One character per byte: the queries are ASCII, and offsets must match the bytes. */
-const BYTES_AS_TEXT = new TextDecoder('latin1')
-
-/** `ESC ] 10|11 ; ? BEL|ST` (foreground / background color) and `ESC [ c` / `ESC [ 0 c` (primary device attributes). */
-const QUERY = /\x1B\](1[01]);\?(\x07|\x1B\\)|\x1B\[0?c/g
-const QUERIES = ['\x1B]10;?\x07', '\x1B]10;?\x1B\\', '\x1B]11;?\x07', '\x1B]11;?\x1B\\', '\x1B[c', '\x1B[0c']
-const QUERY_MAX_LENGTH = Math.max(...QUERIES.map(query => query.length))
-
-function answer([, osc, terminator]: RegExpMatchArray): string {
-  if (!osc)
-    return '\x1B[?62;22c' // Ghostty's own DA1: VT220 with ANSI color.
-  const theme = TERMINAL_THEMES[terminalAppearance.value]
-  const color = osc === '10' ? theme.foreground : theme.background
-  return `\x1B]${osc};${xtermColor(color)}${terminator}`
-}
-
-/** `#272936` → `rgb:2727/2929/3636`, the 16-bit-per-channel form xterm replies with. */
-function xtermColor(hex: string): string {
-  const channels = hex.slice(1).match(/../g) ?? []
-  return `rgb:${channels.map(channel => channel.repeat(2)).join('/')}`
 }
