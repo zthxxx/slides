@@ -80,27 +80,33 @@ errors=$(SHELL=/bin/zsh tmux -L provision -f /dev/null new-session -d -x 80 -y 2
 tmux -L provision kill-server 2>/dev/null || true
 [ -z "$errors" ] || fail "tmux printed errors for ~/.config/tmux/tmux.conf: $errors"
 
-step "zinit: clone zinit and the plugins ~/.zshrc loads, nothing else"
-# burst runs the turbo (wait) loads now instead of after the first prompt, so they are cloned too.
-zsh -i -c '@zinit-scheduler burst' </dev/null
-zinit_home="$XDG_DATA_HOME/zinit"
-# Exactly the plugins ~/.zshrc loads; `_local---zinit` is zinit's own completion.
-installed=$(ls "$zinit_home/plugins" | grep -vx '_local---zinit' | tr '\n' ' ')
-expected="zdharma-continuum---fast-syntax-highlighting zthxxx---jovial "
-[ "$installed" = "$expected" ] ||
-	fail "zinit installed [$installed], expected [$expected] (the plugins ~/.zshrc loads)"
-# oh-my-zsh libs and plugins would arrive as snippet files. zinit itself only creates the empty
-# snippets/OMZ::plugins directory and a `plugins` link to it (zinit.zsh, .zinit-prepare-home).
-snippets=$(find "$zinit_home/snippets" -type f 2>/dev/null)
-[ -z "$snippets" ] || fail "zinit snippet files present: $snippets"
-ls -A "$zinit_home" "$zinit_home/plugins"
+step "zsh plugins: jovial and fast-syntax-highlighting, the two ~/.zshrc loads"
+# Each at its default branch's head, recorded in the image stamp. Only what the shell loads is kept: jovial's two
+# files, fast-syntax-highlighting without its git history, screenshots and tests.
+plugins="$XDG_DATA_HOME/zsh-plugins"
+clones=/tmp/zsh-plugin-clones
+clone() {
+	git clone --quiet --depth 1 "https://github.com/$1" "$clones/$2" >&2 &&
+		git -C "$clones/$2" log -1 --format="%h %cs"
+}
+jovial_rev=$(clone zthxxx/jovial jovial) || fail "cannot clone jovial"
+fsh_rev=$(clone zdharma-continuum/fast-syntax-highlighting fast-syntax-highlighting) ||
+	fail "cannot clone fast-syntax-highlighting"
+mkdir -p "$plugins/jovial"
+cp "$clones/jovial/jovial.zsh-theme" "$clones/jovial/jovial.plugin.zsh" "$clones/jovial/LICENSE" "$plugins/jovial/"
+cp -R "$clones/fast-syntax-highlighting" "$plugins/"
+rm -rf "$clones" "$plugins/fast-syntax-highlighting/.git" "$plugins/fast-syntax-highlighting/.github" \
+	"$plugins/fast-syntax-highlighting/images" "$plugins/fast-syntax-highlighting/test" \
+	"$plugins/fast-syntax-highlighting/tests"
+echo "jovial $jovial_rev, fast-syntax-highlighting $fsh_rev"
+[ "$(ls "$plugins" | tr '\n' ' ')" = "fast-syntax-highlighting jovial " ] || fail "unexpected plugins: $(ls "$plugins")"
 
 step "compile what zsh reads at start"
-# Parsing is most of zsh's start in the VM. zsh reads file.zwc in place of a sourced script, a startup file or an
-# autoloaded function when it is newer (zshbuiltins(1), zcompile); zinit compiles only each plugin's main file. The
-# offline start below then runs on the compiled files.
-zsh -c 'zinit=$XDG_DATA_HOME/zinit fsh=$XDG_DATA_HOME/zinit/plugins/zdharma-continuum---fast-syntax-highlighting
-	for f in ~/.zshrc ~/.zcompdump $zinit/zinit.git/zinit*.zsh $zinit/plugins/zthxxx---jovial/*.(zsh|zsh-theme) \
+# zsh also parses every script it sources, at every start. It reads file.zwc in place of a sourced script, a startup
+# file or an autoloaded function when it is newer (zshbuiltins(1), zcompile). The offline start below then runs on
+# the compiled files.
+zsh -c 'plugins=$XDG_DATA_HOME/zsh-plugins fsh=$XDG_DATA_HOME/zsh-plugins/fast-syntax-highlighting
+	for f in ~/.zshrc $plugins/jovial/*.(zsh|zsh-theme) \
 		$fsh/fast-syntax-highlighting.plugin.zsh $fsh/fast-highlight $fsh/fast-string-highlight $fsh/fast-theme; do
 		zcompile "$f" || { print -u2 -r -- "cannot compile $f"; exit 1 }
 		print -r -- "$f.zwc"
@@ -113,11 +119,12 @@ done
 
 step "offline start: no network, no errors"
 ip link set eth0 down 2>/dev/null || true
-errors=$(zsh -i -c '@zinit-scheduler burst' 2>&1 </dev/null >/dev/null) || fail "zsh -i failed offline: $errors"
+# The page loads fast-syntax-highlighting after the first prompt; `zsh -i -c` has no prompt, so it loads it here.
+errors=$(zsh -i -c .terminal-glance-load-highlighting 2>&1 </dev/null >/dev/null) || fail "zsh -i failed offline: $errors"
 [ -z "$errors" ] || fail "zsh -i printed errors offline: $errors"
 # fast-syntax-highlighting downloads its secondary theme on every start unless the work dir has it (~/.zshrc);
 # the image's copy must load the plugin's `free` styles, which the highlighter checks for (`freedefault`).
-errors=$(zsh -i -c '@zinit-scheduler burst
+errors=$(zsh -i -c '.terminal-glance-load-highlighting
 	[[ $FAST_WORK_DIR == $XDG_CONFIG_HOME/fsh ]] || { print -r -- "work dir is $FAST_WORK_DIR"; exit 1 }
 	source $FAST_WORK_DIR/secondary_theme.zsh 2>&1 && (( ${+FAST_HIGHLIGHT_STYLES[freedefault]} )) ||
 		{ print -r -- "$FAST_WORK_DIR/secondary_theme.zsh sets no free styles"; exit 1 }' </dev/null 2>&1) ||
@@ -132,18 +139,18 @@ inputs=${IMAGE_INPUT_HASH:-unknown}
 unkernel=${UNKERNEL_VERSION:-unknown}
 lower=$(cat /usr/lib/kw-image)
 built=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+jovial=$jovial_rev
+fast-syntax-highlighting=$fsh_rev
 EOF
 cat /etc/terminal-glance-image
 
 step "clean caches"
 rm -rf /var/cache/apk/* /var/cache/kw-apk "$HOME/.cache" "$HOME/.wget-hsts" \
-	"$HOME/.zsh_history" "$HOME/.ash_history" "$HOME/.lesshst" \
-	"$XDG_DATA_HOME/zinit/zinit.git/.git/FETCH_HEAD" /tmp/* 2>/dev/null || true
-find "$XDG_DATA_HOME/zinit" -name '*.zwc.old' -delete 2>/dev/null || true
+	"$HOME/.zsh_history" "$HOME/.ash_history" "$HOME/.lesshst" /tmp/* 2>/dev/null || true
 
 step "sizes"
 # One du per path: du counts an inode once, so a nested path in the same call would print nothing.
-for d in "$OV/upper" "$OV/upper/usr/lib" "$OV/upper/usr/share" "$OV/upper/usr/bin" "$XDG_DATA_HOME/zinit"; do
+for d in "$OV/upper" "$OV/upper/usr/lib" "$OV/upper/usr/share" "$OV/upper/usr/bin" "$XDG_DATA_HOME/zsh-plugins"; do
 	du -sh "$d" 2>/dev/null || true
 done
 df -h /data

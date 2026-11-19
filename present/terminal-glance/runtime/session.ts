@@ -1,60 +1,17 @@
 import type { Pty, PtyEnd } from 'unkernel/web'
 import type { SessionField, StepInput, TimedWrite } from './steps'
 import type { ProgramStatus } from './program-status'
-import { ref, shallowReactive, watch } from 'vue'
-import { TERMINAL_THEMES, terminalAppearance } from './appearance'
+import { ref, shallowReactive } from 'vue'
 import { playBellSound } from './bell'
 import { createEmulator } from './emulator'
-import { downloadRestOfDisk, markLinuxUp, useLinux, whenIdle } from './kernel'
-import { MarkWatcher, SHELL_SETTLED_MARK, SpareShells } from './spare-shells'
+import { downloadRestOfDisk, markLinuxUp, useLinux } from './kernel'
 import { referencedSessions, resolveSessionRefs, stepChunks, typingPlan } from './steps'
 
 export type SessionStatus = 'idle' | 'starting' | 'running' | 'failed'
 
-/** A shell that never prints SHELL_SETTLED_MARK (bare Alpine's ash) counts as started after this long. */
-const SETTLE_TIMEOUT_MS = 5000
-/** A spare starts only after every terminal has printed nothing for this long, and the page is idle. */
-const QUIET_MS = 1000
-/** When a terminal last printed (`performance.now()`). */
-let lastOutputAt = 0
-
-/**
- * Two spares, as a slide shows at most two terminals; each is a zsh at its prompt (runtime/spare-shells.ts).
- * They start once the first terminal's shell has settled, so they never slow the boot or that first prompt.
- * Kept across Vite HMR, like the sessions: the spares are live ptys on the one VM.
- */
-const spareShells: SpareShells<Pty> = import.meta.hot?.data.spareShells ?? createSpareShells()
-if (import.meta.hot)
-  import.meta.hot.data.spareShells = spareShells
-
-function createSpareShells(): SpareShells<Pty> {
-  const spares = new SpareShells<Pty>({
-    spawn: size => useLinux().then(({ vm }) => vm.spawn(undefined, undefined, size)),
-    colors: () => TERMINAL_THEMES[terminalAppearance.value],
-    // A shell starting takes the VM's CPU from the one in use: typed keys would echo late, a command would run slower.
-    whenIdle: whenTerminalsQuiet,
-    settledMark: SHELL_SETTLED_MARK,
-    settleTimeoutMs: SETTLE_TIMEOUT_MS,
-    // The redraw of a settled zsh arrives in 20 to 60 ms; waiting longer only delays the prompt.
-    redrawWaitMs: 120,
-    capacity: 2,
-    // Every terminal of the deck is wider (92 columns) and taller (10 rows at least, Terminal.vue MIN_ROWS).
-    size: { cols: 80, rows: 8 },
-  })
-  // jovial picks its palette from the background color its shell was told at start.
-  watch(terminalAppearance, () => spares.retire())
-  return spares
-}
-
-async function whenTerminalsQuiet(): Promise<void> {
-  for (let wait = QUIET_MS; wait > 0; wait = lastOutputAt + QUIET_MS - performance.now())
-    await sleep(wait)
-  await whenIdle()
-}
-
 /**
  * One shell on its own pty of the shared VM, shown by one terminal emulator.
- * The shell starts the first time the terminal is shown: a spare one when there is one, so its prompt shows at once.
+ * The pty is spawned the first time the terminal is shown, so pty numbers follow the order slides are visited.
  */
 export class ShellSession {
   readonly programStatus = ref<ProgramStatus>()
@@ -128,32 +85,23 @@ export class ShellSession {
       if (notice)
         void this.terminal.write(`\x1B[33m${notice}\x1B[0m\r\n`)
       const size = { cols: this.terminal.cols, rows: this.terminal.rows }
-      const spare = await spareShells.take(size)
-      const pty = spare?.pty ?? await vm.spawn(undefined, undefined, size)
+      const pty = await vm.spawn(undefined, undefined, size)
       markLinuxUp()
       this.#pty = pty
-      // A fit while the shell was coming could not reach it.
+      // A fit while the pty was spawning could not reach it.
       if (this.terminal.cols !== size.cols || this.terminal.rows !== size.rows)
         pty.resize(this.terminal.cols, this.terminal.rows)
       this.pts.value = pty.pts
       this.pid.value = pty.pid
       this.status.value = 'running'
 
-      const settled = new MarkWatcher(SHELL_SETTLED_MARK)
-      let isSettled = false
       // Resolving after the emulator has parsed each chunk lets the pty's flow control pace a flood such as `yes`.
-      void (spare?.output ?? pty.output)
+      void pty.output
         .pipeTo(new WritableStream({
           write: (chunk) => {
-            lastOutputAt = performance.now()
             if (!this.ready.value) {
               this.ready.value = true
               downloadRestOfDisk()
-              setTimeout(() => spareShells.fill(), SETTLE_TIMEOUT_MS)
-            }
-            if (!isSettled && settled.seen(chunk)) {
-              isSettled = true
-              spareShells.fill()
             }
             return this.terminal.write(chunk)
           },

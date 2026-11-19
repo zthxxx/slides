@@ -18,7 +18,6 @@ setup/main.ts             Slidev app setup: starts Linux's downloads in the audi
    │
 runtime/                  plain TypeScript; no templates
    session.ts             ShellSession = one pty + one emulator; registry by slide and name; step playback
-   spare-shells.ts        shells started ahead, at their prompt, for the next terminals to take
    emulator.ts            the terminal emulator seam (ghostty-web); mouse reporting
    queries.ts             answers to the color and device-attribute queries ghostty-web leaves unanswered
    mouse.ts               pure: DEC mouse modes → protocol, pointer action → report bytes
@@ -42,7 +41,7 @@ public/linux/             built by image/ (gitignored): manifest.json + chunks/*
 image/                    the image's build: see image.md
 ```
 
-Dependencies point down only. `runtime/` never imports from `components/`; `steps.ts`, `disk.ts` and `spare-shells.ts` hold the logic worth testing and take their I/O as arguments (`ChunkLoader`; a spare's `spawn` and `whenIdle`).
+Dependencies point down only. `runtime/` never imports from `components/`; `steps.ts` and `disk.ts` hold the logic worth testing and take their I/O as arguments (`ChunkLoader`).
 
 ## Lifecycle
 
@@ -61,23 +60,11 @@ When the manifest is missing (a fresh checkout without `pnpm build:image`), the 
 ### A terminal, once per slide
 
 - A session is keyed by `<slide number>/<terminal name>` (`sessionKey`). The registry is kept across HMR.
-- A terminal shown before Linux is up shows Linux's boot stages until its shell's first output (`LinuxBoot.vue`): download kernel, download disk, boot Linux, start shell, each waiting, running or done (a download with its size, the boot with its time), and the downloads' progress bar. `kernel.ts` records the stages in `linuxBoot`; the boot stage ends when the first pty spawns, because `vm.spawn` waits for the guest's kwtty and unkernel 0.1.0 reports no other readiness. The screen uses the system's monospace font, which needs no download, and fades in after 0.2 s, so a shell that starts at once shows none of it. Downloads after the boot (a chunk the guest reads before the background download has it) show in the title bar instead; the background download itself shows nowhere. A terminal shown later shows no boot screen: its shell is a spare already at its prompt, or, when none is left, starts in under a second on a blank screen, as in a real terminal.
-- When the slide becomes active, `Terminal.vue` calls `session.show(element)`: the session's host element moves into the window, the emulator opens (first time) and fits, and the shell starts (first time). It takes a spare shell when there is one (below); otherwise `vm.spawn()` → `kwtty` → root's login shell, zsh with jovial.
+- A terminal shown before Linux is up shows Linux's boot stages until its shell's first output (`LinuxBoot.vue`): download kernel, download disk, boot Linux, start shell, each waiting, running or done (a download with its size, the boot with its time), and the downloads' progress bar. `kernel.ts` records the stages in `linuxBoot`; the boot stage ends when the first pty spawns, because `vm.spawn` waits for the guest's kwtty and unkernel 0.1.0 reports no other readiness. The screen uses the system's monospace font, which needs no download, and fades in after 0.2 s, so a shell that starts at once shows none of it. Downloads after the boot (a chunk the guest reads before the background download has it) show in the title bar instead; the background download itself shows nowhere. A terminal shown later shows no boot screen: its shell prints its prompt about 0.15 s after the spawn ([performance.md](./performance.md#the-shells-start)).
+- When the slide becomes active, `Terminal.vue` calls `session.show(element)`: the session's host element moves into the window, the emulator opens (first time) and fits, and the shell is spawned (first time): `vm.spawn()` → `kwtty` → root's login shell, zsh with jovial; fast-syntax-highlighting loads right after its first prompt.
 - pty output → `emulator.write()`; emulator input and its replies to terminal queries → `pty.write()`; emulator resize → `pty.resize()` (SIGWINCH).
 - Leaving the slide blurs the terminal; the shell keeps running. Returning shows the same shell.
 - A shell that exits (`exit`, `^D` at the prompt) is replaced by a new one in the same window, with a dim note. If the whole machine stops (`poweroff`), the terminal says to reload.
-
-### Spare shells
-
-zsh takes 0.4 to 0.6 s to its first prompt in the VM, and two starting together about 1 s, as they share its one CPU. So that a terminal shows its prompt at once, `session.ts` keeps two shells started ahead (`SpareShells` in `spare-shells.ts`): a slide shows two terminals at most.
-
-- **When they start.** After the first terminal's shell has settled (`.zshrc` prints `SHELL_SETTLED_MARK` once zinit's turbo loads have run), one at a time, each once the one before has settled, every terminal has printed nothing for 1 s and the page is idle. A shell starting takes CPU from the one in use, so typed keys would echo late. A terminal that takes a spare starts a replacement the same way.
-- **While spare.** A spare's pty is 80 × 8, smaller than any terminal of the deck. Its output is held, and its start-up queries are answered from it with the terminals' current colors (`QueryResponder`), as jovial waits for the background color to pick its palette.
-- **Handed over.** `ShellSession` takes the oldest spare and resizes it to the terminal; the size always changes, so zsh redraws its prompt for the terminal's width, with the current time (SIGWINCH). The terminal reads the held output, without the queries the spare answered, together with that redraw (it waits up to 120 ms for it), then the shell's output as it comes. The pty number is the spare's.
-- **Colors.** jovial chooses its palette from the background color it is told at start, so switching the terminals between dark and light closes the spares and starts new ones.
-- **No spare left.** When terminals open faster than spares start (two slides of terminals within about a second), the terminal spawns its own shell as before.
-
-`test/spare-shells.test.ts` checks with property tests that a terminal taking a spare shows all the shell printed, in order, with each query answered once, by the spare or by the terminal, and that the spares stay within their number and start one at a time.
 
 ### Steps
 
@@ -109,7 +96,7 @@ Only Slidev's `slide` render context outside print mode runs Linux. The presente
 | The grid fills the window's width, and ghostty-web's scrollbar, drawn at the canvas's right edge, sits at the window's edge | `emulator.ts` fits whole cells to the full width (ghostty-web's FitAddon kept 15 px free for a scrollbar it draws inside the canvas anyway) and right-aligns the canvas; the remainder, under one cell, goes to the left margin |
 | A user's paste wrapped in bracketed-paste markers while the program asks for them (`CSI ? 2004 h`), so zle takes a multi-line paste as one edit instead of running it line by line | `emulator.ts`; ghostty-web 0.4.0's own paste sends no markers |
 | Cursor position reports (`ESC [ 6 n`) | ghostty-web |
-| Background / foreground color queries (OSC 10/11) and primary device attributes (`ESC [ c`) | `QueryResponder` in `queries.ts`, used by `emulator.ts` and by spare shells; jovial asks both when zsh starts and would otherwise wait out a timeout |
+| Background / foreground color queries (OSC 10/11) and primary device attributes (`ESC [ c`) | `QueryResponder` in `queries.ts`, used by `emulator.ts`; jovial asks both when zsh starts and would otherwise wait out a timeout |
 | Hack Nerd Font Mono, line height 1 | Local WOFF2 faces declared in `Terminal.vue`, loaded before the renderer measures the font; `emulator.ts` replaces `CanvasRenderer.measureFont()` to use a row height of one font size, rounded to whole screen CSS pixels |
 | Correct link hit-testing and crisp text inside Slidev's `transform: scale()` | `emulator.ts` cancels the slide scale on the host, fits whole-pixel cell widths and aligns the canvas origin to device pixels; it re-fits 150 ms after a window resize and re-aligns after transitions |
 | Canvas resolution follows display changes and browser zoom | `emulator.ts` watches the resolution media query, updates the renderer's device-pixel ratio and fits again; ghostty-web resizes its backing store on the next render |

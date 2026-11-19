@@ -45,32 +45,6 @@ export class QueryResponder {
   }
 }
 
-/**
- * The output without the complete queries in it: what a terminal shows of output whose queries were answered
- * already. A query cut off at the end stays, so the terminal that reads on answers it once the rest arrives.
- */
-export function withoutQueries(output: Uint8Array): Uint8Array<ArrayBuffer> {
-  const text = BYTES_AS_TEXT.decode(output)
-  const kept: Uint8Array[] = []
-  let from = 0
-  for (const match of text.matchAll(QUERY)) {
-    kept.push(output.subarray(from, match.index))
-    from = match.index + match[0].length
-  }
-  kept.push(output.subarray(from))
-  return concatBytes(kept)
-}
-
-export function concatBytes(parts: readonly Uint8Array[]): Uint8Array<ArrayBuffer> {
-  const bytes = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0))
-  let offset = 0
-  for (const part of parts) {
-    bytes.set(part, offset)
-    offset += part.length
-  }
-  return bytes
-}
-
 /** One character per byte: the queries are ASCII, and offsets must match the bytes. */
 const BYTES_AS_TEXT = new TextDecoder('latin1')
 

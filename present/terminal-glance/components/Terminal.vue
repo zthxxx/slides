@@ -232,8 +232,8 @@ const download = computed(() => {
 
 /**
  * While Linux boots, and until the first prompt on a terminal shown during the boot, the screen shows the boot stages;
- * later downloads show in the title bar. A terminal shown later only waits for its shell, a spare one at its prompt
- * (runtime/spare-shells.ts), so it shows no boot screen.
+ * later downloads show in the title bar. A terminal shown later waits only for its shell, about 0.15 s, so it shows
+ * no boot screen.
  */
 const booting = computed(() => live && session?.status.value !== 'failed' && !session?.ready.value
   && (linuxBoot.boot.state !== 'done' || shownDuringBoot.value))
