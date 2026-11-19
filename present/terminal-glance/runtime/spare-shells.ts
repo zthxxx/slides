@@ -117,7 +117,7 @@ export class SpareShells<P extends SparePty> {
       })
       // One at a time: shells starting together share the VM's CPU, and so does a terminal's shell in use.
       await spare.settled
-      if (spare.endedUnsettled && !spare.retired)
+      if (spare.endedUnsettled && !spare.retired && !spare.handedOver)
         this.#broken = true
     }
   }
@@ -129,9 +129,10 @@ class Spare<P extends SparePty> {
   readonly output: ReadableStream<Uint8Array>
   endedUnsettled = false
   retired = false
+  /** Taken by a terminal: its shell is that terminal's now, and may end on a command typed there. */
+  handedOver = false
 
   readonly #held: Uint8Array[] = []
-  #handedOver = false
   #controller!: TransformStreamDefaultController<Uint8Array>
   #onOutput: (() => void) | undefined
 
@@ -158,7 +159,7 @@ class Spare<P extends SparePty> {
         transform: (chunk, controller) => {
           if (!isSettled && mark.seen(chunk))
             settle()
-          if (this.#handedOver)
+          if (this.handedOver)
             return controller.enqueue(chunk)
           queries.scan(chunk)
           this.#held.push(chunk)
@@ -177,7 +178,7 @@ class Spare<P extends SparePty> {
     this.pty.resize(size.cols, size.rows)
     // The redraw and the held prompt reach the terminal together, so the prompt at the spare's width never shows.
     await Promise.race([output, sleep(redrawWaitMs)])
-    this.#handedOver = true
+    this.handedOver = true
     const held = withoutQueries(concatBytes(this.#held.splice(0)))
     if (held.length)
       this.#controller.enqueue(held)

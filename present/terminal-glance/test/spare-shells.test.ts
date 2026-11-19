@@ -164,7 +164,7 @@ describe('a terminal taking a spare shell', () => {
 })
 
 describe('keeping spares', () => {
-  const step = fc.constantFrom('take', 'settle', 'retire', 'crash')
+  const step = fc.constantFrom('take', 'settle', 'retire', 'crash', 'exitTaken')
 
   test('keeps at most `capacity` spares, starts one only after the one before settled, and never hands out a closed one', async () => {
     await fc.assert(fc.asyncProperty(fc.integer({ min: 1, max: 3 }), fc.array(step, { maxLength: 24 }), async (capacity, steps) => {
@@ -213,6 +213,12 @@ describe('keeping spares', () => {
               expect(shell.closed).toBe(true)
             break
           }
+          case 'exitTaken': {
+            // `exit` typed in a terminal whose shell was taken still starting.
+            const starting = shells.find(shell => !shell.settledPrinted && !shell.closed && taken.has(shell))
+            starting?.exit()
+            break
+          }
           case 'crash': {
             const starting = shells.find(shell => !shell.settledPrinted && !shell.closed && !taken.has(shell))
             if (starting) {
@@ -234,6 +240,18 @@ describe('keeping spares', () => {
       }
       for (const shell of shells)
         expect(shell.sizes[0]).toEqual(SPARE_SIZE)
+
+      // Unless a spare crashed while starting, the spares come back to their number once each has settled.
+      if (crashedAt === undefined) {
+        for (let round = 0; round <= capacity + 1; round++) {
+          for (const shell of shells.filter(shell => !shell.settledPrinted && !shell.closed)) {
+            shell.settledPrinted = true
+            shell.print(encode(SHELL_SETTLED_MARK))
+          }
+          await tick()
+        }
+        expect(spares.count).toBe(capacity)
+      }
     }), { numRuns: 200 })
   })
 })
