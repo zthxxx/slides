@@ -41,7 +41,7 @@ GitHub Pages gzips the wasm on the fly: unkernel 0.2.0's `unkernel.wasm` is 11,4
 | `build.cssCodeSplit: false` | `vite.config.ts` | One stylesheet instead of one per slide; slide styles are scoped, so loading them all at once is safe. |
 | `preloadImages: false` | `slides.md` headmatter | Slide pictures load with their slides, which Slidev mounts about 3 s after opening, instead of competing with the scripts. |
 | Shiki core with one grammar | `components/shell-highlight.ts` | The step buttons' highlighter carries the shell grammar, the two vitesse themes and the JavaScript regex engine, without oniguruma's wasm or other grammars: about 66 KB gzip of the `app` chunk. |
-| An iframe loads on first view | `components/WebFrame.vue` | The embedded botmux page loads the first time its slide is shown, in the audience and presenter windows only. |
+| A video loads on first view | `components/WebVideo.vue` | The botmux demo video (4.4 MB) loads the first time its slide is shown, in the audience and presenter windows only. |
 
 Measured locally at 400 ms latency and 3 Mbps. Before is `7d99b43`, with Slidev's default chunks.
 
@@ -136,7 +136,7 @@ The guest has 512 MiB (`kernel.ts`), as with 0.1.0's default. unkernel 0.2.0's d
 
 ### Four CPUs
 
-In Chrome and Edge the guest runs on 4 CPUs from the deck's second load on, in a worker of a cross-origin isolated page ([architecture.md](./architecture.md#cpus)); elsewhere on 1.
+The guest runs on 4 CPUs from the deck's second load on, in a worker of a cross-origin isolated page ([architecture.md](./architecture.md#cpus)); the first load runs it on 1.
 
 Measured locally with Chrome 157 on the production build, each run in a fresh browser session with the HTTP cache cleared and disabled, the service worker unregistered for 1 CPU and registered for 4; 3 runs each, 2 for the throttled rows:
 
@@ -152,8 +152,6 @@ Measured locally with Chrome 157 on the production build, each run in a fresh br
 On Node, with the same images, 4 CPUs ran four `seq 200000 | sort -r` at once in 2.7 s instead of 9.3 to 9.4 s, and one alone in 2.0 s instead of 2.2 s.
 
 So 4 CPUs boot about 0.25 s later, half of it the SMP patch, and start the shells of a two-terminal slide in half the time; a single program runs as fast as on one.
-
-In the isolated page the Google Fonts stylesheet, which blocks rendering, is fetched without credentials, on a connection of its own. In the unthrottled runs that connection was new (959 ms to connect from the author's network) while the other page reused one, so the app started about 0.85 s later; a cold visit opens one either way.
 
 ### The shell's start
 
@@ -248,5 +246,5 @@ With the cache warm, `fc871bf` rendered the slide in 0.08 to 0.24 s and drew the
 - **The boot bundles' bytes download twice:** the background download also fetches the chunks they came from, 1.8 MB more per cold visit.
 - **The wasm relies on GitHub Pages' gzip,** which GitHub does not document. Served uncompressed, it would grow by 7.0 MB, about 19 s at 3 Mbps; a zopfli `.wasm.gz` decoded with `DecompressionStream('gzip')` would remove that dependence.
 - **After 10 minutes** every file is revalidated with one round trip.
-- **4 CPUs start the boot later:** the SMP kernel compiles only after the download ends and the patch (about 90 ms) is applied, and the first load in Chrome or Edge boots on 1 CPU, because it only registers the service worker that isolates the next one.
+- **4 CPUs start the boot later:** the SMP kernel compiles only after the download ends and the patch (about 90 ms) is applied, and the first load boots on 1 CPU, because it only registers the service worker that isolates the next one.
 - **jovial's first precmd** takes 77 to 82 ms of every shell's start: 35 to 42 ms computing its segments' lengths through a regex loop per affix (`@jov.init-affix`), and 15 to 18 ms starting its dev-env probe in a zpty, a new process on every prompt. On a slide with two terminals, both shells start together and show their prompts after about 0.3 s on 1 CPU, 0.13 to 0.16 s on 4.

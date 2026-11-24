@@ -34,6 +34,8 @@ export class KernelWorkerHost {
   readonly #spawning = new Map<number, { resolve: (pty: ShellPty) => void, reject: (error: Error) => void, ended: Promise<PtyEnd> }>()
   readonly #ending = new Map<number, (end: PtyEnd) => void>()
   readonly #writes = new Map<string, { resolve: () => void, reject: (error: Error) => void }>()
+  /** Each pty's output stream, waiting for the chunk it pulled. */
+  readonly #pulls = new Map<number, { controller: ReadableStreamDefaultController<Uint8Array>, done: () => void }>()
   #booted: { resolve: (cpus: number) => void, reject: (error: Error) => void } | undefined
   #nextPty = 0
   #nextWrite = 0
@@ -96,7 +98,7 @@ export class KernelWorkerHost {
         const pending = this.#spawning.get(message.id)
         this.#spawning.delete(message.id)
         if (pending)
-          pending.resolve(this.#pty(message.id, message.pid, message.pts, message.output, pending.ended))
+          pending.resolve(this.#pty(message.id, message.pid, message.pts, pending.ended))
         break
       }
       case 'spawnFailed': {
@@ -116,6 +118,17 @@ export class KernelWorkerHost {
           pending?.resolve()
         break
       }
+      case 'output':
+      case 'outputEnd': {
+        const pulling = this.#pulls.get(message.id)
+        this.#pulls.delete(message.id)
+        if (message.type === 'output')
+          pulling?.controller.enqueue(message.chunk)
+        else
+          pulling?.controller.close()
+        pulling?.done()
+        break
+      }
       case 'ended':
         this.#ending.get(message.id)?.(message.end)
         this.#ending.delete(message.id)
@@ -123,7 +136,15 @@ export class KernelWorkerHost {
     }
   }
 
-  #pty(id: number, pid: number, pts: number, output: ReadableStream<Uint8Array>, ended: Promise<PtyEnd>): ShellPty {
+  #pty(id: number, pid: number, pts: number, ended: Promise<PtyEnd>): ShellPty {
+    // One chunk in flight: the stream pulls the next only once the terminal has taken the last (highWaterMark 1).
+    const output = new ReadableStream<Uint8Array>({
+      pull: controller => new Promise<void>((done) => {
+        this.#pulls.set(id, { controller, done })
+        this.#post({ type: 'pull', id })
+      }),
+      cancel: () => this.#post({ type: 'cancel', id }),
+    })
     return {
       pid,
       pts,
@@ -138,8 +159,13 @@ export class KernelWorkerHost {
     }
   }
 
-  /** The worker died: the boot, pending spawns and writes fail, and every shell ends as lost. */
+  /** The worker died: the boot, pending spawns, writes and output fail, and every shell ends as lost. */
   #fail(error: Error): void {
+    for (const { controller, done } of this.#pulls.values()) {
+      controller.error(error)
+      done()
+    }
+    this.#pulls.clear()
     this.#booted?.reject(error)
     for (const { reject } of this.#spawning.values())
       reject(error)

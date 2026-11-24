@@ -96,9 +96,16 @@ A terminal's shell is spawned the first time its slide is shown, so pty numbers 
 
 A new diagram component renders its SVG inside `<DiagramFrame>` (`components/diagrams/DiagramFrame.vue`), which gives it the shared diagram styles.
 
-## Embedded web pages
+## Resources from other sites
 
-`<WebFrame src="…" crop="top right bottom left" />` embeds a live page and shows only one region of it. A cross-origin page cannot be restyled, so the page is laid out at `viewport` CSS pixels wide (default 1400), shifted by the crop insets and scaled to the frame's width. Measure the insets in a browser at that width, for example the header height and the left and right edges of the content column. The page loads the first time its slide is shown; previews and export show its URL instead.
+The deck is cross-origin isolated, so that Linux runs on 4 CPUs ([architecture.md](./architecture.md#cpus)), and its embedder policy is `require-corp`. A resource from another site loads only if:
+
+- its response has `Cross-Origin-Resource-Policy: cross-origin`, as Google Fonts and GitHub avatars send; or
+- it is requested with CORS (`<img crossorigin="anonymous">`, `<video crossorigin="anonymous">`) and the response has `Access-Control-Allow-Origin`, as GitHub Pages and badgen.net send. A Markdown image is not a CORS request, so such an image needs the HTML tag, as the closing slide's badge has.
+
+Check a new one with `curl -sI <url>` before using it. An iframe of another site does not load at all unless that site opts in, so the deck embeds none.
+
+`<WebVideo src="…" page="…" title="…" />` plays a video from another site with the browser's controls, with a link to the page it comes from. It loads the first time its slide is shown; previews and export show its title instead.
 
 ## Speaker notes
 

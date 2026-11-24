@@ -21,6 +21,7 @@ function post(message: FromWorker, transfer: Transferable[] = []): void {
 let disks: ReturnType<typeof openImageDisks> | undefined
 let machine: Promise<KernelInstance> | undefined
 const ptys = new Map<number, Pty>()
+const outputs = new Map<number, ReadableStreamDefaultReader<Uint8Array>>()
 const loads = new Map<number, { resolve: (bytes: Uint8Array<ArrayBuffer>) => void, reject: (error: Error) => void }>()
 let nextLoad = 0
 
@@ -38,15 +39,29 @@ async function spawn(id: number, cols: number, rows: number, user: string): Prom
   try {
     const pty = await (await machine!).spawn(undefined, undefined, { cols, rows, user })
     ptys.set(id, pty)
+    outputs.set(id, pty.output.getReader())
     void pty.ended.then((end) => {
       ptys.delete(id)
       post({ type: 'ended', id, end })
     })
-    post({ type: 'spawned', id, pid: pty.pid, pts: pty.pts, output: pty.output }, [pty.output])
+    post({ type: 'spawned', id, pid: pty.pid, pts: pty.pts })
   }
   catch (error) {
     post({ type: 'spawnFailed', id, message: String((error as Error)?.message ?? error) })
   }
+}
+
+/** Reads the pty's next output chunk for the page; a copy crosses, as the chunk may be a view of a larger buffer. */
+async function pull(id: number): Promise<void> {
+  const reader = outputs.get(id)
+  const next = await reader?.read().catch(() => undefined)
+  if (!next || next.done) {
+    outputs.delete(id)
+    post({ type: 'outputEnd', id })
+    return
+  }
+  const chunk = next.value.slice()
+  post({ type: 'output', id, chunk }, [chunk.buffer])
 }
 
 scope.onmessage = ({ data: message }: MessageEvent<ToWorker>) => {
@@ -95,6 +110,13 @@ scope.onmessage = ({ data: message }: MessageEvent<ToWorker>) => {
     }
     case 'resize':
       ptys.get(message.id)?.resize(message.cols, message.rows)
+      break
+    case 'pull':
+      void pull(message.id)
+      break
+    case 'cancel':
+      void outputs.get(message.id)?.cancel().catch(() => {})
+      outputs.delete(message.id)
       break
   }
 }

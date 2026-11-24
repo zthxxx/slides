@@ -145,7 +145,8 @@ Ref Pictures & Flow:
   </a>
 </p>
 
-[![zthxxx](https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
+<!-- crossorigin: badgen sends CORS headers but no Cross-Origin-Resource-Policy, which the deck's embedder policy needs of a plain image (public/coi-sw.js). -->
+<a href="https://github.com/zthxxx"><img alt="zthxxx" src="https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2" crossorigin="anonymous" /></a>
 
 [ [jovial](https://github.com/zthxxx/jovial) · [zsh-history-enquirer](https://github.com/zthxxx/zsh-history-enquirer) · [midk](https://github.com/zthxxx/midk) ]
 
