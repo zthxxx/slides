@@ -1,10 +1,13 @@
-import type { KernelInstance } from 'unkernel/web'
-import type { ImageDisk } from './disk'
+import type { ImageDisks } from './disk'
+import type { ImageSource } from './image-source'
+import type { LinuxVm } from './kernel-worker-host'
 import kernelUrl from 'unkernel/unkernel.wasm?url'
-import { checkSupport, createKernel, loadKernelModule } from 'unkernel/web'
+import { checkSupport, createKernel, isMobile, loadKernelModule, webCpuBlocker } from 'unkernel/web'
 import { shallowReactive } from 'vue'
-import { openImageDisk } from './disk'
+import { openImageDisks } from './disk'
 import { AHEAD_PRIORITY, summarizeDownloads, trackDownload } from './downloads'
+import { openImageSource } from './image-source'
+import { KernelWorkerHost } from './kernel-worker-host'
 
 /**
  * The page's only Linux VM: unkernel's bundled kernel with its base initramfs, booting unkernel's Alpine 3.24
@@ -14,21 +17,28 @@ import { AHEAD_PRIORITY, summarizeDownloads, trackDownload } from './downloads'
  * There is no network; the guest's writes stay in memory, so every page load starts from the same machine.
  * Every terminal session is a pty spawned on it.
  *
+ * Where the page is cross-origin isolated (Chromium, through `public/coi-sw.js`), the kernel runs in a worker on
+ * several CPUs (`kernel-worker.ts`); elsewhere on this thread, on one.
+ *
  * Source: unkernel@0.2.0-261124-c08e977 `dist/web.d.mts` (`createKernel` with `distro`, `checkSupport`, `CowDisk`,
  * `BaseDisk`) and `guest/base/initramfs/init` in its repository (the overlay root).
  */
 export interface LinuxMachine {
-  vm: KernelInstance
+  vm: LinuxVm
   /** Why the machine is not the published one, shown at the top of each new terminal. */
   notice?: string
 }
 
 /** What the boot needs from the network, started together so that none waits for another. */
 interface Downloads {
+  /** The CPUs the guest will get: 1 runs the kernel on this thread. */
+  cpus: number
   /** unkernel's kernel and its base initramfs (one wasm file), compiled while it downloads. */
   kernel: Promise<WebAssembly.Module>
-  /** The distro image and the preinstalled-tools disk; their boot data downloads as soon as the manifest arrives. */
-  image: Promise<ImageDisk | undefined>
+  /** The images' files: the manifest, then both boot bundles at once; undefined without a built image. */
+  source: Promise<ImageSource | undefined>
+  /** The disks, on this thread (one CPU) or in the kernel's worker (several). */
+  disks: Promise<ImageDisks | KernelWorkerHost | undefined>
 }
 
 // A thread can run only one kernel, so Vite HMR must reuse the machine instead of booting another.
@@ -41,6 +51,23 @@ let downloads: Downloads | undefined = import.meta.hot?.data.downloads
  */
 const GUEST_MEMORY_MIB = 512
 
+/**
+ * The CPUs the guest gets where it can have several: unkernel's own page suggests half the device's threads, up to 4
+ * on desktops and 2 on phones (unkernel README, `?cpus=`).
+ */
+const SMP_CPUS = 4
+const SMP_CPUS_MOBILE = 2
+
+/**
+ * Several CPUs need shared memory, so a cross-origin isolated page (`public/coi-sw.js`), and a thread that may block,
+ * so a worker (unkernel@0.2.0-261124-c08e977 `webCpuBlocker`). Elsewhere the kernel runs on this thread, on one.
+ */
+function guestCpus(): number {
+  if (!globalThis.crossOriginIsolated || webCpuBlocker({ worker: true }) !== undefined)
+    return 1
+  return isMobile() ? SMP_CPUS_MOBILE : SMP_CPUS
+}
+
 /** The download progress entry of the kernel wasm; every other entry during the boot is the disk's. */
 export const KERNEL_DOWNLOAD = 'unkernel.wasm'
 
@@ -51,6 +78,8 @@ export const KERNEL_DOWNLOAD = 'unkernel.wasm'
  */
 export interface BootStage {
   state: 'waiting' | 'active' | 'done' | 'failed'
+  /** The boot stage: the CPUs the guest got. */
+  cpus?: number
   /** `performance.now()` at the boot stage's start and end. */
   startedAt?: number
   endedAt?: number
@@ -101,9 +130,17 @@ export function prefetchLinux(): void {
       throw new Error(`${response.url}: HTTP ${response.status}`)
     return response
   })
+  const cpus = guestCpus()
+  const source = openImageSource(manifestUrl())
   downloads = {
-    kernel: kernelResponse.then(response => loadKernelModule(response, { onProgress: ({ loaded, done }) => kernelProgress(loaded, done) })),
-    image: openImageDisk(manifestUrl()),
+    cpus,
+    // unkernel.wasm holds the single-CPU kernel and, in a custom section, the patch that makes it SMP: `smp` applies
+    // it to the downloaded bytes, so that kernel compiles once the download ends instead of while it streams
+    // (unkernel@0.2.0-261124-c08e977 `LoadOptions.smp`).
+    kernel: kernelResponse.then(response => loadKernelModule(response, { smp: cpus > 1, onProgress: ({ loaded, done }) => kernelProgress(loaded, done) })),
+    source,
+    // The worker starts now, so the boot's disk reads load while the kernel still downloads.
+    disks: source.then(images => images && (cpus > 1 ? new KernelWorkerHost(images) : openImageDisks(images.manifest, images.files.load))),
   }
   // A failed download is reported by the boot that awaits it; the progress bar stops counting it.
   downloads.kernel.then(
@@ -113,7 +150,7 @@ export function prefetchLinux(): void {
       setStage('kernel', { state: 'failed' })
     },
   )
-  downloads.image.then(image => image?.bootData).then(
+  downloads.disks.then(disks => disks?.bootData).then(
     () => setStage('disk', { state: 'done', bytes: summarizeDownloads(name => name !== KERNEL_DOWNLOAD).loaded }),
     () => setStage('disk', { state: 'failed' }),
   )
@@ -126,8 +163,8 @@ const REST_AFTER_BOOT_MS = 5000
 let restStarted = false
 
 /**
- * Downloads the rest of both images (25 MB gzip in all, the Alpine image first) while the page is idle, so a program's first run (htop, bat, tmux)
- * reads it from memory instead of waiting for its chunks. Called when a shell has drawn its first prompt, or a while
+ * Downloads the rest of both images (25 MB gzip in all, the Alpine image first) while the page is idle, so a
+ * program's first run (htop, bat, tmux) reads it from memory instead of waiting for its chunks. Called when a shell has drawn its first prompt, or a while
  * after the boot when no terminal is shown: the page, the boot and the first prompt have all they need by then, and
  * the download is low priority, two files at a time.
  */
@@ -135,7 +172,7 @@ export function downloadRestOfDisk(): void {
   if (restStarted || !downloads)
     return
   restStarted = true
-  void downloads.image.then(image => image && whenIdle().then(image.downloadRest)).catch(() => {})
+  void downloads.source.then(images => images && whenIdle().then(images.downloadRest)).catch(() => {})
 }
 
 function whenIdle(): Promise<void> {
@@ -162,11 +199,18 @@ async function bootLinux(): Promise<LinuxMachine> {
   if (!support.ok)
     throw new Error(`This browser cannot run the in-page Linux VM:\n${support.problems.join('\n')}`)
 
-  const [kernel, image] = await Promise.all([downloads!.kernel, downloads!.image])
+  const [kernel, source, disks] = await Promise.all([downloads!.kernel, downloads!.source, downloads!.disks])
   setStage('boot', { state: 'active', startedAt: performance.now() })
-  let vm: KernelInstance
+  let vm: LinuxVm
   try {
-    vm = await createKernel({ kernel, distro: image?.distro, disks: image ? [image.disk] : [], memoryMiB: GUEST_MEMORY_MIB })
+    if (disks instanceof KernelWorkerHost) {
+      setStage('boot', { cpus: await disks.boot(kernel, GUEST_MEMORY_MIB, downloads!.cpus) })
+      vm = disks.vm
+    }
+    else {
+      vm = await createKernel({ kernel, distro: disks?.distro, disks: disks ? [disks.disk] : [], memoryMiB: GUEST_MEMORY_MIB })
+      setStage('boot', { cpus: 1 })
+    }
   }
   catch (error) {
     setStage('boot', { state: 'failed' })
@@ -174,10 +218,10 @@ async function bootLinux(): Promise<LinuxMachine> {
   }
   setTimeout(downloadRestOfDisk, REST_AFTER_BOOT_MS)
 
-  if (!image)
+  if (!source)
     return { vm, notice: `No preinstalled image at ${manifestUrl().pathname}: this is unkernel's base shell (busybox ash), without Alpine. Build it with \`pnpm build:image\` in present/terminal-glance.` }
-  if (image.manifest.unkernel !== __UNKERNEL_VERSION__)
-    return { vm, notice: `The image was built on unkernel ${image.manifest.unkernel}, the page runs ${__UNKERNEL_VERSION__}: rebuild it with \`pnpm build:image\`.` }
+  if (source.manifest.unkernel !== __UNKERNEL_VERSION__)
+    return { vm, notice: `The image was built on unkernel ${source.manifest.unkernel}, the page runs ${__UNKERNEL_VERSION__}: rebuild it with \`pnpm build:image\`.` }
   return { vm }
 }
 

@@ -65,6 +65,9 @@ export default {
     exclude: ['unkernel'],
   },
   plugins: [preloadLinux()],
+  // runtime/kernel-worker.ts imports unkernel, whose web entry loads its GL renderer with a dynamic import: an IIFE
+  // worker (Vite's default) cannot split it off.
+  worker: { format: 'es' },
   build: {
     // One stylesheet instead of one per slide: the slides' own styles are scoped, so loading them all up front is safe.
     cssCodeSplit: false,

@@ -134,6 +134,27 @@ The kernel compile starts once Slidev's app has run, 0.54 to 1.03 s after naviga
 
 The guest has 512 MiB (`kernel.ts`), as with 0.1.0's default. unkernel 0.2.0's default on desktops, 2 GiB, booted no faster: on Node the prompt came 272 to 274 ms after `createKernel` with 512 MiB and 279 to 287 ms with 2 GiB.
 
+### Four CPUs
+
+In Chrome and Edge the guest runs on 4 CPUs from the deck's second load on, in a worker of a cross-origin isolated page ([architecture.md](./architecture.md#cpus)); elsewhere on 1.
+
+Measured locally with Chrome 157 on the production build, each run in a fresh browser session with the HTTP cache cleared and disabled, the service worker unregistered for 1 CPU and registered for 4; 3 runs each, 2 for the throttled rows:
+
+| Measure | 1 CPU | 4 CPUs |
+| --- | ---: | ---: |
+| The app requests the kernel → first prompt | 315 to 353 ms | 582 to 589 ms |
+| Of which applying the SMP patch to the kernel | | 88 to 91 ms |
+| Slides 18 and 21 (two terminals): slide change → both prompts | 276 to 377 ms | 128 to 162 ms |
+| First key → its echo | 14 to 26 ms | 9 to 20 ms |
+| 400 ms latency, 3 Mbps, cold: navigation → first prompt | 28.2 s | 27.7 to 27.9 s |
+| The same: kernel downloaded → first prompt | 0.28 to 0.29 s | 0.41 to 0.42 s |
+
+On Node, with the same images, 4 CPUs ran four `seq 200000 | sort -r` at once in 2.7 s instead of 9.3 to 9.4 s, and one alone in 2.0 s instead of 2.2 s.
+
+So 4 CPUs boot about 0.25 s later, half of it the SMP patch, and start the shells of a two-terminal slide in half the time; a single program runs as fast as on one.
+
+In the isolated page the Google Fonts stylesheet, which blocks rendering, is fetched without credentials, on a connection of its own. In the unthrottled runs that connection was new (959 ms to connect from the author's network) while the other page reused one, so the app started about 0.85 s later; a cold visit opens one either way.
+
 ### The shell's start
 
 The image loads two zsh plugins: the jovial theme, and fast-syntax-highlighting right after the first prompt. node, python3 and zoxide are left out, and the build fails if they come back as a dependency: without them the published image is 22.7 MiB gzip instead of 58.5 MiB (at `ce872b1`).
@@ -149,7 +170,7 @@ Measured on the dev server, from the slide becoming active; plugins loaded is wh
 | Two terminals (slides 18, 21, 25, 28): prompt | 1290 to 1380 ms | 294 to 335 ms |
 | Two terminals: plugins loaded | 1890 to 1970 ms | 500 to 540 ms |
 
-Two terminals' shells start together and share the VM's one CPU. Before the prompt, each spends 77 to 82 ms in jovial's first precmd, most of it computing segment lengths and starting its dev-env probe in a new process.
+Two terminals' shells start together; on 1 CPU they share it ([Four CPUs](#four-cpus)). Before the prompt, each spends 77 to 82 ms in jovial's first precmd, most of it computing segment lengths and starting its dev-env probe in a new process.
 
 The image ships fast-syntax-highlighting's secondary theme in `~/.config/fsh`. Without the file, the plugin tries to download it at every start, and with no network that holds typed keys for 5 s. The first typed key echoes after 19 to 23 ms; without the file it took 5051 ms ([image.md](./image.md#shell-start-time)).
 
@@ -227,4 +248,5 @@ With the cache warm, `fc871bf` rendered the slide in 0.08 to 0.24 s and drew the
 - **The boot bundles' bytes download twice:** the background download also fetches the chunks they came from, 1.8 MB more per cold visit.
 - **The wasm relies on GitHub Pages' gzip,** which GitHub does not document. Served uncompressed, it would grow by 7.0 MB, about 19 s at 3 Mbps; a zopfli `.wasm.gz` decoded with `DecompressionStream('gzip')` would remove that dependence.
 - **After 10 minutes** every file is revalidated with one round trip.
-- **jovial's first precmd** takes 77 to 82 ms of every shell's start: 35 to 42 ms computing its segments' lengths through a regex loop per affix (`@jov.init-affix`), and 15 to 18 ms starting its dev-env probe in a zpty, a new process on every prompt. On a slide with two terminals, both shells start together and show their prompts after about 0.3 s.
+- **4 CPUs start the boot later:** the SMP kernel compiles only after the download ends and the patch (about 90 ms) is applied, and the first load in Chrome or Edge boots on 1 CPU, because it only registers the service worker that isolates the next one.
+- **jovial's first precmd** takes 77 to 82 ms of every shell's start: 35 to 42 ms computing its segments' lengths through a regex loop per affix (`@jov.init-affix`), and 15 to 18 ms starting its dev-env probe in a zpty, a new process on every prompt. On a slide with two terminals, both shells start together and show their prompts after about 0.3 s on 1 CPU, 0.13 to 0.16 s on 4.

@@ -34,6 +34,11 @@ const live = computed(() => ['slide', 'presenter'].includes($renderContext.value
 
 /** Slidev mounts every slide early; the page loads the first time its slide is shown and stays loaded after. */
 const loaded = ref(false)
+/**
+ * In a cross-origin isolated deck (public/coi-sw.js, Chromium only) a cross-origin page loads only as a credentialless
+ * iframe, without the viewer's cookies for its site; its host cannot opt in to the deck's embedder policy.
+ */
+const isolated = globalThis.crossOriginIsolated
 watch(isActive, (active) => {
   if (active)
     loaded.value = true
@@ -81,6 +86,7 @@ const frameStyle = computed(() => {
       <iframe
         v-if="live && loaded"
         class="web-frame-page"
+        :credentialless="isolated || undefined"
         :src="src"
         :title="title"
         :style="frameStyle"

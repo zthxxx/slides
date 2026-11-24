@@ -1,4 +1,3 @@
-import { AHEAD_PRIORITY, readCounted } from './downloads'
 import type { DiskBase } from 'unkernel/web'
 import { BaseDisk, CowDisk } from 'unkernel/web'
 
@@ -269,8 +268,8 @@ export type FetchReason = 'need' | 'ahead' | 'background'
 export type FileFetcher = (file: string, reason: FetchReason) => Promise<Uint8Array<ArrayBuffer>>
 
 /**
- * The image's published files, each fetched once and kept as published (gzip): the whole image is 27 MiB this way,
- * against 90 MiB decompressed, and no chunk the guest has evicted from its cache is downloaded again.
+ * The images' published files, each fetched once and kept as published (gzip): both images are 24 MiB this way,
+ * against 91 MiB decompressed, and no chunk the guest has evicted from its cache is downloaded again.
  */
 export class ImageFiles {
   readonly #fetch: FileFetcher
@@ -281,7 +280,12 @@ export class ImageFiles {
   }
 
   /** A ChunkLoader: the file's decompressed bytes, fetched the first time only. */
-  readonly load: ChunkLoader = async (file, priority) => decodeChunk(await this.#get(file, priority ? 'ahead' : 'need'))
+  readonly load: ChunkLoader = async (file, priority) => decodeChunk(await this.published(file, priority))
+
+  /** The file's bytes as published, fetched the first time only; `low` marks a download made ahead of need. */
+  published(file: string, priority?: 'low'): Promise<Uint8Array<ArrayBuffer>> {
+    return this.#get(file, priority ? 'ahead' : 'need')
+  }
 
   /**
    * Fetches every listed file not fetched yet, `concurrency` at a time, in the given order. A guest read of a file
@@ -312,66 +316,42 @@ export class ImageFiles {
   }
 }
 
-function fetchFiles(manifestUrl: URL): FileFetcher {
-  return async (file, reason) => {
-    const url = new URL(file, manifestUrl)
-    const response = await fetch(url, reason === 'need' ? {} : { priority: AHEAD_PRIORITY })
-    if (!response.ok)
-      throw new Error(`disk chunk ${url}: HTTP ${response.status}`)
-    // Nobody waits for a background download, so the terminals' progress bar leaves it out.
-    return reason === 'background' ? new Uint8Array(await response.arrayBuffer()) : readCounted(response, file)
-  }
-}
-
 /** Files of the background download fetched at once: enough to finish soon, few enough to leave a guest read room. */
 export const BACKGROUND_CONCURRENCY = 2
 
-export interface ImageDisk {
+/** Both images as unkernel disks, reading their files through `load`, on the page's thread or in the kernel's worker. */
+export interface ImageDisks {
   /** The data disk, with the guest's writes kept in memory only. */
   disk: CowDisk
   /** The distro image, read-only: unkernel's `createKernel({ distro })`. */
   distro: BaseDisk
-  manifest: DiskManifest
   /**
    * Settles once what the guest reads up to its first prompt, from both images, has downloaded (or failed,
    * leaving reads to fetch it).
    */
   bootData: Promise<void>
-  /** Downloads every chunk not fetched yet, at low priority; settles when all have been tried. */
-  downloadRest: () => Promise<void>
 }
 
 /**
- * The preinstalled-tools disk and the distro image under it, from one manifest. Every page load starts from the
- * published images: the guest's writes stay in memory. What the guest reads up to its first prompt starts
- * downloading as soon as the manifest is read, before the kernel exists: on a high-latency link the guest would
- * otherwise wait one round trip per chunk it reads.
+ * The preinstalled-tools disk and the distro image under it. Every page load starts from the published images: the
+ * guest's writes stay in memory. What the guest reads up to its first prompt starts loading at once, before the
+ * kernel exists: on a high-latency link the guest would otherwise wait one round trip per chunk it reads.
  */
-export async function openImageDisk(manifestUrl: URL): Promise<ImageDisk | undefined> {
-  const response = await fetch(manifestUrl, { priority: AHEAD_PRIORITY })
-  // A dev server answers a missing file with its HTML fallback page.
-  if (response.status === 404 || !response.headers.get('content-type')?.includes('json'))
-    return undefined
-  if (!response.ok)
-    throw new Error(`${manifestUrl}: HTTP ${response.status}`)
-  const manifest = await response.json() as DiskManifest
-  if (manifest.format !== MANIFEST_FORMAT)
-    throw new Error(`${manifestUrl}: unknown disk format ${JSON.stringify(manifest.format)}, expected ${MANIFEST_FORMAT}: rebuild it with \`pnpm build:image\``)
-  const files = new ImageFiles(fetchFiles(manifestUrl))
-  const data = new ChunkedDiskBase(manifest, files.load, `${manifest.format}:${manifest.inputHash}`)
-  const distro = new ChunkedDiskBase(manifest.distro, files.load, `distro:${manifest.distro.sha256}`)
+export function openImageDisks(manifest: DiskManifest, load: ChunkLoader): ImageDisks {
+  const data = new ChunkedDiskBase(manifest, load, `${manifest.format}:${manifest.inputHash}`)
+  const distro = new ChunkedDiskBase(manifest.distro, load, `distro:${manifest.distro.sha256}`)
   const bootData = Promise.all([
     data.prefetchBoot(BOOT_PREFETCH_CONCURRENCY),
     distro.prefetchBoot(BOOT_PREFETCH_CONCURRENCY),
   ]).then(() => {}, () => {})
-  // The distro image first: it is small, and every program reads its C library from it.
-  const inDiskOrder = [manifest.distro, manifest].flatMap(image =>
+  return { disk: new CowDisk(data), distro: new BaseDisk(distro), bootData }
+}
+
+/**
+ * Every published chunk of both images, each in disk order, the distro image's first: it is small, and every program
+ * reads its C library from it.
+ */
+export function imageChunkFiles(manifest: DiskManifest): string[] {
+  return [manifest.distro, manifest].flatMap(image =>
     Object.entries(image.chunks).sort(([a], [b]) => Number(a) - Number(b)).map(([, file]) => file))
-  return {
-    disk: new CowDisk(data),
-    distro: new BaseDisk(distro),
-    manifest,
-    bootData,
-    downloadRest: () => files.downloadAll(inDiskOrder, BACKGROUND_CONCURRENCY),
-  }
 }

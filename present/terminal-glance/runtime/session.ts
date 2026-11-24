@@ -1,4 +1,5 @@
-import type { Pty, PtyEnd } from 'unkernel/web'
+import type { PtyEnd } from 'unkernel/web'
+import type { ShellPty } from './kernel-worker-host'
 import type { SessionField, StepInput, TimedWrite } from './steps'
 import type { ProgramStatus } from './program-status'
 import { ref, shallowReactive } from 'vue'
@@ -27,8 +28,8 @@ export class ShellSession {
   readonly terminal = createEmulator()
 
   #opening: Promise<void> | undefined
-  #pty: Pty | undefined
-  #starting: Promise<Pty> | undefined
+  #pty: ShellPty | undefined
+  #starting: Promise<ShellPty> | undefined
   #typing: Promise<void> = Promise.resolve()
 
   constructor(readonly key: string) {
@@ -56,7 +57,7 @@ export class ShellSession {
     this.terminal.fit()
   }
 
-  start(): Promise<Pty> {
+  start(): Promise<ShellPty> {
     this.#starting ??= this.#spawn()
     return this.#starting
   }
@@ -78,7 +79,7 @@ export class ShellSession {
     return typing
   }
 
-  async #spawn(): Promise<Pty> {
+  async #spawn(): Promise<ShellPty> {
     this.status.value = 'starting'
     try {
       const { vm, notice } = await useLinux()

@@ -43,7 +43,7 @@ const rows = computed<Row[]>(() => {
   return [
     { label: 'Download kernel', state: kernel.state, detail: downloadDetail(kernel, KERNEL_DOWNLOAD, name => name === KERNEL_DOWNLOAD) },
     { label: 'Download disk', state: disk.state, detail: downloadDetail(disk, 'boot data', name => name !== KERNEL_DOWNLOAD) },
-    { label: 'Boot Linux', state: boot.state, detail: ['kernel, /init, kwtty', boot.state === 'done' && took(boot)].filter(Boolean).join(' · ') },
+    { label: 'Boot Linux', state: boot.state, detail: ['kernel, /init, kwtty', (boot.cpus ?? 0) > 1 && `${boot.cpus} CPUs`, boot.state === 'done' && took(boot)].filter(Boolean).join(' · ') },
     // The terminal shows this screen until the shell's first output, so the shell is starting once Linux is up.
     { label: 'Start shell', state: boot.state === 'done' ? 'active' : 'waiting', detail: 'zsh, jovial' },
   ]
@@ -133,8 +133,8 @@ const progress = computed(() => {
 
 .linux-boot-stages {
   display: grid;
-  /* The detail column fits its longest text (`unkernel.wasm · 10.9 / 10.9 MB`), so the block keeps its place. */
-  grid-template-columns: auto auto 31ch;
+  /* The detail column fits its longest text (`kernel, /init, kwtty · 4 CPUs · 0.4 s`), so the block keeps its place. */
+  grid-template-columns: auto auto 38ch;
   gap: 0.35rem 0.9rem;
   margin: 0;
   padding: 0;

@@ -14,7 +14,7 @@ components/               Vue views; know about Slidev (render context, active s
    ShellStep.vue          one step button; plays here, or relays from the presenter window; shell highlighting (shell-highlight.ts)
    WebFrame.vue           a live web page cropped to one region (e.g. a docs page without its header and sidebars)
    diagrams/              SVG diagrams for TTY, SSH, OSC and Agent gateways; DiagramFrame.vue gives each the shared light/dark styles
-setup/main.ts             Slidev app setup: starts Linux's downloads in the audience window
+setup/main.ts             Slidev app setup: starts Linux's downloads in the audience window; registers public/coi-sw.js in Chromium
    │
 runtime/                  plain TypeScript; no templates
    session.ts             ShellSession = one pty + one emulator; registry by slide and name; step playback
@@ -28,8 +28,11 @@ runtime/                  plain TypeScript; no templates
    appearance.ts          shared dark/light terminal preference and color palettes
    palette.ts             two synchronized VT parsers, selected by the terminal preference
    program-status.ts      stream observer for root OSC 7501 reports
-   kernel.ts              the page's one VM, booted once per tab
-   disk.ts                the published images (the Alpine image and the data disk): each one's boot bundle up front, the other chunks in the background after the first prompt; the data disk under an in-memory copy-on-write layer
+   kernel.ts              the page's one VM, booted once per tab: on this thread on 1 CPU, or in kernel-worker.ts on 4
+   kernel-worker.ts       the Web Worker that runs the kernel on several CPUs and serves its ptys to the page
+   kernel-worker-host.ts  the page's side of it: starts the worker, serves its file reads, proxies its ptys (protocol: kernel-worker-protocol.ts)
+   image-source.ts        the published images' files, fetched on the page's thread: the manifest, the boot bundles, the background download
+   disk.ts                the published images (the Alpine image and the data disk) as disks, on either thread: each one's boot bundle up front, chunks on demand; the data disk under an in-memory copy-on-write layer
    steps.ts               pure: step → bytes, `{a.pts}` references
    relay.ts               presenter window → slide window (BroadcastChannel)
    demo.ts                ShellDemo context and terminal accent colors
@@ -37,6 +40,7 @@ runtime/                  plain TypeScript; no templates
 unkernel (npm)            createKernel, vm.spawn() → Pty, CowDisk, BaseDisk; unkernel.wasm = kernel + base initramfs
 ghostty-web (npm)         Ghostty's VT parser in WebAssembly, canvas renderer, xterm.js-shaped API
    │
+public/coi-sw.js          service worker: COOP/COEP on the deck's documents and worker scripts (cross-origin isolation)
 public/linux/             built by image/ (gitignored): manifest.json, chunks/ + boot/ (data disk), distro/ (Alpine image)
 image/                    the image's build: see image.md
 ```
@@ -49,13 +53,30 @@ Dependencies point down only. `runtime/` never imports from `components/`; `step
 
 1. The downloads start before any script runs: a build's `index.html` preloads the disk manifest, the two boot bundles it names and the kernel wasm (see [performance.md](./performance.md#starting-linuxs-downloads-early)). As soon as the app runs, `setup/main.ts` calls `prefetchLinux()` in the audience window; its fetches take over the preloaded responses, and the kernel compiles while it streams.
 2. Slidev mounts every slide about 3 s after the deck opens (hidden with `v-show`). The first live `Terminal` calls `useLinux()`, so the VM boots in the background, usually before the talk reaches a demo.
-3. `useLinux()` (`kernel.ts`) starts the downloads if nothing has yet, checks browser support, and calls `createKernel({ kernel, distro, disks, memoryMiB: 512 })` once two downloads, started together by `prefetchLinux()`, are ready: the kernel wasm, compiled while it streams, and the images, whose boot bundles (the bytes the guest reads up to its first prompt, one file per image) are fetched as soon as the manifest arrives (image.md). The Alpine image is `BaseDisk(ChunkedDiskBase)`, read-only; the data disk is `CowDisk(ChunkedDiskBase)`, whose writes stay in memory, so a reload is a fresh machine.
+3. `useLinux()` (`kernel.ts`) starts the downloads if nothing has yet, checks browser support, and calls `createKernel({ kernel, distro, disks, memoryMiB: 512 })`, on this thread or, with `cpus`, in `kernel-worker.ts` ([CPUs](#cpus)), once two downloads, started together by `prefetchLinux()`, are ready: the kernel wasm, compiled while it streams, and the images, whose boot bundles (the bytes the guest reads up to its first prompt, one file per image) are fetched as soon as the manifest arrives (image.md). The Alpine image is `BaseDisk(ChunkedDiskBase)`, read-only; the data disk is `CowDisk(ChunkedDiskBase)`, whose writes stay in memory, so a reload is a fresh machine.
    `prefetchLinux()` runs no kernel. `setup/main.ts` still calls it only where `Terminal.vue` boots (the `play` route outside print mode): another window would compile a kernel it never boots.
 4. The base initramfs `/init` mounts the Alpine image (labelled `kwroot`, `/dev/wda`) read-only and the disk labelled `kwdata` (`/dev/wdb`) at `/data`, and makes `/` an overlay of the image under `/data/distros/alpine/upper` (image.md). busybox `init` starts `kwbox tty serve` (kwtty), which serves `vm.spawn()`. `session.ts` spawns every shell as root: unkernel's distro images otherwise run sessions as the user `user`.
 
 `useLinux()` is memoized and kept across Vite HMR (`import.meta.hot.data`): a thread can run only one kernel.
 
 When the manifest is missing (a fresh checkout without `pnpm build:image`), the page boots unkernel's base shell (busybox ash, no Alpine) and every new terminal prints a yellow notice saying so. It prints the same kind of notice when the image was built on another unkernel version.
+
+### CPUs
+
+unkernel 0.2.0 runs the guest on several CPUs, each in a thread of its own on one shared memory (`cpus`). A CPU blocks while it waits for another, which a page's main thread may not, and the threads share a `SharedArrayBuffer`, which only a cross-origin isolated page has (unkernel@0.2.0-261124-c08e977 `webCpuBlocker`).
+
+| Browser | CPUs | Where the kernel runs |
+| --- | --- | --- |
+| Chrome, Edge | 4, or 2 on phones as unkernel's own page suggests | `kernel-worker.ts`, from the deck's second load on |
+| Firefox, Safari, and the first load in Chrome or Edge | 1 | the page's thread |
+
+- GitHub Pages cannot send COOP and COEP headers, so `public/coi-sw.js`, a service worker that `setup/main.ts` registers, adds `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: credentialless` to the deck's documents and worker scripts. The page's other requests bypass it (static routing).
+- It is registered only where iframes can be `credentialless`: under COEP the embedded botmux page (`WebFrame.vue`) loads only as a credentialless iframe, without the viewer's cookies for its site, and Firefox and Safari have none.
+- The first load registers it and boots on 1 CPU without reloading; the next load is isolated.
+- unkernel's own worker mode (`worker: true`) takes disks only as specs it builds (a file, an HTTP image read by range, its IndexedDB data disk), not the deck's chunked images. So `kernel-worker.ts` runs unkernel inline in a worker of the deck's own, with the same disks (`disk.ts`). Their files are still fetched on the page's thread (`image-source.ts`), which owns the preloads and the progress bar, and cross to the worker as copies. Each pty's output crosses as a transferred stream, so its flow control spans both threads.
+- `unkernel.wasm` holds the single-CPU kernel and, in a custom section, the patch that makes it SMP; `loadKernelModule(…, { smp: true })` applies it to the downloaded bytes, so that kernel compiles once the download has finished instead of while it streams.
+
+Measurements: [performance.md](./performance.md#four-cpus).
 
 ### A terminal, once per slide
 
@@ -173,6 +194,7 @@ How the build, the downloads, the boot and the HTTP cache are arranged for slow 
 | unkernel needs WebAssembly JSPI | Chrome / Edge 137+, Firefox 153+, Safari 27+. Other browsers get a message in the terminal. |
 | `unkernel` is pinned to a prerelease (`0.2.0-261124-c08e977`) | Upgrade deliberately; rebuild the image with it, which also fetches that release's Alpine image (image.md). |
 | One kernel per thread | Never call `createKernel` outside `kernel.ts`. |
+| Several CPUs need a cross-origin isolated page and a worker | Chrome and Edge only, through `public/coi-sw.js`; elsewhere 1 CPU ([CPUs](#cpus)). |
 | Guest memory: 512 MiB (`kernel.ts`), what the talk's htop step shows; unkernel tries smaller sizes where that cannot be allocated | Enough for the deck's tools; writes to the disk also live in memory. unkernel's own default, 2 GiB on desktops, boots no faster. |
 | No network in the guest | `apk add` and `git clone` fail on the page; preinstall in the image instead. |
 | `vite.config.ts` excludes `unkernel` from dependency pre-bundling | The SDK finds `unkernel.wasm` relative to its own module URL. |
