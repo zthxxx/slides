@@ -64,22 +64,17 @@ When the manifest is missing (a fresh checkout without `pnpm build:image`), the 
 
 ### CPUs
 
-unkernel 0.2.0 runs the guest on several CPUs, each in a thread of its own on one shared memory (`cpus`). A CPU blocks while it waits for another, which a page's main thread may not, and the threads share a `SharedArrayBuffer`, which only a cross-origin isolated page has (unkernel@0.2.0-261124-c08e977 `webCpuBlocker`).
+The guest runs on 4 CPUs (2 on phones) where the page is cross-origin isolated, and on 1 elsewhere: unkernel's CPUs share one memory, which needs a `SharedArrayBuffer`, and block while they wait for one another, which a page's main thread may not.
 
-| Load | CPUs | Where the kernel runs |
+| Page | CPUs | Where the kernel runs |
 | --- | --- | --- |
-| A cross-origin isolated page: the dev server, or a build once its service worker is active | 4, or 2 on phones as unkernel's own page suggests | `kernel-worker.ts` |
-| A page that is not isolated: a hard reload, or a browser without service workers | 1 | the page's thread |
+| Isolated: the dev server, or a build once its service worker is active | 4, or 2 on phones | `kernel-worker.ts`, with the same disks; files are still fetched on the page's thread |
+| Not isolated: a hard reload, or a browser without service workers | 1 | the page's thread |
 
-- unkernel.dev sends `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` from its server, and so does the dev server (`server.headers` in `vite.config.ts`). GitHub Pages cannot send headers, so in a build `public/coi-sw.js`, a service worker, adds the same two to the deck's documents and worker scripts. The page's other requests bypass it (static routing).
-- `require-corp` is the policy Chrome, Firefox and Safari all support. Under it a resource from another site loads only with `Cross-Origin-Resource-Policy` or as a CORS request ([authoring.md](./authoring.md#resources-from-other-sites)), and an iframe of another site not at all, so the deck embeds none: the botmux slide plays the page's demo video (`WebVideo.vue`).
-- `runtime/isolate-page.js`, which `vite.config.ts` inlines at the top of a build's `index.html` so that it runs before the app's scripts, registers the worker. A load the worker did not serve, such as the first visit, is not isolated: once the worker is active the script reloads it, at most once per tab session (sessionStorage), so a load that stays unisolated, such as a hard reload, which bypasses service workers, runs on 1 CPU instead of reloading again.
-- A new deploy replaces the worker: the browser fetches its script past the HTTP cache (`updateViaCache: 'none'`), and a changed script takes over at once (`skipWaiting`, `clients.claim`). `isolate-page.js` also unregisters any other registration under the deck's scope, such as one an older script URL or scope left.
-- unkernel's own worker mode (`worker: true`) takes disks only as specs it builds (a file, an HTTP image read by range, its IndexedDB data disk), not the deck's chunked images. So `kernel-worker.ts` runs unkernel inline in a worker of the deck's own, with the same disks (`disk.ts`). Their files are still fetched on the page's thread (`image-source.ts`), which owns the preloads and the progress bar, and cross to the worker as copies.
-- A pty's output crosses one chunk per request (`pull`): the page's stream asks for the next chunk once the terminal has taken the last, so the guest still waits while the terminal is behind. Safari cannot transfer a stream to another thread.
-- `unkernel.wasm` holds the single-CPU kernel and, in a custom section, the patch that makes it SMP; `loadKernelModule(…, { smp: true })` applies it to the downloaded bytes, so that kernel compiles once the download has finished instead of while it streams.
+- The dev server sends `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` (`vite.config.ts`). On GitHub Pages, `public/coi-sw.js` adds them, registered by `runtime/isolate-page.js` at the top of `index.html`, which reloads the first visit once.
+- Under that policy the deck loads nothing from another site without CORP or CORS, and embeds no iframe of another site.
 
-Measurements: [performance.md](./performance.md#four-cpus).
+[isolation.md](./isolation.md) has the details, the rules for the slides' content and the problems met on the way; [performance.md](./performance.md#four-cpus) the measurements.
 
 ### A terminal, once per slide
 
@@ -195,7 +190,7 @@ How the build, the downloads, the boot and the HTTP cache are arranged for slow 
 | Constraint | Consequence |
 | --- | --- |
 | unkernel needs WebAssembly JSPI | Chrome / Edge 137+, Firefox 153+, Safari 27+. Other browsers get a message in the terminal. |
-| `unkernel` is pinned to a prerelease (`0.2.0-261124-c08e977`) | Upgrade deliberately; rebuild the image with it, which also fetches that release's Alpine image (image.md). |
+| `unkernel` is pinned to a prerelease (`0.2.0-261124-c08e977`) | Upgrade deliberately, through the checks in [image.md](./image.md#upgrading-unkernel); the image build fetches that release's Alpine image. |
 | One kernel per thread | Never call `createKernel` outside `kernel.ts`. |
 | Several CPUs need a cross-origin isolated page and a worker | The dev server sends the headers, a build's `public/coi-sw.js` adds them; no resource from another site without CORP or CORS, and no iframe of another site ([CPUs](#cpus)). |
 | Guest memory: 512 MiB (`kernel.ts`), what the talk's htop step shows; unkernel tries smaller sizes where that cannot be allocated | Enough for the deck's tools; writes to the disk also live in memory. unkernel's own default, 2 GiB on desktops, boots no faster. |

@@ -253,6 +253,31 @@ GitHub refuses pushed files over 100 MB; every chunk is about 1 MiB.
 | Add or remove a tool | `image/guest/packages.txt`, then `pnpm build:image` |
 | Change the shell or tmux configuration | `image/guest/rootfs/root/.zshrc`, `image/guest/rootfs/root/.config/tmux/tmux.conf` |
 | Add files to the guest | Put them under `image/guest/rootfs/` at their guest path |
-| Bump `unkernel` | Update the catalog version in `pnpm-workspace.yaml`, `pnpm install`, `pnpm build:image` |
+| Bump `unkernel` | See [Upgrading unkernel](#upgrading-unkernel) |
 
 Then check the result in the page (`pnpm dev terminal-glance`): a new terminal must show the jovial prompt with no error lines, and the tool must run.
+
+### Upgrading unkernel
+
+unkernel is a prerelease, and one release can change the guest's CPU, the kernel file, the guest images and the SDK at once: 0.2.0 changed all four. For a new version:
+
+1. Read what changed: the commits since the deck's version (`gh api repos/pithings/unkernel/compare/<old>...<new>`), and the new package's `README.md`, `dist/web.d.mts` and `dist/node.d.mts`.
+2. Update the catalog version in `pnpm-workspace.yaml` and run `pnpm install`. The release's `unkernel.tgz` is the npm tarball; `gh release download` gets it when the npm registry is slow.
+3. Run `pnpm build:image --force` and the tests, and check each place below against the new version.
+4. Open the deck (`pnpm dev terminal-glance`): the first prompt, `uname -a`, htop's CPU count and memory, a slide with two terminals. Measure the boot as [performance.md](./performance.md) describes, and update the version and commit cited in comments, docs and slide notes.
+
+What changed from 0.1.0 to 0.2.0, and where the deck depends on it:
+
+| Change | Where |
+| --- | --- |
+| The kernel file: `unkernel/alpine.wasm` (the kernel with an Alpine initramfs) became `unkernel/unkernel.wasm` (the kernel with a base initramfs) | `vite.config.ts` (the asset, its preload, `__KERNEL_WASM_BYTES__`), `runtime/kernel.ts`, `image/vm/provision.ts` |
+| Each distro is a separate erofs image in the GitHub release, listed with its size and SHA-256 in `distros.json` | `image/vm/distro.ts` (`fetchDistro`), `distro` in every `createKernel`, the `distro` part of the manifest |
+| The guest CPU: riscv64 became aarch64 | `ALPINE_INDEX` in `image/build.ts` (the mirror probe), slide notes that name the architecture |
+| The data disk's upper layer: `/data/overlay/upper` became `/data/distros/<name>/upper`, with no boot markers | `image/guest/setup.sh` (`OV`, the overlay checks) |
+| Sessions and `exec` run as the user `user` (uid 1000) unless they name another | `user: 'root'` in `runtime/session.ts`, `image/vm/provision.ts`, `image/vm/trace-boot.ts` |
+| The guest's tools are one program: `kwtty serve` runs as `kwbox tty serve`, its source moved to `guest/src/` | slide notes and source links (`pages/terminal-layers.md`, `pages/keystroke.md`, `slides.md`) |
+| The base layer puts shims that install node, npm, bun and others on first use in `/usr/lib/kw/bin` | the dependency check in `setup.sh` |
+| Guest memory defaults to 2 GiB on desktops | `GUEST_MEMORY_MIB` in `runtime/kernel.ts` |
+| Several CPUs: the kernel bundle carries an SMP patch, and each CPU runs in a thread | `loadKernelModule(…, { smp })` in `runtime/kernel.ts`, [isolation.md](./isolation.md) |
+| The web entry carries its Web Worker mode inline (64 KB more gzip in the `terminal` chunk) | [performance.md](./performance.md#remaining-costs) |
+

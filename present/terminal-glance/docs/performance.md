@@ -12,6 +12,12 @@ Sizes on the wire are in MB (10^6 bytes), to compare with link rates in Mbps: 3 
 
 The local measurements used a local HTTP/2 server with gzip and ETag/304, mirroring GitHub Pages, and Chrome under Playwright. CDP `Network.emulateNetworkConditions` set the per-request latency and the bandwidth, which it splits equally between requests, ignoring fetch priority. Each cold run used a fresh profile, with 2 runs per variant. The measuring scripts are not in the repository.
 
+Three things skewed early measurements:
+
+- Changing only the URL's hash does not reload the deck, which routes by hash: reload explicitly between runs.
+- `page.goto` resolves at the `load` event, which on a fast local server comes after the first prompt: time from navigation, as `performance.now()` in the page does.
+- `playwright-cli` keeps one Chrome profile across its sessions, service workers and HTTP cache included: a cold load or a first visit needs its own `--profile` directory, or the cache cleared and disabled through CDP.
+
 
 ## What the page downloads
 
@@ -136,7 +142,7 @@ The guest has 512 MiB (`kernel.ts`), as with 0.1.0's default. unkernel 0.2.0's d
 
 ### Four CPUs
 
-The guest runs on 4 CPUs in a worker of a cross-origin isolated page ([architecture.md](./architecture.md#cpus)). On GitHub Pages a service worker isolates the page, and the first visit reloads once it is active.
+The guest runs on 4 CPUs in a worker of a cross-origin isolated page ([isolation.md](./isolation.md)). On GitHub Pages a service worker isolates the page, and the first visit reloads once it is active.
 
 Measured locally with Chrome 157 on the production build, each run in a fresh browser session with the HTTP cache cleared and disabled, the service worker unregistered for 1 CPU and registered for 4; 3 runs each, 2 for the throttled rows:
 

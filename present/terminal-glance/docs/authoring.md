@@ -98,7 +98,7 @@ A new diagram component renders its SVG inside `<DiagramFrame>` (`components/dia
 
 ## Resources from other sites
 
-The deck is cross-origin isolated, so that Linux runs on 4 CPUs ([architecture.md](./architecture.md#cpus)), and its embedder policy is `require-corp`. A resource from another site loads only if:
+The deck is cross-origin isolated, so that Linux runs on 4 CPUs ([isolation.md](./isolation.md)), and its embedder policy is `require-corp`. A resource from another site loads only if:
 
 - its response has `Cross-Origin-Resource-Policy: cross-origin`, as Google Fonts and GitHub avatars send; or
 - it is requested with CORS (`<img crossorigin="anonymous">`, `<video crossorigin="anonymous">`) and the response has `Access-Control-Allow-Origin`, as GitHub Pages and badgen.net send. A Markdown image is not a CORS request, so such an image needs the HTML tag, as the closing slide's badge has.
