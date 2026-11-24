@@ -13,7 +13,7 @@ Terminal / Shell / 输入输出
 <!--
 - 本系列想把每天都在用、却说不清的几个概念讲明白：Terminal、TTY、Shell，以及它们和进程怎么协作
 - 「其一」只讲输入输出：一个按键从键盘到屏幕走过的完整路径
-- 演示用的是页面里直接运行的真实 Linux 内核 (unkernel，Alpine 3.24 riscv64)，预装 zsh + jovial、bash、tmux、htop、git、less、bat、nvim，不需要联网；会后每个人打开这个页面都能自己重做一遍
+- 演示用的是页面里直接运行的真实 Linux 内核 (unkernel，Alpine 3.24 aarch64)，预装 zsh + jovial、bash、tmux、htop、git、less、bat、nvim，不需要联网；会后每个人打开这个页面都能自己重做一遍
 -->
 
 ---
@@ -108,7 +108,7 @@ Ref Docs: Control Protocols
 
 Ref Docs: Emulators, Multiplexers, Mouse & Images
 
-- [unkernel · kwtty.c (0e4b2ec)](https://github.com/pithings/unkernel/blob/0e4b2ecb4d677bab0b326cc56362dc38a9111af5/kernel/guest/kwtty.c)
+- [unkernel · kwtty.c (c08e977)](https://github.com/pithings/unkernel/blob/c08e97791caedb084f9e78b7a5baec73d641a9ec/guest/src/kwtty.c)
 - [iTerm2 · Proprietary Escape Codes](https://iterm2.com/documentation-escape-codes.html) · [Inline Images](https://iterm2.com/documentation-images.html)
 - [kitty · keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) · [graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/)
 - [Libghostty Is Coming](https://mitchellh.com/writing/libghostty-is-coming) · [How Warp Works](https://www.warp.dev/blog/how-warp-works)

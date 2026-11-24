@@ -133,8 +133,8 @@ const progress = computed(() => {
 
 .linux-boot-stages {
   display: grid;
-  /* The detail column fits its longest text (`unkernel-alpine.wasm · 12.2 / 12.2 MB`), so the block keeps its place. */
-  grid-template-columns: auto auto 38ch;
+  /* The detail column fits its longest text (`unkernel.wasm · 10.9 / 10.9 MB`), so the block keeps its place. */
+  grid-template-columns: auto auto 31ch;
   gap: 0.35rem 0.9rem;
   margin: 0;
   padding: 0;

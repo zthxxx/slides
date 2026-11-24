@@ -1,26 +1,19 @@
 import { AHEAD_PRIORITY, readCounted } from './downloads'
 import type { DiskBase } from 'unkernel/web'
-import { CowDisk } from 'unkernel/web'
+import { BaseDisk, CowDisk } from 'unkernel/web'
 
 /**
- * `linux/manifest.json`, written by `image/build.ts`: the preinstalled-tools data disk
- * split into fixed-size chunks, each gzip-compressed and named by its content hash.
- * A chunk index missing from `chunks` reads as zeros.
+ * One published disk image (`image/pack.ts`): split into fixed-size chunks, each gzip-compressed and named by its
+ * content hash. A chunk index missing from `chunks` reads as zeros.
  */
-export interface DiskManifest {
-  format: typeof MANIFEST_FORMAT
-  /** ext4 label; unkernel's /init mounts the disk labelled `kwdata` and overlays / with it. */
-  label: string
-  /** The unkernel package version the disk was provisioned with; its overlay sits on that version's initramfs. */
-  unkernel: string
-  inputHash: string
+export interface PackedImage {
   size: number
   chunkSize: number
   encoding: 'gzip'
   chunks: Record<string, string>
   /**
    * The chunks the guest reads from power-on to zsh's first prompt, in the order it first reads them,
-   * recorded by `image/vm/trace-boot.ts`. Missing in manifests built before it existed.
+   * recorded by `image/vm/trace-boot.ts`.
    */
   boot?: number[]
   /**
@@ -30,7 +23,28 @@ export interface DiskManifest {
   bootBundle?: { file: string, blockSize: number, runs: Array<[number, number]> }
 }
 
-export const MANIFEST_FORMAT = 'terminal-glance/disk@1'
+/**
+ * `linux/manifest.json`, written by `image/build.ts`: the preinstalled-tools data disk (the top level) and unkernel's
+ * distro image (`distro`). The kernel's base initramfs mounts the distro image (labelled `kwroot`) read-only as the
+ * root's lower layer, and the data disk (labelled `kwdata`) at /data, whose `/data/distros/<name>/upper` holds the
+ * preinstalled tools as the root's upper layer.
+ */
+export interface DiskManifest extends PackedImage {
+  format: typeof MANIFEST_FORMAT
+  label: string
+  /** The unkernel package version the disk was provisioned with; its release published the distro image. */
+  unkernel: string
+  inputHash: string
+  distro: PackedImage & {
+    /** `/usr/lib/kw-distro`, e.g. `alpine`. */
+    name: string
+    /** `/usr/lib/kw-image`, the image id the data disk's upper layer was provisioned on. */
+    image: string
+    sha256: string
+  }
+}
+
+export const MANIFEST_FORMAT = 'terminal-glance/disk@2'
 
 /**
  * Decompressed chunks kept in memory, besides prefetched ones the guest has not read yet;
@@ -61,14 +75,15 @@ export class ChunkedDiskBase implements DiskBase {
   readonly #queued = new Map<number, () => void>()
   /** Prefetched chunks the guest has not read yet: never evicted, so none is downloaded twice. */
   readonly #unread = new Set<number>()
-  readonly #manifest: DiskManifest
+  readonly #manifest: PackedImage
   /** Each boot-bundle block's offset in the bundle file. */
   readonly #bundled = new Map<number, number>()
   #bundle: Promise<Uint8Array> | undefined
 
-  constructor(manifest: DiskManifest, load: ChunkLoader) {
+  /** `identity` names the image's content for unkernel's disk snapshots, which the deck does not take. */
+  constructor(manifest: PackedImage, load: ChunkLoader, identity = `chunked:${manifest.size}`) {
     this.size = manifest.size
-    this.identity = `${manifest.format}:${manifest.inputHash}`
+    this.identity = identity
     this.#chunkSize = manifest.chunkSize
     this.#chunks = manifest.chunks
     this.#load = load
@@ -312,19 +327,25 @@ function fetchFiles(manifestUrl: URL): FileFetcher {
 export const BACKGROUND_CONCURRENCY = 2
 
 export interface ImageDisk {
+  /** The data disk, with the guest's writes kept in memory only. */
   disk: CowDisk
+  /** The distro image, read-only: unkernel's `createKernel({ distro })`. */
+  distro: BaseDisk
   manifest: DiskManifest
-  /** Settles once what the guest reads up to its first prompt has downloaded (or failed, leaving reads to fetch it). */
+  /**
+   * Settles once what the guest reads up to its first prompt, from both images, has downloaded (or failed,
+   * leaving reads to fetch it).
+   */
   bootData: Promise<void>
   /** Downloads every chunk not fetched yet, at low priority; settles when all have been tried. */
   downloadRest: () => Promise<void>
 }
 
 /**
- * The preinstalled-tools disk, with the guest's writes kept in memory only:
- * every page load starts from the published image.
- * What the guest reads up to its first prompt starts downloading as soon as the manifest is read, before the
- * kernel exists: on a high-latency link the guest would otherwise wait one round trip per chunk it reads.
+ * The preinstalled-tools disk and the distro image under it, from one manifest. Every page load starts from the
+ * published images: the guest's writes stay in memory. What the guest reads up to its first prompt starts
+ * downloading as soon as the manifest is read, before the kernel exists: on a high-latency link the guest would
+ * otherwise wait one round trip per chunk it reads.
  */
 export async function openImageDisk(manifestUrl: URL): Promise<ImageDisk | undefined> {
   const response = await fetch(manifestUrl, { priority: AHEAD_PRIORITY })
@@ -335,10 +356,22 @@ export async function openImageDisk(manifestUrl: URL): Promise<ImageDisk | undef
     throw new Error(`${manifestUrl}: HTTP ${response.status}`)
   const manifest = await response.json() as DiskManifest
   if (manifest.format !== MANIFEST_FORMAT)
-    throw new Error(`${manifestUrl}: unknown disk format ${JSON.stringify(manifest.format)}`)
+    throw new Error(`${manifestUrl}: unknown disk format ${JSON.stringify(manifest.format)}, expected ${MANIFEST_FORMAT}: rebuild it with \`pnpm build:image\``)
   const files = new ImageFiles(fetchFiles(manifestUrl))
-  const base = new ChunkedDiskBase(manifest, files.load)
-  const bootData = base.prefetchBoot(BOOT_PREFETCH_CONCURRENCY).catch(() => {})
-  const inDiskOrder = Object.entries(manifest.chunks).sort(([a], [b]) => Number(a) - Number(b)).map(([, file]) => file)
-  return { disk: new CowDisk(base), manifest, bootData, downloadRest: () => files.downloadAll(inDiskOrder, BACKGROUND_CONCURRENCY) }
+  const data = new ChunkedDiskBase(manifest, files.load, `${manifest.format}:${manifest.inputHash}`)
+  const distro = new ChunkedDiskBase(manifest.distro, files.load, `distro:${manifest.distro.sha256}`)
+  const bootData = Promise.all([
+    data.prefetchBoot(BOOT_PREFETCH_CONCURRENCY),
+    distro.prefetchBoot(BOOT_PREFETCH_CONCURRENCY),
+  ]).then(() => {}, () => {})
+  // The distro image first: it is small, and every program reads its C library from it.
+  const inDiskOrder = [manifest.distro, manifest].flatMap(image =>
+    Object.entries(image.chunks).sort(([a], [b]) => Number(a) - Number(b)).map(([, file]) => file))
+  return {
+    disk: new CowDisk(data),
+    distro: new BaseDisk(distro),
+    manifest,
+    bootData,
+    downloadRest: () => files.downloadAll(inDiskOrder, BACKGROUND_CONCURRENCY),
+  }
 }

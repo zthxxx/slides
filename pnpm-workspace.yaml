@@ -16,4 +16,4 @@ catalog:
   rimraf: 6.0.1
   rxjs: 8.0.0-alpha.14
   shiki: 4.6.0
-  unkernel: 0.1.0-261117-0e4b2ec
+  unkernel: 0.2.0-261124-c08e977

@@ -46,8 +46,8 @@ catalogs:
       specifier: 7.0.2
       version: 7.0.2
     unkernel:
-      specifier: 0.1.0-261117-0e4b2ec
-      version: 0.1.0-261117-0e4b2ec
+      specifier: 0.2.0-261124-c08e977
+      version: 0.2.0-261124-c08e977
 
 importers:
 
@@ -138,7 +138,7 @@ importers:
         version: link:../../packages/slidev-theme-eloc
       unkernel:
         specifier: 'catalog:'
-        version: 0.1.0-261117-0e4b2ec
+        version: 0.2.0-261124-c08e977
     devDependencies:
       '@types/bun':
         specifier: 'catalog:'
@@ -3935,8 +3935,8 @@ packages:
   unist-util-visit@5.0.0:
     resolution: {integrity: sha512-MR04uvD+07cwl/yhVuVWAtw+3GOR/knlL55Nd/wAdblk27GCVt3lqpTivy/tkJcZoNPzTwS1Y+KMojlLDhoTzg==}
 
-  unkernel@0.1.0-261117-0e4b2ec:
-    resolution: {integrity: sha512-lb1gZoBHtfaPGvDfGtEK+w2eWWcDLF0mBQnfQIng22mDp0enxQfpEbmsHZ7+pBDg6VBcmsxNSgOCrM8cE4F0rA==}
+  unkernel@0.2.0-261124-c08e977:
+    resolution: {integrity: sha512-sStZVD0/VmnGkJlAxL6j4EMNfqoioC1ful4Uua8IxFEeEoiYWm+sPebC3f2XpwIh7xBVHjB+jip/jen9Z9onNQ==}
     engines: {node: '>=24'}
     hasBin: true
 
@@ -9161,7 +9161,7 @@ snapshots:
       unist-util-is: 6.0.0
       unist-util-visit-parents: 6.0.1
 
-  unkernel@0.1.0-261117-0e4b2ec: {}
+  unkernel@0.2.0-261124-c08e977: {}
 
   unocss@66.13.0(@oxc-project/types@0.156.0)(cac@7.1.0)(rolldown@1.2.19)(rollup@4.34.7)(srvx@1.0.8)(vite@8.3.8(@types/node@22.13.4)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1)):
     dependencies:

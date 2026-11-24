@@ -15,7 +15,7 @@ Run from the repository root unless noted.
 | Run the tests | `pnpm -C present/terminal-glance test` |
 | Build the whole site (builds the guest image first when its inputs changed) | `pnpm build` |
 
-Without a built image the page still runs, on bare Alpine (busybox ash), and says so in every terminal.
+Without a built image the page still runs, on unkernel's base shell (busybox ash, without Alpine), and says so in every terminal.
 
 ## Directory map
 

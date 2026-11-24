@@ -1,28 +1,33 @@
 /**
- * Records which disk chunks the guest reads from power-on until zsh shows its first prompt, so the page can
- * fetch them all at once instead of one round trip at a time (runtime/disk.ts `boot`).
+ * Records what the guest reads from power-on until zsh shows its first prompt, from both published images (the
+ * distro image and the data disk), so the page can fetch it all at once instead of one round trip at a time
+ * (runtime/disk.ts `boot`, `bootBundle`).
  *
- * Boots the published image offline the way the page does: unkernel's bundled kernel and initramfs, the
- * chunks under a copy-on-write disk, no network, a pty from `vm.spawn()` whose terminal queries are answered
- * as runtime/emulator.ts does. Prints `{ "boot": [chunk indices in first-read order], "reads": [[offset, length], ...] }`
- * as JSON: the chunks for the page to prefetch, and the byte ranges image/pack.ts packs into the boot bundle.
+ * Boots the published images offline the way the page does: unkernel's bundled kernel and base initramfs, the
+ * distro image read-only, the data disk under a copy-on-write layer, no network, root's login shell on a pty from
+ * `vm.spawn()` whose terminal queries are answered as runtime/emulator.ts does. Prints, as JSON,
+ * `{ "data": Trace, "distro": Trace, "atPrompt": n }` where a Trace is `{ "boot": [chunk indices in first-read
+ * order], "reads": [[offset, length], ...] }`: the chunks for the page to prefetch, and the byte ranges image/pack.ts
+ * packs into each image's boot bundle.
  *
  *   node image/vm/trace-boot.ts --manifest public/linux/manifest.json
  *
  * Needs Node >= 24 (WebAssembly JSPI), like provision.ts.
- * Source: unkernel@0.1.0-261117-0e4b2ec `dist/node.d.mts` (`createKernel`, `CowDisk`, `DiskBase`, `Pty`).
+ * Source: unkernel@0.2.0-261124-c08e977 `dist/node.d.mts` (`createKernel` with `distro`, `BaseDisk`, `CowDisk`,
+ * `DiskBase`, `Pty`, `SpawnOptions.user`).
  */
 import type { DiskBase } from 'unkernel/node'
+import type { DiskManifest, PackedImage } from '../pack'
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { gunzipSync } from 'node:zlib'
-import { CowDisk, createKernel } from 'unkernel/node'
+import { BaseDisk, CowDisk, createKernel } from 'unkernel/node'
 
 const { values: options } = parseArgs({
   options: {
     'manifest': { type: 'string' },
-    /** The longest wait after the first prompt for the turbo-loaded plugins' mark; their reads still count. */
+    /** The longest wait after the first prompt for the highlighting plugin's mark; its reads still count. */
     'settle-ms': { type: 'string', default: '5000' },
     'timeout-ms': { type: 'string', default: '60000' },
   },
@@ -30,51 +35,62 @@ const { values: options } = parseArgs({
 if (!options.manifest)
   throw new Error('usage: trace-boot.ts --manifest <public/linux/manifest.json>')
 
-interface Manifest { size: number, chunkSize: number, inputHash: string, chunks: Record<string, string> }
-const manifest: Manifest = JSON.parse(await readFile(options.manifest, 'utf8'))
+const manifest: DiskManifest = JSON.parse(await readFile(options.manifest, 'utf8'))
 const dir = dirname(options.manifest)
 const log = (message: string) => process.stderr.write(`[trace-boot] ${message}\n`)
 
-/** Chunk indices in the order the guest first read inside them. */
-const order: number[] = []
-const loaded = new Map<number, Uint8Array>()
-let readBytes = 0
-/** Every byte range the guest read, in order; image/pack.ts rounds them to blocks. */
-const reads: Array<[number, number]> = []
+/** A published image as a DiskBase that records every read: the chunks in first-read order and the byte ranges. */
+class TracedImage implements DiskBase {
+  readonly size: number
+  readonly identity: string
+  /** Chunk indices in the order the guest first read inside them. */
+  readonly order: number[] = []
+  /** Every byte range the guest read, in order; image/pack.ts rounds them to blocks. */
+  readonly reads: Array<[number, number]> = []
+  readBytes = 0
+  readonly #image: PackedImage
+  readonly #loaded = new Map<number, Uint8Array>()
 
-async function chunk(index: number): Promise<Uint8Array> {
-  let bytes = loaded.get(index)
-  if (!bytes) {
-    const file = manifest.chunks[index]
-    bytes = file ? new Uint8Array(gunzipSync(await readFile(join(dir, file)))) : new Uint8Array(manifest.chunkSize)
-    loaded.set(index, bytes)
+  constructor(image: PackedImage, identity: string) {
+    this.#image = image
+    this.size = image.size
+    this.identity = identity
   }
-  return bytes
-}
 
-const base: DiskBase = {
-  size: manifest.size,
-  identity: `trace:${manifest.inputHash}`,
   async read(offset: number, length: number): Promise<Uint8Array> {
-    readBytes += length
-    reads.push([offset, length])
+    this.readBytes += length
+    this.reads.push([offset, length])
+    const { chunkSize, chunks } = this.#image
     const out = new Uint8Array(length)
     for (let at = offset; at < offset + length;) {
-      const index = Math.floor(at / manifest.chunkSize)
-      if (manifest.chunks[index] && !order.includes(index))
-        order.push(index)
-      const start = at - index * manifest.chunkSize
-      const count = Math.min(manifest.chunkSize - start, offset + length - at)
-      out.set((await chunk(index)).subarray(start, start + count), at - offset)
+      const index = Math.floor(at / chunkSize)
+      if (chunks[index] && !this.order.includes(index))
+        this.order.push(index)
+      const start = at - index * chunkSize
+      const count = Math.min(chunkSize - start, offset + length - at)
+      out.set((await this.#chunk(index)).subarray(start, start + count), at - offset)
       at += count
     }
     return out
-  },
+  }
+
+  async #chunk(index: number): Promise<Uint8Array> {
+    let bytes = this.#loaded.get(index)
+    if (!bytes) {
+      const file = this.#image.chunks[index]
+      bytes = file ? new Uint8Array(gunzipSync(await readFile(join(dir, file)))) : new Uint8Array(this.#image.chunkSize)
+      this.#loaded.set(index, bytes)
+    }
+    return bytes
+  }
 }
 
+const data = new TracedImage(manifest, `trace:${manifest.inputHash}`)
+const distro = new TracedImage(manifest.distro, `trace:${manifest.distro.sha256}`)
+
 const t0 = performance.now()
-const vm = await createKernel({ disks: [new CowDisk(base)] })
-const pty = await vm.spawn(undefined, undefined, { cols: 100, rows: 30 })
+const vm = await createKernel({ distro: new BaseDisk(distro), disks: [new CowDisk(data)] })
+const pty = await vm.spawn(undefined, undefined, { cols: 100, rows: 30, user: 'root' })
 
 const decoder = new TextDecoder()
 let output = ''
@@ -112,7 +128,7 @@ if (!prompt) {
   log(`no prompt within ${options['timeout-ms']} ms; last output: ${JSON.stringify(output.slice(-400))}`)
   process.exit(1)
 }
-const atPrompt = order.length
+const atPrompt = data.order.length + distro.order.length
 const settle = Date.now() + Number(options['settle-ms'])
 while (!plugins && Date.now() < settle)
   await new Promise(resolve => setTimeout(resolve, 20))
@@ -120,7 +136,10 @@ while (!plugins && Date.now() < settle)
 await new Promise(resolve => setTimeout(resolve, 300))
 
 const after = plugins ? `plugins loaded ${((plugins - prompt) / 1000).toFixed(1)} s later` : `no plugins mark within ${options['settle-ms']} ms`
-log(`first prompt after ${((prompt - t0) / 1000).toFixed(1)} s, ${after}; ${atPrompt} chunks read by the prompt, ${order.length} in all; ${(readBytes / 2 ** 20).toFixed(1)} MiB read`)
-process.stdout.write(`${JSON.stringify({ boot: order, atPrompt, reads })}\n`)
+const read = (image: TracedImage) => `${image.order.length} chunks, ${(image.readBytes / 2 ** 20).toFixed(1)} MiB`
+log(`first prompt after ${((prompt - t0) / 1000).toFixed(1)} s, ${after}; ${atPrompt} chunks read by the prompt; `
+  + `read from the distro image ${read(distro)}, from the data disk ${read(data)}`)
+const trace = (image: TracedImage) => ({ boot: image.order, reads: image.reads })
+process.stdout.write(`${JSON.stringify({ data: trace(data), distro: trace(distro), atPrompt })}\n`)
 await vm.stop()
 process.exit(0)

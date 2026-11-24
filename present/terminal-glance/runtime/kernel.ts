@@ -1,20 +1,21 @@
 import type { KernelInstance } from 'unkernel/web'
 import type { ImageDisk } from './disk'
-import kernelUrl from 'unkernel/alpine.wasm?url'
+import kernelUrl from 'unkernel/unkernel.wasm?url'
 import { checkSupport, createKernel, loadKernelModule } from 'unkernel/web'
 import { shallowReactive } from 'vue'
 import { openImageDisk } from './disk'
 import { AHEAD_PRIORITY, summarizeDownloads, trackDownload } from './downloads'
 
 /**
- * The page's only Linux VM: unkernel's bundled kernel and Alpine 3.24 riscv64 initramfs,
- * plus the preinstalled-tools disk built by `image/` (zsh + jovial, bash, tmux, htop, git, less, neovim).
- * Its /init finds the disk by the label `kwdata` and makes / an overlay of the initramfs and the disk.
+ * The page's only Linux VM: unkernel's bundled kernel with its base initramfs, booting unkernel's Alpine 3.24
+ * aarch64 image, plus the preinstalled-tools disk built by `image/` (zsh + jovial, bash, tmux, htop, git, less,
+ * neovim). The base's /init mounts the Alpine image (labelled `kwroot`) read-only and the disk labelled `kwdata` at
+ * /data, and makes / an overlay of the image under `/data/distros/alpine/upper`.
  * There is no network; the guest's writes stay in memory, so every page load starts from the same machine.
  * Every terminal session is a pty spawned on it.
  *
- * Source: unkernel@0.1.0-261117-0e4b2ec `dist/web.d.mts` (`createKernel`, `checkSupport`, `CowDisk`)
- * and `kernel/guest/kw-data.sh` in its repository (the kwdata overlay root).
+ * Source: unkernel@0.2.0-261124-c08e977 `dist/web.d.mts` (`createKernel` with `distro`, `checkSupport`, `CowDisk`,
+ * `BaseDisk`) and `guest/base/initramfs/init` in its repository (the overlay root).
  */
 export interface LinuxMachine {
   vm: KernelInstance
@@ -24,9 +25,9 @@ export interface LinuxMachine {
 
 /** What the boot needs from the network, started together so that none waits for another. */
 interface Downloads {
-  /** unkernel's kernel and initramfs (one wasm file), compiled while it downloads. */
+  /** unkernel's kernel and its base initramfs (one wasm file), compiled while it downloads. */
   kernel: Promise<WebAssembly.Module>
-  /** The preinstalled-tools disk; its boot chunks download as soon as the manifest arrives. */
+  /** The distro image and the preinstalled-tools disk; their boot data downloads as soon as the manifest arrives. */
   image: Promise<ImageDisk | undefined>
 }
 
@@ -34,13 +35,19 @@ interface Downloads {
 let booting: Promise<LinuxMachine> | undefined = import.meta.hot?.data.booting
 let downloads: Downloads | undefined = import.meta.hot?.data.downloads
 
+/**
+ * The guest's memory: what the talk's htop step shows (pages/keystroke.md), and plenty for its demos. unkernel's
+ * default on desktops is 2 GiB (`autoMemoryMiB`), which boots no faster.
+ */
+const GUEST_MEMORY_MIB = 512
+
 /** The download progress entry of the kernel wasm; every other entry during the boot is the disk's. */
-export const KERNEL_DOWNLOAD = 'unkernel-alpine.wasm'
+export const KERNEL_DOWNLOAD = 'unkernel.wasm'
 
 /**
  * The machine's boot, in stages, for the terminals' boot screen: the two downloads run together, then the kernel
- * boots until the guest's kwtty accepts the first pty (`vm.spawn` waits for it; unkernel 0.1.0 has no other
- * readiness signal, `createKernel` resolves at kernel entry).
+ * boots until the guest's kwtty accepts the first pty (`vm.spawn` waits for it; `createKernel` resolves at kernel
+ * entry, before the guest's init).
  */
 export interface BootStage {
   state: 'waiting' | 'active' | 'done' | 'failed'
@@ -76,8 +83,8 @@ export function markLinuxUp(): void {
 }
 
 /**
- * Starts downloading what Linux needs (the kernel wasm, the disk manifest and the chunks the guest reads up to
- * its first prompt) without booting it. Safe in any window: it runs no kernel, so a presenter window calling it
+ * Starts downloading what Linux needs (the kernel wasm, the disk manifest and what the guest reads from both images
+ * up to its first prompt) without booting it. Safe in any window: it runs no kernel, so a presenter window calling it
  * only warms the HTTP cache. Call it as early as the page allows; useLinux() reuses the downloads.
  */
 export function prefetchLinux(): void {
@@ -119,7 +126,7 @@ const REST_AFTER_BOOT_MS = 5000
 let restStarted = false
 
 /**
- * Downloads the rest of the disk (27 MiB in all) while the page is idle, so a program's first run (htop, bat, tmux)
+ * Downloads the rest of both images (25 MB gzip in all, the Alpine image first) while the page is idle, so a program's first run (htop, bat, tmux)
  * reads it from memory instead of waiting for its chunks. Called when a shell has drawn its first prompt, or a while
  * after the boot when no terminal is shown: the page, the boot and the first prompt have all they need by then, and
  * the download is low priority, two files at a time.
@@ -159,7 +166,7 @@ async function bootLinux(): Promise<LinuxMachine> {
   setStage('boot', { state: 'active', startedAt: performance.now() })
   let vm: KernelInstance
   try {
-    vm = await createKernel({ kernel, disks: image ? [image.disk] : [] })
+    vm = await createKernel({ kernel, distro: image?.distro, disks: image ? [image.disk] : [], memoryMiB: GUEST_MEMORY_MIB })
   }
   catch (error) {
     setStage('boot', { state: 'failed' })
@@ -168,7 +175,7 @@ async function bootLinux(): Promise<LinuxMachine> {
   setTimeout(downloadRestOfDisk, REST_AFTER_BOOT_MS)
 
   if (!image)
-    return { vm, notice: `No preinstalled image at ${manifestUrl().pathname}: this is bare Alpine (busybox ash). Build it with \`pnpm build:image\` in present/terminal-glance.` }
+    return { vm, notice: `No preinstalled image at ${manifestUrl().pathname}: this is unkernel's base shell (busybox ash), without Alpine. Build it with \`pnpm build:image\` in present/terminal-glance.` }
   if (image.manifest.unkernel !== __UNKERNEL_VERSION__)
     return { vm, notice: `The image was built on unkernel ${image.manifest.unkernel}, the page runs ${__UNKERNEL_VERSION__}: rebuild it with \`pnpm build:image\`.` }
   return { vm }

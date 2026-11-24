@@ -1,9 +1,10 @@
 #!/bin/sh
 # Provisions the terminal-glance guest image. Runs inside unkernel's Alpine
-# (busybox ash, root) booted by image/vm/provision.ts with a network and a
-# fresh data disk: / is the overlay of the bundled initramfs and
-# /data/overlay/upper, so everything installed here lands on the data disk,
-# which is the image the page boots with (no network there).
+# image (busybox ash, root) booted by image/vm/provision.ts with a network and
+# a fresh data disk: the base initramfs makes / an overlay of the read-only
+# Alpine image under /data/distros/alpine/upper, so everything installed here
+# lands on the data disk, which the page boots with on the same Alpine image
+# (no network there). Source: unkernel guest/base/initramfs/init.
 #
 # /provision (this directory, read-only over 9p):
 #   packages.txt   apk packages to install
@@ -13,7 +14,7 @@ set -eu
 set -o pipefail
 
 P=/provision
-OV=/data/overlay
+OV=/data/distros/alpine
 export HOME=/root TERM=xterm-256color
 export XDG_CONFIG_HOME=$HOME/.config XDG_DATA_HOME=$HOME/.local/share
 cd "$HOME"
@@ -25,6 +26,8 @@ step "root file system"
 root_type=$(awk '$2 == "/" { t = $3 } END { print t }' /proc/mounts)
 [ "$root_type" = overlay ] || fail "/ is $root_type, not the overlay on the kwdata disk (is the data disk attached?)"
 mountpoint -q /data || fail "/data is not mounted"
+# upper=tmpfs (safe mode, or no data disk) would keep everything installed below in memory only.
+grep -qx 'upper=data' /run/kw-base || fail "the root's upper layer is not on the data disk: $(tr '\n' ' ' < /run/kw-base)"
 echo "/ is the overlay over $OV/upper; lower image $(cat /usr/lib/kw-image)"
 
 step "apk packages"
@@ -55,7 +58,8 @@ chown -R root:root "$HOME"
 chmod 700 "$HOME"
 chmod 644 "$HOME/.zshrc"
 grep -qx /bin/zsh /etc/shells || echo /bin/zsh >> /etc/shells
-# kwtty starts root's passwd shell for every host terminal (unkernel kernel/guest/kwtty.c, getpwuid(0)).
+# The page's terminals are root's login shells (runtime/session.ts spawns them as root): kwtty runs the passwd
+# shell of the user a session asks for (unkernel guest/src/kwtty.c).
 sed -i -e 's#^\(root:[^:]*:0:0:[^:]*:[^:]*:\).*$#\1/bin/zsh#' /etc/passwd
 grep '^root:' /etc/passwd
 
@@ -113,8 +117,12 @@ zsh -c 'plugins=$XDG_DATA_HOME/zsh-plugins fsh=$XDG_DATA_HOME/zsh-plugins/fast-s
 	done' || fail "zcompile failed"
 
 step "no unwanted tools pulled in as dependencies"
+# unkernel's base layer puts shims in /usr/lib/kw/bin that install node, npm and others with apk on first use
+# (unkernel guest/base/rootfs/usr/lib/kw/bin); only an installed program counts.
 for cmd in node python3 zoxide; do
-	! command -v "$cmd" >/dev/null || fail "$cmd is installed ($(command -v "$cmd")), the image must not ship it"
+	for found in $(which -a "$cmd" 2>/dev/null); do
+		case $found in /usr/lib/kw/bin/*) ;; *) fail "$cmd is installed ($found), the image must not ship it" ;; esac
+	done
 done
 
 step "offline start: no network, no errors"
@@ -164,9 +172,12 @@ if ! fstrim -v /data; then
 	rm -f /data/.zero
 fi
 
-step "boot markers"
-# A clean first boot on the page: no failed-boot count, no safe mode request.
-rm -f "$OV/attempts" "$OV/safe"
+step "overlay state"
+# The base's /init records the image id an upper was made on in $OV/lower; the page boots the same image, which
+# finds its own id there and leaves the upper as it is (unkernel guest/base/initramfs/init, data_upper).
+[ "$(cat "$OV/lower")" = "$(cat /usr/lib/kw-image)" ] ||
+	fail "$OV/lower is $(cat "$OV/lower"), the running image $(cat /usr/lib/kw-image)"
+[ ! -e "$OV/discard" ] || fail "$OV/discard would make the page's boot set the upper aside"
 ls -la "$OV"
 sync
 step "done"

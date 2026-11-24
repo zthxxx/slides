@@ -1,12 +1,12 @@
-import type { DiskManifest } from '../image/pack'
+import type { PackedImage } from '../image/pack'
 import { describe, expect, test } from 'bun:test'
 import fc from 'fast-check'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { CowDisk } from 'unkernel/web'
-import { CHUNK_SIZE, packDisk, writeBootBundle } from '../image/pack'
-import { ChunkedDiskBase, decodeChunk, ImageFiles, MANIFEST_FORMAT } from '../runtime/disk'
+import { CHUNK_SIZE, packImage, writeBootBundle } from '../image/pack'
+import { ChunkedDiskBase, decodeChunk, ImageFiles } from '../runtime/disk'
 
 /**
  * The published disk is the contract between image/pack.ts (build) and runtime/disk.ts (page):
@@ -66,12 +66,12 @@ function render({ size, denseChunks, writes, repeatFirstChunk }: DiskSpec): Uint
   return disk
 }
 
-async function publish(disk: Uint8Array): Promise<{ manifest: DiskManifest, outDir: string, cleanup: () => Promise<void> }> {
+async function publish(disk: Uint8Array): Promise<{ manifest: PackedImage, outDir: string, cleanup: () => Promise<void> }> {
   const root = await mkdtemp(join(tmpdir(), 'terminal-glance-disk-'))
   const diskPath = join(root, 'kwdata.img')
   const outDir = join(root, 'linux')
   await Bun.write(diskPath, disk)
-  const manifest = await packDisk({ disk: diskPath, outDir, unkernel: 'test', inputHash: 'test' })
+  const manifest = await packImage(diskPath, outDir, 'chunks')
   return { manifest, outDir, cleanup: () => rm(root, { recursive: true, force: true }) }
 }
 
@@ -148,7 +148,7 @@ function slowLoader(outDir: string, seed: number, loads: Map<string, number>, fa
 }
 
 /** Chunk indices with equal contents share one file; each index is still fetched on its own. */
-function indicesPerFile(manifest: DiskManifest): Map<string, number> {
+function indicesPerFile(manifest: PackedImage): Map<string, number> {
   const count = new Map<string, number>()
   for (const file of Object.values(manifest.chunks))
     count.set(file, (count.get(file) ?? 0) + 1)
@@ -388,11 +388,7 @@ describe('chunk cache', () => {
     }
     return bytes
   }
-  const manifestOf = (count: number, boot: number[]): DiskManifest => ({
-    format: MANIFEST_FORMAT,
-    label: 'kwdata',
-    unkernel: 'test',
-    inputHash: 'test',
+  const manifestOf = (count: number, boot: number[]): PackedImage => ({
     size: count * CHUNK,
     chunkSize: CHUNK,
     encoding: 'gzip',
@@ -454,7 +450,7 @@ describe('rest of the disk in the background', () => {
     reads: fc.array(fc.record({ position: fc.double({ min: 0, max: 1, noNaN: true }), length: fc.integer({ min: 1, max: 2 * CHUNK_SIZE }), early: fc.boolean() }), { maxLength: 6 }),
   })
 
-  const inDiskOrder = (manifest: DiskManifest) => Object.entries(manifest.chunks).sort(([a], [b]) => Number(a) - Number(b)).map(([, file]) => file)
+  const inDiskOrder = (manifest: PackedImage) => Object.entries(manifest.chunks).sort(([a], [b]) => Number(a) - Number(b)).map(([, file]) => file)
 
   test('every file is fetched once, guest reads included, and afterwards the whole disk reads without the network', async () => {
     await fc.assert(

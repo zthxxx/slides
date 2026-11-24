@@ -1,14 +1,15 @@
 /**
- * Boots unkernel's bundled Alpine on a fresh kwdata data disk with the host's network,
- * runs image/guest/setup.sh in it, and powers off: the data disk file is then the guest image.
+ * Boots unkernel's Alpine image on a fresh kwdata data disk with the host's network, runs image/guest/setup.sh in
+ * it as root, and powers off: the data disk file is then the guest image. The Alpine image is the root's read-only
+ * lower layer (/dev/wda); everything setup.sh installs lands in the data disk's /data/distros/alpine/upper (/dev/wdb).
  *
  * Needs Node >= 24: unkernel runs on WebAssembly JSPI, which Bun does not have, so image/build.ts
  * (Bun) starts this file with Node. Node 24 strips the TypeScript types itself.
  *
- *   node image/vm/provision.ts --disk <file> --guest <dir>
+ *   node image/vm/provision.ts --disk <file> --distro <alpine.erofs> --guest <dir>
  *
- * Source: unkernel@0.1.0-261117-0e4b2ec `dist/node.d.mts` (`createKernel`, `createImageFromKwsparse`,
- * `bundledBoot`, `FileDisk`, `nodeFs`, `directBackend`) and `dist/cli.mjs` (`--data`, `--mount`).
+ * Source: unkernel@0.2.0-261124-c08e977 `dist/node.d.mts` (`createKernel` with `distro`, `createImageFromKwsparse`,
+ * `bundledBoot`, `FileDisk`, `nodeFs`, `directBackend`, `SpawnOptions.user`) and `dist/cli.mjs` (`--data`, `--mount`).
  */
 import type { BlockDevice, Subprocess } from 'unkernel/node'
 import { readFile, rm } from 'node:fs/promises'
@@ -29,6 +30,7 @@ import {
 const { values: options } = parseArgs({
   options: {
     'disk': { type: 'string' },
+    'distro': { type: 'string' },
     'guest': { type: 'string' },
     'memory': { type: 'string', default: '2048' },
     'input-hash': { type: 'string', default: '' },
@@ -36,8 +38,8 @@ const { values: options } = parseArgs({
     'apk-mirror': { type: 'string', default: '' },
   },
 })
-if (!options.disk || !options.guest)
-  throw new Error('usage: provision.ts --disk <file> --guest <dir> [--memory MiB] [--input-hash HEX]')
+if (!options.disk || !options.distro || !options.guest)
+  throw new Error('usage: provision.ts --disk <file> --distro <alpine.erofs> --guest <dir> [--memory MiB] [--input-hash HEX]')
 
 const SLAB = 1 << 20
 
@@ -82,7 +84,7 @@ class ZeroingDisk implements BlockDevice {
 const t0 = performance.now()
 const log = (message: string) => process.stderr.write(`[provision] ${message}\n`)
 
-const kernelFile = fileURLToPath(import.meta.resolve('unkernel/alpine.wasm'))
+const kernelFile = fileURLToPath(import.meta.resolve('unkernel/unkernel.wasm'))
 const unkernelVersion: string = JSON.parse(await readFile(fileURLToPath(import.meta.resolve('unkernel/package.json')), 'utf8')).version
 const module = await WebAssembly.compile(await readFile(kernelFile))
 const { datadisk } = bundledBoot(module)
@@ -98,6 +100,7 @@ const disk = new ZeroingDisk(new FileDisk(options.disk))
 const vm = await createKernel({
   kernel: module,
   memoryMiB: Number(options.memory),
+  distro: options.distro,
   disks: [disk],
   net: directBackend(),
   mounts: { '/provision': { fs: nodeFs(options.guest), readOnly: true } },
@@ -105,8 +108,10 @@ const vm = await createKernel({
 // The kernel log and the console shell, for diagnosing a failed boot.
 vm.onOutput(bytes => process.stderr.write(bytes))
 
+// unkernel's distro images run programs as the user `user` unless told otherwise; the image is root's.
 const setup: Subprocess = await vm.spawn('/bin/sh', ['/provision/setup.sh'], {
   pty: false,
+  user: 'root',
   timeout: 120_000,
   env: { IMAGE_INPUT_HASH: options['input-hash'], UNKERNEL_VERSION: unkernelVersion, APK_MIRROR: options['apk-mirror'] },
 })
@@ -123,7 +128,7 @@ if (end.type !== 'exit' || end.code !== 0) {
 }
 
 // poweroff ends the vsock session it runs on, so its own end is not awaited.
-void vm.spawn('/sbin/poweroff', [], { pty: false }).catch(() => {})
+void vm.spawn('/sbin/poweroff', [], { pty: false, user: 'root' }).catch(() => {})
 const exit = await vm.exited
 disk.close()
 log(`kernel exited: ${JSON.stringify({ code: exit.code, kind: exit.kind, reason: exit.reason })} after ${((performance.now() - t0) / 1000).toFixed(0)} s`)

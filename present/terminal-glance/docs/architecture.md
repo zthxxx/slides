@@ -1,6 +1,6 @@
 # Architecture
 
-The deck runs a real Linux in the page: unkernel's kernel compiled to WebAssembly, with Alpine riscv64 and a preinstalled-tools disk.
+The deck runs a real Linux in the page: unkernel's kernel compiled to WebAssembly, with unkernel's Alpine aarch64 image and a preinstalled-tools disk.
 Each terminal on a slide is a shell on its own pty of that one machine, drawn by ghostty-web.
 
 ## Layers
@@ -29,15 +29,15 @@ runtime/                  plain TypeScript; no templates
    palette.ts             two synchronized VT parsers, selected by the terminal preference
    program-status.ts      stream observer for root OSC 7501 reports
    kernel.ts              the page's one VM, booted once per tab
-   disk.ts                the published disk image: the boot bundle up front, the other chunks in the background after the first prompt, under an in-memory copy-on-write layer
+   disk.ts                the published images (the Alpine image and the data disk): each one's boot bundle up front, the other chunks in the background after the first prompt; the data disk under an in-memory copy-on-write layer
    steps.ts               pure: step → bytes, `{a.pts}` references
    relay.ts               presenter window → slide window (BroadcastChannel)
    demo.ts                ShellDemo context and terminal accent colors
    │
-unkernel (npm)            createKernel, vm.spawn() → Pty, CowDisk; unkernel-alpine.wasm = kernel + initramfs
+unkernel (npm)            createKernel, vm.spawn() → Pty, CowDisk, BaseDisk; unkernel.wasm = kernel + base initramfs
 ghostty-web (npm)         Ghostty's VT parser in WebAssembly, canvas renderer, xterm.js-shaped API
    │
-public/linux/             built by image/ (gitignored): manifest.json + chunks/*.gz
+public/linux/             built by image/ (gitignored): manifest.json, chunks/ + boot/ (data disk), distro/ (Alpine image)
 image/                    the image's build: see image.md
 ```
 
@@ -47,21 +47,21 @@ Dependencies point down only. `runtime/` never imports from `components/`; `step
 
 ### Boot, once per tab
 
-1. The downloads start before any script runs: a build's `index.html` preloads the disk manifest, the boot bundle it names and the kernel wasm (see [performance.md](./performance.md#starting-linuxs-downloads-early)). As soon as the app runs, `setup/main.ts` calls `prefetchLinux()` in the audience window; its fetches take over the preloaded responses, and the kernel compiles while it streams.
+1. The downloads start before any script runs: a build's `index.html` preloads the disk manifest, the two boot bundles it names and the kernel wasm (see [performance.md](./performance.md#starting-linuxs-downloads-early)). As soon as the app runs, `setup/main.ts` calls `prefetchLinux()` in the audience window; its fetches take over the preloaded responses, and the kernel compiles while it streams.
 2. Slidev mounts every slide about 3 s after the deck opens (hidden with `v-show`). The first live `Terminal` calls `useLinux()`, so the VM boots in the background, usually before the talk reaches a demo.
-3. `useLinux()` (`kernel.ts`) starts the downloads if nothing has yet, checks browser support, and calls `createKernel({ kernel, disks })` once two downloads, started together by `prefetchLinux()`, are ready: the kernel wasm, compiled while it streams, and the disk, whose boot bundle (the bytes the guest reads up to its first prompt, one file) is fetched as soon as the manifest arrives (image.md). The disk is `CowDisk(ChunkedDiskBase)`; writes stay in memory, so a reload is a fresh machine.
+3. `useLinux()` (`kernel.ts`) starts the downloads if nothing has yet, checks browser support, and calls `createKernel({ kernel, distro, disks, memoryMiB: 512 })` once two downloads, started together by `prefetchLinux()`, are ready: the kernel wasm, compiled while it streams, and the images, whose boot bundles (the bytes the guest reads up to its first prompt, one file per image) are fetched as soon as the manifest arrives (image.md). The Alpine image is `BaseDisk(ChunkedDiskBase)`, read-only; the data disk is `CowDisk(ChunkedDiskBase)`, whose writes stay in memory, so a reload is a fresh machine.
    `prefetchLinux()` runs no kernel. `setup/main.ts` still calls it only where `Terminal.vue` boots (the `play` route outside print mode): another window would compile a kernel it never boots.
-4. The initramfs `/init` mounts the disk labelled `kwdata` and makes `/` an overlay of the initramfs and the disk (image.md). busybox `init` starts `kwtty serve`.
+4. The base initramfs `/init` mounts the Alpine image (labelled `kwroot`, `/dev/wda`) read-only and the disk labelled `kwdata` (`/dev/wdb`) at `/data`, and makes `/` an overlay of the image under `/data/distros/alpine/upper` (image.md). busybox `init` starts `kwbox tty serve` (kwtty), which serves `vm.spawn()`. `session.ts` spawns every shell as root: unkernel's distro images otherwise run sessions as the user `user`.
 
 `useLinux()` is memoized and kept across Vite HMR (`import.meta.hot.data`): a thread can run only one kernel.
 
-When the manifest is missing (a fresh checkout without `pnpm build:image`), the page boots bare Alpine (busybox ash) and every new terminal prints a yellow notice saying so. It prints the same kind of notice when the image was built on another unkernel version.
+When the manifest is missing (a fresh checkout without `pnpm build:image`), the page boots unkernel's base shell (busybox ash, no Alpine) and every new terminal prints a yellow notice saying so. It prints the same kind of notice when the image was built on another unkernel version.
 
 ### A terminal, once per slide
 
 - A session is keyed by `<slide number>/<terminal name>` (`sessionKey`). The registry is kept across HMR.
-- A terminal shown before Linux is up shows Linux's boot stages until its shell's first output (`LinuxBoot.vue`): download kernel, download disk, boot Linux, start shell, each waiting, running or done (a download with its size, the boot with its time), and the downloads' progress bar. `kernel.ts` records the stages in `linuxBoot`; the boot stage ends when the first pty spawns, because `vm.spawn` waits for the guest's kwtty and unkernel 0.1.0 reports no other readiness. The screen uses the system's monospace font, which needs no download, and fades in after 0.2 s, so a shell that starts at once shows none of it. Downloads after the boot (a chunk the guest reads before the background download has it) show in the title bar instead; the background download itself shows nowhere. A terminal shown later shows no boot screen: its shell prints its prompt about 0.15 s after the spawn ([performance.md](./performance.md#the-shells-start)).
-- When the slide becomes active, `Terminal.vue` calls `session.show(element)`: the session's host element moves into the window, the emulator opens (first time) and fits, and the shell is spawned (first time): `vm.spawn()` → `kwtty` → root's login shell, zsh with jovial; fast-syntax-highlighting loads right after its first prompt.
+- A terminal shown before Linux is up shows Linux's boot stages until its shell's first output (`LinuxBoot.vue`): download kernel, download disk, boot Linux, start shell, each waiting, running or done (a download with its size, the boot with its time), and the downloads' progress bar. `kernel.ts` records the stages in `linuxBoot`; the boot stage ends when the first pty spawns, because `vm.spawn` waits for the guest's kwtty and `createKernel` resolves at kernel entry, before the guest's init. The screen uses the system's monospace font, which needs no download, and fades in after 0.2 s, so a shell that starts at once shows none of it. Downloads after the boot (a chunk the guest reads before the background download has it) show in the title bar instead; the background download itself shows nowhere. A terminal shown later shows no boot screen: its shell prints its prompt about 0.15 s after the spawn ([performance.md](./performance.md#the-shells-start)).
+- When the slide becomes active, `Terminal.vue` calls `session.show(element)`: the session's host element moves into the window, the emulator opens (first time) and fits, and the shell is spawned (first time): `vm.spawn()` with `user: 'root'` → `kwtty` → root's login shell, zsh with jovial; fast-syntax-highlighting loads right after its first prompt.
 - pty output → `emulator.write()`; emulator input and its replies to terminal queries → `pty.write()`; emulator resize → `pty.resize()` (SIGWINCH).
 - Leaving the slide blurs the terminal; the shell keeps running. Returning shows the same shell.
 - A shell that exits (`exit`, `^D` at the prompt) is replaced by a new one in the same window, with a dim note. If the whole machine stops (`poweroff`), the terminal says to reload.
@@ -171,8 +171,8 @@ How the build, the downloads, the boot and the HTTP cache are arranged for slow 
 | Constraint | Consequence |
 | --- | --- |
 | unkernel needs WebAssembly JSPI | Chrome / Edge 137+, Firefox 153+, Safari 27+. Other browsers get a message in the terminal. |
-| `unkernel` is pinned to a prerelease (`0.1.0-261117-0e4b2ec`) | Upgrade deliberately; rebuild the image with it (image.md). |
+| `unkernel` is pinned to a prerelease (`0.2.0-261124-c08e977`) | Upgrade deliberately; rebuild the image with it, which also fetches that release's Alpine image (image.md). |
 | One kernel per thread | Never call `createKernel` outside `kernel.ts`. |
-| Guest memory: unkernel's default (512 MiB on desktops, 256 MiB on phones) | Enough for the deck's tools; writes to the disk also live in memory. |
+| Guest memory: 512 MiB (`kernel.ts`), what the talk's htop step shows; unkernel tries smaller sizes where that cannot be allocated | Enough for the deck's tools; writes to the disk also live in memory. unkernel's own default, 2 GiB on desktops, boots no faster. |
 | No network in the guest | `apk add` and `git clone` fail on the page; preinstall in the image instead. |
-| `vite.config.ts` excludes `unkernel` from dependency pre-bundling | The SDK loads `unkernel-alpine.wasm` relative to its own module URL. |
+| `vite.config.ts` excludes `unkernel` from dependency pre-bundling | The SDK finds `unkernel.wasm` relative to its own module URL. |

@@ -51,10 +51,10 @@ iTerm2 / Ghostty / kitty / Warp 是什么
 <!--
 - 前面拆开的几层之间，都隔着固定的接口：终端模拟器和对端交换的只是 VT/ANSI 字节；持有 ptmx 的一方用 read、write 搬字节，用 ioctl (TIOCSWINSZ) 改窗口大小；程序只看到 fd 0、1、2 上的 tty 和 termios 设置
 - 接口不变，每一层都能换：终端模拟器可以是 iTerm2、Ghostty、kitty、Warp；持有 master 端的可以是终端模拟器自己、ssh 那头的 sshd，或者 tmux server；内核可以是 Linux、macOS；程序完全不知道对面是谁
-- 页面里的终端也是这个结构。ghostty-web 负责把字节解析成字符格子并画到 canvas；按键经 unkernel 的 JS `Pty` (`vm.spawn()`) 走 vsock 的 1022 端口，进到 guest 里的 `kwtty serve`；kwtty 用 `forkpty()` 拿到 ptmx，把 root 的 login shell 放在 /dev/pts/N 上
-- 在任意终端运行 `ps -o pid,ppid,args` 或 htop 能看到这一层：init 启动的 `kwtty serve` 为每个页面终端 fork 一个子进程，子进程下面就是那个终端的 `-zsh`
+- 页面里的终端也是这个结构。ghostty-web 负责把字节解析成字符格子并画到 canvas；按键经 unkernel 的 JS `Pty` (`vm.spawn()`) 走 vsock 的 1022 端口，进到 guest 里的 kwtty (`kwbox tty serve`)；kwtty 用 `forkpty()` 拿到 ptmx，把 root 的 login shell 放在 /dev/pts/N 上
+- 在任意终端运行 `ps -o pid,ppid,args` 或 htop 能看到这一层：init 启动的 `kwbox tty serve` (kwtty) 为每个页面终端 fork 一个子进程，子进程下面就是那个终端的 `-zsh`
 - kwtty 在这里的角色和 sshd 一样：把 ptmx 上的字节搬到一条传输通道上，只是通道从 ssh 换成了 vsock。内核这一层换成了编译成 WebAssembly 的 Linux，zsh、tmux、htop 都没有改动
-- 来源：[unkernel kwtty.c · 每个连接一个 pty 和 login shell](https://github.com/pithings/unkernel/blob/0e4b2ecb4d677bab0b326cc56362dc38a9111af5/kernel/guest/kwtty.c#L1-L19)、[kwtty.c · forkpty](https://github.com/pithings/unkernel/blob/0e4b2ecb4d677bab0b326cc56362dc38a9111af5/kernel/guest/kwtty.c#L1014)、[js/core/tty.ts · host 端 Pty](https://github.com/pithings/unkernel/blob/0e4b2ecb4d677bab0b326cc56362dc38a9111af5/js/core/tty.ts#L1-L11)、[alpine.sh · inittab 启动 kwtty serve](https://github.com/pithings/unkernel/blob/0e4b2ecb4d677bab0b326cc56362dc38a9111af5/kernel/guest/alpine.sh#L100)、[ghostty-web README](https://github.com/coder/ghostty-web#readme)；版本对应 deck 安装的 unkernel 0.1.0-261117-0e4b2ec 和 ghostty-web 0.4.0
+- 来源：[unkernel kwtty.c · 每个连接一个 pty 和 login shell](https://github.com/pithings/unkernel/blob/c08e97791caedb084f9e78b7a5baec73d641a9ec/guest/src/kwtty.c#L3-L26)、[kwtty.c · forkpty](https://github.com/pithings/unkernel/blob/c08e97791caedb084f9e78b7a5baec73d641a9ec/guest/src/kwtty.c#L1830)、[js/core/tty.ts · host 端 Pty](https://github.com/pithings/unkernel/blob/c08e97791caedb084f9e78b7a5baec73d641a9ec/js/core/tty.ts#L3-L11)、[Alpine inittab · 启动 kwbox tty serve](https://github.com/pithings/unkernel/blob/c08e97791caedb084f9e78b7a5baec73d641a9ec/guest/distro/alpine/rootfs/etc/inittab#L16)、[ghostty-web README](https://github.com/coder/ghostty-web#readme)；版本对应 deck 安装的 unkernel 0.2.0-261124-c08e977 和 ghostty-web 0.4.0
 -->
 
 ---

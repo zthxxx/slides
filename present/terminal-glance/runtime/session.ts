@@ -85,7 +85,9 @@ export class ShellSession {
       if (notice)
         void this.terminal.write(`\x1B[33m${notice}\x1B[0m\r\n`)
       const size = { cols: this.terminal.cols, rows: this.terminal.rows }
-      const pty = await vm.spawn(undefined, undefined, size)
+      // root's login shell (zsh), which the image configures; unkernel's distro images default to the user `user`
+      // (unkernel@0.2.0-261124-c08e977 `SpawnOptions.user`).
+      const pty = await vm.spawn(undefined, undefined, { ...size, user: 'root' })
       markLinuxUp()
       this.#pty = pty
       // A fit while the pty was spawning could not reach it.
