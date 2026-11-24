@@ -52,6 +52,32 @@ function preloadLinux(): Plugin {
   }
 }
 
+/**
+ * Inlines runtime/isolate-page.js at the top of a build's index.html: it registers the service worker that makes the
+ * deck cross-origin isolated on GitHub Pages (public/coi-sw.js) and reloads the first visit once the worker is active,
+ * starting before the app's scripts so the reload comes early. The dev server sends the headers itself (`server`).
+ */
+function isolatePage(): Plugin {
+  let base = '/'
+  return {
+    name: 'terminal-glance:isolate-page',
+    apply: 'build',
+    configResolved(resolved) {
+      base = resolved.base
+    },
+    transformIndexHtml: {
+      order: 'pre',
+      handler() {
+        // The full-line comments are for maintainers; index.html gets the code.
+        const code = readFileSync(new URL('./runtime/isolate-page.js', import.meta.url), 'utf8')
+          .replace(/^\s*\/\/.*\n/gm, '')
+          .replaceAll('__BASE__', JSON.stringify(base))
+        return [{ tag: 'script', children: code, injectTo: 'head-prepend' }]
+      },
+    },
+  }
+}
+
 export default {
   define: {
     // The page compares it with the version the published disk image was provisioned on (runtime/kernel.ts).
@@ -64,7 +90,16 @@ export default {
     // (`bundledKernelUrl`); pre-bundling would move the module away from that file.
     exclude: ['unkernel'],
   },
-  plugins: [preloadLinux()],
+  plugins: [isolatePage(), preloadLinux()],
+  server: {
+    // Cross-origin isolation for Linux's 4 CPUs (runtime/kernel.ts), sent by the dev server itself, as unkernel.dev's
+    // server does; Slidev's own index.html middleware applies these too (@slidev/cli@53.1.0 `dist/serve-*.mjs`).
+    // A build relies on public/coi-sw.js instead, since GitHub Pages cannot send headers.
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
   // runtime/kernel-worker.ts imports unkernel, whose web entry loads its GL renderer with a dynamic import: an IIFE
   // worker (Vite's default) cannot split it off.
   worker: { format: 'es' },

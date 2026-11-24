@@ -17,8 +17,8 @@ import { KernelWorkerHost } from './kernel-worker-host'
  * There is no network; the guest's writes stay in memory, so every page load starts from the same machine.
  * Every terminal session is a pty spawned on it.
  *
- * Where the page is cross-origin isolated (`public/coi-sw.js`, from the deck's second load on), the kernel runs in a
- * worker on several CPUs (`kernel-worker.ts`); elsewhere on this thread, on one.
+ * Where the page is cross-origin isolated (the dev server's headers, or a build's `public/coi-sw.js`), the kernel runs
+ * in a worker on several CPUs (`kernel-worker.ts`); elsewhere on this thread, on one.
  *
  * Source: unkernel@0.2.0-261124-c08e977 `dist/web.d.mts` (`createKernel` with `distro`, `checkSupport`, `CowDisk`,
  * `BaseDisk`) and `guest/base/initramfs/init` in its repository (the overlay root).

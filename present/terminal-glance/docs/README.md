@@ -43,7 +43,7 @@ present/terminal-glance/
 ## Presenting
 
 - Open the deck, then the presenter view from it (same browser). Steps clicked in the presenter view type into the slide window's terminals.
-- Linux runs on 4 CPUs from the deck's second load on: the first load registers the service worker that makes the page cross-origin isolated, and boots on 1 CPU. Open the deck once before the talk ([architecture.md](./architecture.md#cpus)).
+- Linux runs on 4 CPUs. On the published site the first visit reloads itself once, after registering the service worker that makes the page cross-origin isolated; a hard reload (Shift) bypasses that worker and runs on 1 CPU ([architecture.md](./architecture.md#cpus)).
 - Click into a terminal to type by hand; click outside it before using the keyboard to change slides.
 - Selecting text in a terminal copies it. Cmd-click (Ctrl-click) opens a URL. While a program uses the mouse (tmux, htop), clicks and the wheel go to it; hold Shift to select text.
 - Drag a terminal's bottom edge to change its height; the height is kept after a reload. Double-click the edge to restore the layout's height.

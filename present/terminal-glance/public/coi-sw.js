@@ -9,8 +9,9 @@
 // cross-origin`, and the botmux video (components/WebVideo.vue) is a CORS request. The deck embeds no iframe, which
 // a host that does not opt in could not fill under this policy.
 //
-// setup/main.ts registers it and unregisters any other registration of the deck. A changed file replaces the
-// running version at once (skipWaiting, clients.claim), so no page keeps an old one.
+// runtime/isolate-page.js, inlined at the top of a build's index.html, registers it, reloads the first visit once it
+// is active, and unregisters any other registration of the deck. A changed file replaces the running version at once
+// (skipWaiting, clients.claim), so no page keeps an old one. The dev server sends the same headers itself.
 // Ref: https://web.dev/articles/coop-coep, https://developer.chrome.com/docs/web-platform/service-worker-static-routing
 
 self.addEventListener('install', (event) => {

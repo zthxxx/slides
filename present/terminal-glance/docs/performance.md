@@ -136,7 +136,7 @@ The guest has 512 MiB (`kernel.ts`), as with 0.1.0's default. unkernel 0.2.0's d
 
 ### Four CPUs
 
-The guest runs on 4 CPUs from the deck's second load on, in a worker of a cross-origin isolated page ([architecture.md](./architecture.md#cpus)); the first load runs it on 1.
+The guest runs on 4 CPUs in a worker of a cross-origin isolated page ([architecture.md](./architecture.md#cpus)). On GitHub Pages a service worker isolates the page, and the first visit reloads once it is active.
 
 Measured locally with Chrome 157 on the production build, each run in a fresh browser session with the HTTP cache cleared and disabled, the service worker unregistered for 1 CPU and registered for 4; 3 runs each, 2 for the throttled rows:
 
@@ -148,6 +148,8 @@ Measured locally with Chrome 157 on the production build, each run in a fresh br
 | First key → its echo | 14 to 26 ms | 9 to 20 ms |
 | 400 ms latency, 3 Mbps, cold: navigation → first prompt | 28.2 s | 27.7 to 27.9 s |
 | The same: kernel downloaded → first prompt | 0.28 to 0.29 s | 0.41 to 0.42 s |
+
+The first visit, in a fresh browser profile with no service worker yet, reloads once the worker is active and boots on 4 CPUs: its prompt came 1.17 s after navigation without throttling and 28.5 s after it at 400 ms latency and 3 Mbps (one run each), against 28.2 s for a first visit on 1 CPU without the reload.
 
 On Node, with the same images, 4 CPUs ran four `seq 200000 | sort -r` at once in 2.7 s instead of 9.3 to 9.4 s, and one alone in 2.0 s instead of 2.2 s.
 
@@ -246,5 +248,5 @@ With the cache warm, `fc871bf` rendered the slide in 0.08 to 0.24 s and drew the
 - **The boot bundles' bytes download twice:** the background download also fetches the chunks they came from, 1.8 MB more per cold visit.
 - **The wasm relies on GitHub Pages' gzip,** which GitHub does not document. Served uncompressed, it would grow by 7.0 MB, about 19 s at 3 Mbps; a zopfli `.wasm.gz` decoded with `DecompressionStream('gzip')` would remove that dependence.
 - **After 10 minutes** every file is revalidated with one round trip.
-- **4 CPUs start the boot later:** the SMP kernel compiles only after the download ends and the patch (about 90 ms) is applied, and the first load boots on 1 CPU, because it only registers the service worker that isolates the next one.
+- **4 CPUs start the boot later:** the SMP kernel compiles only after the download ends and the patch (about 90 ms) is applied. On GitHub Pages the first visit also reloads once its service worker is active, which cancels the downloads in flight: about 0.3 s at 3 Mbps.
 - **jovial's first precmd** takes 77 to 82 ms of every shell's start: 35 to 42 ms computing its segments' lengths through a regex loop per affix (`@jov.init-affix`), and 15 to 18 ms starting its dev-env probe in a zpty, a new process on every prompt. On a slide with two terminals, both shells start together and show their prompts after about 0.3 s on 1 CPU, 0.13 to 0.16 s on 4.
