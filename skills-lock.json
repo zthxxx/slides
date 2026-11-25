@@ -1,11 +1,18 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
+    "archify": {
+      "source": "tt-a1i/archify",
+      "commit": "a0199aab7bc1e87821c286f9b297afb8f98894ec",
+      "sourceType": "github",
+      "skillPath": "archify/SKILL.md",
+      "computedHash": "bb2089d6702a90407af959da82006a7b9115fbfeeba6654b5977da965bb3a791"
+    },
     "slidev": {
       "source": "slidevjs/slidev",
       "sourceType": "github",
       "skillPath": "skills/slidev/SKILL.md",
-      "computedHash": "bd437b2aadeb76032cd4c0c1fb0bf25971f925a77ba14f7a6a9aa0b77979581f"
+      "computedHash": "5009e1e90efa148395212686d36e72c5318914a21851031f027865ac31eea519"
     }
   }
 }
