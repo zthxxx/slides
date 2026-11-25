@@ -44,7 +44,7 @@ present/terminal-glance/
 - [architecture.md](./architecture.md): 分层、boot 与 session 的生命周期、终端模拟器、约束
 - [image.md](./image.md): guest image 是什么、如何构建和发布、shell 的启动耗时、体积、如何修改
 - [performance.md](./performance.md): 构建、下载、boot 和 image 为慢速网络做了哪些处理，附实测数据和剩余开销
-- [isolation.md](./isolation.md): cross-origin isolation 与 guest 的 4 个 CPU，包括响应头、service worker、kernel 的 worker、slides 内容的规则、遇到的问题
+- [isolation.md](./isolation.md): cross-origin isolation 与 guest 的 4 个 CPU，包括浏览器为什么要求这两个响应头、它们的其他影响与限制、service worker、kernel 的 worker、slides 内容的规则、遇到的问题
 - [authoring.md](./authoring.md): 用 `<ShellDemo>` 和 `<ShellStep>` 编写 demo slide、插图，以及 speaker notes
 
 

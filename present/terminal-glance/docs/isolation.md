@@ -1,7 +1,7 @@
 # Cross-origin isolation 与 guest 的 CPU
 
 在 Chrome、Firefox 和 Safari 里，只要页面是 cross-origin isolated，deck 的 Linux 就跑在 4 个 CPU 上 (手机上 2 个)；其他情况下跑在 1 个 CPU 上。
-本文说明页面如何获得 cross-origin isolation、各部分运行在哪个线程、这对 slides 内容提出的规则，以及途中遇到的问题，每个问题都附上症状
+本文说明浏览器为什么要求 cross-origin isolation、它带来的其他影响与限制、页面如何获得它、各部分运行在哪个线程、这对 slides 内容提出的规则，以及途中遇到的问题，每个问题都附上症状
 
 4 个 CPU 带来的变化是：有两个终端的 slide，两个 prompt 出现所需的时间减半；并行任务的速度是 1 个 CPU 时的 3.5 倍；单个程序和 1 个 CPU 时一样快；boot 多花约 0.25 s。实测数据见 [performance.md](./performance.md#4-个-cpu)
 
@@ -16,6 +16,97 @@ unkernel 0.2.0 可以让 guest 跑在多个 CPU 上，每个 CPU 各占一个线
   CPU 0 空闲时等待其他 CPU 是例外：它不阻塞，用的是 `Atomics.waitAsync`，`webCpuBlocker` 也会检查这个接口。只有 1 个 CPU 时没有别的 CPU 可等，所以 kernel 可以跑在页面主线程上
 
 页面是 cross-origin isolated、且 `webCpuBlocker({ worker: true })` 没有发现缺少的条件时，`runtime/kernel.ts` (`guestCpus`) 申请 4 个 CPU (手机上 2 个，与 unkernel 自己页面的建议一致)；否则 kernel 以 1 个 CPU 跑在页面主线程上。CPU 多于 1 个时，boot 界面的 “Boot Linux” 一行会显示 CPU 数量
+
+
+## 浏览器为什么要求这两个响应头
+
+浏览器只给 cross-origin isolated 的页面提供线程间共享的内存，原因是 Spectre：共享内存能做出纳秒级的计时器，有了它，页面可以读出同一进程里本来无权读的数据。两个响应头保证进程里没有这样的数据，浏览器才把共享内存交给页面
+
+受限制的只有共享内存一项，unkernel 用到的另外两项能力都建立在它之上：
+
+- `SharedArrayBuffer` 就是共享内存本身
+- wasm 线程使用的 `WebAssembly.Memory({ shared: true })`，底层也是 `SharedArrayBuffer`
+- `Atomics.wait` 只能作用在 `SharedArrayBuffer` 上
+
+页面主线程不能调用 `Atomics.wait` 是另一条规则 (页面主线程的 `[[CanBlock]]` 为 false)，目的是不让页面卡死，与安全无关
+
+
+### Spectre 如何读取数据
+
+CPU 遇到分支时按预测往下执行，预测错了再撤销结果，但执行期间载入缓存的内容不会撤销。页面里的 JS 可以借此越界读出一个字节：
+
+1. 用合法的下标反复调用 `if (i < arr.length) { probe[arr[i] * 4096] }`，让分支预测器认为条件总是成立
+2. 传入越界的下标。CPU 按预测执行了 `arr[i]`，读到越界地址上的字节 `secret`，并访问了 `probe[secret * 4096]`
+3. CPU 发现预测错误，撤销结果，JS 看不到 `secret`；但 `probe` 里第 `secret` 个位置已经在缓存里
+4. 依次访问 `probe` 的 256 个位置并计时，最快的位置就是 `secret`
+
+这种读取有两个前提：
+
+- **只能读同一进程里的内存**：越界读发生在被撤销的执行里，JS 的边界检查拦不住它
+- **需要精确的计时器**：缓存命中与未命中只差几十纳秒
+
+
+### 共享内存就是计时器
+
+Spectre 在 2018 年 1 月公开后，浏览器降低了 `performance.now()` 的精度并加入抖动，同时关闭了 `SharedArrayBuffer`。
+共享内存可以绕过前一项措施：一个 worker 不停地给共享内存里的计数器加 1，另一个线程在一次内存访问前后各读一次计数器，两次读数之差就是耗时，精度接近纳秒。这个计时器只由普通的内存读写组成，要降低它的精度，只能拖慢共享内存本身
+
+
+### 两个响应头各管一个数据来源
+
+Spectre 只能读本进程的内存，所以问题在于页面的进程里会不会混进它无权读的数据。数据有两个来源，各由一个响应头负责：
+
+| 来源 | 数据如何进入进程 | 负责的响应头 |
+| --- | --- | --- |
+| 跨站子资源 | `<img>`、`<script>`、`<video>`、`<link>` 发出 `no-cors` 请求，默认带着用户在对方站点的 cookie；JS 读不到响应内容，但响应的字节已经在页面的进程里 | `Cross-Origin-Embedder-Policy: require-corp`：每个跨站资源都要由对方用 CORP 或 CORS 明确同意，否则不加载 |
+| 跨站窗口 | `window.open` 打开的弹窗和它的 opener 互相持有引用，浏览器可能把它们放进同一个进程 | `Cross-Origin-Opener-Policy: same-origin`：页面独占一个 browsing context group，浏览器可以把它放进单独的进程 |
+
+COEP 的另一个取值 `credentialless` 换了一种做法：跨站的 `no-cors` 请求不带 cookie，拿到的只有公开内容，所以不需要对方同意
+
+两个响应头都满足时，`crossOriginIsolated` 为 `true`。这时即使用 Spectre 加上精确计时，能读到的也只有页面本来就能读的数据，所以浏览器开放：
+
+- `SharedArrayBuffer`，以及用 `postMessage` 把它传给其他线程
+- wasm 的 shared memory 与线程
+- 精度更高的 `performance.now()`：hr-time 规范 (coarsen time) 把精度下限从 100 µs 放宽到 5 µs
+- `performance.measureUserAgentSpecificMemory()`
+
+浏览器默认不启用这两项限制：默认启用 COEP 会让不发送 CORP 的 CDN 图片、第三方脚本和嵌入的视频都无法加载，而大多数页面用不到共享内存。只有页面作者知道页面会加载什么，所以由页面自己声明
+
+各浏览器重新开放 `SharedArrayBuffer` 的版本 (mdn/browser-compat-data `javascript/builtins/SharedArrayBuffer.json`)：Firefox 79、Safari 15.2 以这两个响应头为条件；Chrome 桌面版 68 依靠 Site Isolation (每个站点一个进程) 开放、不要求响应头，跨站子资源仍会进入页面的进程，从 Chrome 92 起同样要求这两个响应头
+
+
+## 两个响应头的其他影响与限制
+
+页面一旦 cross-origin isolated，下面这些影响与响应头由谁发送无关
+
+
+### COEP 的影响
+
+- **跨站子资源**：图片、脚本、样式、字体、视频要由对方用 CORP 或 CORS 同意，规则见 [Slides 内容的规则](#slides-内容的规则)
+- **iframe**：被嵌入的页面自己也要发送 COEP，跨站的还要发送 `Cross-Origin-Resource-Policy: cross-origin`。
+  大多数第三方组件 (视频、代码演示、社交媒体) 和普通的 GitHub Pages 站点都不发送，所以嵌不进来；同一 origin 上不发送 COEP 的页面也嵌不进来
+- **Worker 脚本**：worker 脚本的响应也要带 COEP，否则 worker 不会启动 (见 [遇到的问题与 deck 的处理](#遇到的问题与-deck-的处理))
+- **第三方统计和挂件脚本**：对方既不发送 CORP、也不支持 CORS 时，同样不加载
+
+
+### COOP 的影响
+
+- **跨站窗口之间没有引用**：deck 用 `window.open` 打开的跨站窗口、打开 deck 的跨站页面，拿到的 `window.opener` 和窗口引用都为空，也不能通过它们 `postMessage`。依赖弹窗回传结果的登录 (OAuth) 和支付流程会因此中断
+- **同源窗口不受影响**：Slidev 的观众窗口与 presenter 窗口 (@slidev/client@53.1.0 `state/syncState.ts`)、deck 的 Step 转发 (`runtime/relay.ts`) 都通过 `BroadcastChannel` 通信，它只要求同源
+- 带 `rel="noopener"` 的外链本来就不保留 opener，不受影响
+
+
+### 页面自身的变化
+
+- **`document.domain` 不能再修改**
+- **被其他站点嵌入时只有 1 个 CPU**：cross-origin isolation 要从最外层页面开始，嵌在普通页面 iframe 里的 deck 不是 cross-origin isolated
+
+
+### 响应头只能随 HTTP 响应送达
+
+- COOP 和 COEP 只认 HTTP 响应头：`<meta http-equiv>` 对它们无效，页面加载后运行的脚本也补不上
+- 一次加载是否 cross-origin isolated，由这次 document 响应决定。没有带上响应头的加载，只能再 navigate 一次才能获得
+- Service worker 只能给经过它的请求加响应头。首次访问时它还没有安装，hard reload 时浏览器绕过它，这两种加载都不经过它
 
 
 ## 页面如何获得 cross-origin isolation
@@ -67,9 +158,18 @@ GitHub Pages 不能配置响应头，所以构建产物这样处理：
 | botmux 的 demo 视频 (`WebVideo.vue`) | `<video crossorigin="anonymous">`；GitHub Pages 发送 `Access-Control-Allow-Origin: *` |
 | 结尾 slide 的 badgen 徽章 | `<img crossorigin="anonymous">`；badgen 发送 CORS 响应头，但不发送 CORP |
 
+两种条件对应两条路径：
+
+- **CORP**：资源所在的站点用它声明哪些站点可以嵌入这个资源。`same-origin`、`same-site` 用来限制嵌入，`cross-origin` 表示任何站点都可以。
+  没有 COEP 的页面不检查 CORP，缺少这个响应头时资源照常加载，所以大多数站点不发送它；希望资源也能用在 cross-origin isolated 页面里的公共 CDN 才会发送 `cross-origin`，比如上表的 Google Fonts、jsdelivr 和 GitHub 头像
+- **`crossorigin` 属性**：`<img>`、`<video>`、`<script>`、`<link>` 带上 `crossorigin="anonymous"` 后，请求从 `no-cors` 变为 `cors`，跨站时不带 cookie。
+  对方在响应里返回 `Access-Control-Allow-Origin` 就表示同意，不再需要 CORP。没有这个属性时，响应里的 `Access-Control-Allow-Origin` 不起作用，所以 badgen 徽章只有在写成带 `crossorigin` 的标签后才能加载
+
+编写 slides 时遵守以下规则：
+
 - 不嵌入外站的 iframe：只有对方站点为这个 embedder policy 主动放行，它才能加载，而 GitHub Pages 上的站点做不到
 - Markdown 图片 (`![](…)`) 发出的不是 CORS 请求：图片所在的站点不发送 CORP 时，要改用带 `crossorigin` 的 HTML 标签
-- 引入新的外站资源之前，用 `curl -sI <url>` 确认它带有上述两种响应头之一
+- 引入新的外站资源之前，用 `curl -sI <url>` 确认它带有上述两种响应头之一；两种都没有时，把资源放进 deck 的 `public/`，或者换一个来源
 
 
 ## 遇到的问题与 deck 的处理
