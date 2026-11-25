@@ -9,7 +9,7 @@ What 4 CPUs change, measured in [performance.md](./performance.md#four-cpus): a 
 unkernel 0.2.0 runs the guest on several CPUs, each in a thread of its own on one shared memory (`createKernel({ cpus })`). That needs two things of the page (unkernel@0.2.0-261124-c08e977 `webCpuBlocker`):
 
 - **A `SharedArrayBuffer`,** which a browser gives only to a cross-origin isolated page: one whose document is served with `Cross-Origin-Opener-Policy: same-origin` and a `Cross-Origin-Embedder-Policy`.
-- **A thread that may block,** because a CPU waits for another; a page's main thread may not, so the kernel runs in a worker.
+- **A thread that may block.** An SMP Linux's CPUs wait on one another, for example for a lock another CPU holds or for another CPU to finish work it was asked to do. In unkernel such a wait blocks the waiting CPU's thread (`memory.atomic.wait32`, wasm's `Atomics.wait`) until the other CPU wakes it. A page's main thread may not block, so with several CPUs the kernel runs in a worker. CPU 0's idle wait for the other CPUs is the exception: it does not block, it uses `Atomics.waitAsync`, which `webCpuBlocker` also checks for. With one CPU there is no other CPU to wait for, so the kernel can run on the page's thread.
 
 `runtime/kernel.ts` (`guestCpus`) asks for 4 CPUs (2 on phones, as unkernel's own page suggests) when the page is isolated and `webCpuBlocker({ worker: true })` finds nothing missing, and runs the kernel on the page's thread on 1 CPU otherwise. The boot screen's "Boot Linux" row shows the count when it is more than one.
 
