@@ -1,7 +1,7 @@
-# Writing demo slides
+# 编写 demo slides
 
-A demo slide is a `<ShellDemo>` with its terminals and an ordered list of `<ShellStep>` buttons.
-Both components are auto-registered from `components/`.
+一张 demo slide 由一个 `<ShellDemo>` 组成，里面是它的终端和一组有序的 `<ShellStep>` 按钮。
+两个组件都从 `components/` 自动注册
 
 ```md
 <ShellDemo terminals="a b">
@@ -14,40 +14,45 @@ Both components are auto-registered from `components/`.
 </ShellDemo>
 ```
 
+
 ## `<ShellDemo>`
 
-| Prop | Default | Meaning |
+| Prop | 默认值 | 含义 |
 | --- | --- | --- |
-| `terminals` | `"a"` | Space-separated terminal names, stacked top to bottom. Each name is one shell on its own pty. |
-| `heights` | equal | Space-separated height ratios of the stacked terminals, e.g. `heights="3 2"` for a large terminal over a smaller control terminal. Each keeps at least about ten rows, and a height dragged in the page takes precedence. |
+| `terminals` | `"a"` | 以空格分隔的终端名，从上到下堆叠。每个名字对应一个 shell，各自占一个 pty |
+| `heights` | 等高 | 以空格分隔的各终端高度比例，例如 `heights="3 2"` 表示上面一个大终端、下面一个较小的控制终端。每个终端至少保留约十行，在页面中拖动调整过的高度优先 |
 
-The steps column appears only when the demo has steps. The demo takes the slide's remaining height, so a one-line caption above it is fine; longer text pushes the terminals smaller.
+只有 demo 带 Step 时才显示 Step 列。Demo 占满 slide 的剩余高度，所以上方放一行说明没有问题；文字更长就会把终端挤小
 
-Give every demo slide that one-line title, saying what the demo shows (e.g. "往 A 的 pts 写一个 ^C"). Keep a demo to about 11 steps: more than that and the steps column scrolls. A step the presenter should pause on, such as entering the alternate screen, is a step of its own rather than a `sleep` inside a command.
+每张 demo slide 都要有这样一行标题，说明 demo 展示什么 (例如 “往 A 的 pts 写一个 ^C”)。一个 demo 控制在 11 个 Step 左右，超过后 Step 列就要滚动。
+需要演讲者停顿的地方 (比如进入 alternate screen) 单独作为一个 Step，不在命令里写 `sleep`
 
-`<Terminal name="a" />` can also be used alone, without steps.
+`<Terminal name="a" />` 也可以单独使用，不带 Step
+
 
 ## `<ShellStep>`
 
-A step is sent in this order: `keys`, then `type`, then `run` followed by Enter.
+一个 Step 按以下顺序发送: `keys`，然后 `type`，最后 `run` 加 Enter
 
-| Prop | Meaning |
+| Prop | 含义 |
 | --- | --- |
-| `to` | Target terminal name. Default: the first terminal of the demo. |
-| `keys` | Space-separated keys sent as pressed, e.g. `"^C"`, `"^S l"`, `"↑ ⏎"`. Named keys are in `KEY_BYTES` (`runtime/steps.ts`); anything else is sent literally. |
-| `type` | Text typed as a person would, without a final Enter (input for a running program, or a half-typed line). |
-| `run` | A command typed as a person would, then Enter. A line break in the text is typed as Enter; the guest's empty `PS2`/`RPS2` keeps multiline input free of continuation prefixes while preserving its indentation. `run=""` presses Enter only. |
-| `action` | Instead of typing: `toggle-appearance` switches every terminal between dark and light, as the title bar's toggle does. |
+| `to` | 目标终端名。默认为 demo 的第一个终端 |
+| `keys` | 以空格分隔、按按键方式发送的键，例如 `"^C"`、`"^S l"`、`"↑ ⏎"`。具名按键定义在 `KEY_BYTES` (`runtime/steps.ts`)；其他内容按字面发送 |
+| `type` | 像人一样逐字输入的文本，最后不按 Enter (用作正在运行的程序的输入，或输入到一半的一行) |
+| `run` | 像人一样逐字输入的命令，然后按 Enter。文本中的换行按 Enter 输入；guest 的 `PS2`/`RPS2` 为空，所以多行输入没有续行前缀，同时保留缩进。`run=""` 只按 Enter |
+| `action` | 代替输入的动作。`toggle-appearance` 把所有终端在深色和浅色之间切换，与标题栏的切换按钮效果相同 |
 
-The typing schedule spans at most 600 ms: up to 6 ms per character for short text, faster for long text, and up to 40 ms after each pressed key before the next input. Long text goes out in at most about 24 writes, so even a step of a few hundred characters is typed and echoed within about 0.7 s of the click. Shell execution time is outside this budget.
+输入节奏最长 600 ms: 短文本每个字符最多 6 ms，长文本更快；每次按键后最多等 40 ms 再进行下一次输入。
+长文本最多分约 24 次写入，所以即使是几百个字符的 Step，也会在点击后约 0.7 s 内输入并 echo 完毕。Shell 的执行时间不计入这 600 ms
 
-The terminal-name badge on a step (`A`, `B`) and the name in a terminal's title bar appear only when the demo has more than one terminal.
+Step 上的终端名标记 (`A`、`B`) 和终端标题栏里的名字，只在 demo 有多个终端时显示
 
-Each terminal title bar has a shared dark/light toggle. The preference persists across reloads, separately from Slidev's page theme; see [architecture](./architecture.md#shared-terminal-appearance). For the color-query demo, run `terminal-colors`, switch theme with `<ShellStep action="toggle-appearance" />` and run it again. Run bat again to demonstrate application-selected syntax colors; reinitialize jovial with `exec zsh` when testing its startup detection.
+每个终端标题栏都有一个共享的深色/浅色切换按钮。这个偏好在刷新后保留，与 Slidev 的页面主题相互独立，见 [终端共享的外观](./architecture.md#终端共享的外观)。
+演示颜色查询时，运行 `terminal-colors`，用 `<ShellStep action="toggle-appearance" />` 切换主题，再运行一次。再运行一次 bat，可以演示由应用程序选择的语法配色；测试 jovial 的启动检测时，用 `exec zsh` 重新初始化 jovial
 
-`agent-status-demo` emits root OSC 7501 reports and waits for Enter at `blocked`. The title bar shows the latest report. Mark this as a simulated Agent: the script demonstrates protocol bytes and terminal behavior without a model service.
+`agent-status-demo` 发出 root OSC 7501 report，并在 `blocked` 状态等待 Enter。标题栏显示最新的 report。演示时要标明这是模拟的 Agent: 脚本演示协议字节和终端行为，没有接入模型服务
 
-A multi-line command is written with real line breaks inside the attribute; the indentation is typed as written:
+多行命令直接在 attribute 里写真实的换行，缩进会照原样输入：
 
 ```md
   <ShellStep to="a" run="for i in {1..10}; do
@@ -56,23 +61,25 @@ A multi-line command is written with real line breaks inside the attribute; the 
 done" />
 ```
 
-`{a.pts}` and `{a.pid}` in `type` / `run` become terminal `a`'s pty number and its shell's pid when the step plays. The button shows the resolved value once the terminal runs.
+`type` / `run` 里的 `{a.pts}` 和 `{a.pid}`，在 Step 播放时替换为终端 `a` 的 pty 编号和它的 shell 的 pid。终端运行后，按钮上显示替换后的值
 
-Steps can be clicked again and in any order. A played step shows a check mark; the mark only reflects clicks in this page load.
+Step 可以重复点击，也可以按任意顺序点击。播放过的 Step 显示一个勾；这个勾只反映本次页面加载中的点击
 
-### Escaping in attributes
 
-The step text is an HTML attribute inside markdown, kept as raw HTML:
+### Attribute 中的转义
 
-- Use single quotes around the attribute when the command contains double quotes: `run='echo "you typed: $input"'`.
-- When the command contains both kinds, write each single quote as `&#39;` inside a single-quoted attribute; Vue decodes HTML entities in attribute values, so the shell receives `'`.
-- Backslashes are literal (`\x1b`, `\003`, `\n` reach the shell as typed).
-- `<`, `>`, `$`, `{`, `}` need no escaping, and neither does `&` unless it starts an entity such as `&#39;`.
-- Keep the `<ShellDemo>` block free of blank lines: a blank line ends markdown's raw-HTML block.
+Step 的文本是 markdown 里的 HTML attribute，以 raw HTML 保留：
 
-### Escape sequences in steps
+- 命令含双引号时，attribute 用单引号包裹，例如 `run='echo "you typed: $input"'`
+- 命令同时含两种引号时，在单引号 attribute 里把每个单引号写成 `&#39;`；Vue 会解码 attribute 值里的 HTML entity，所以 shell 收到的是 `'`
+- 反斜杠按字面传递 (`\x1b`、`\003`、`\n` 原样到达 shell)
+- `<`、`>`、`$`、`{`、`}` 不需要转义；`&` 也不需要，除非它是 `&#39;` 这类 entity 的开头
+- `<ShellDemo>` 块内不要有空行：空行会结束 markdown 的 raw HTML 块
 
-On each terminal of a slide, the first step that prints an escape sequence declares the names on its first line and uses them on the next, so the audience reads `${CSI}`, `${OSC}` instead of raw `\e[`:
+
+### Step 中的 escape sequence
+
+在一张 slide 的每个终端上，第一个输出 escape sequence 的 Step 在第一行声明这些变量名，在下一行使用，这样观众读到的是 `${CSI}`、`${OSC}`，不用读原始的 `\e[`：
 
 ```md
   <ShellStep run='ESC=$&#39;\x1b&#39;; CSI="${ESC}["; OSC="${ESC}]"; ST="${ESC}\\"
@@ -80,40 +87,47 @@ echo "${OSC}7501;state=clear${ST}"' />
   <ShellStep run='echo "${OSC}7501;state=done${ST}"' />
 ```
 
-Later steps on the same terminal reuse the variables; the names live in that terminal's shell only. Slides with only cursor and color steps declare `ESC` and `CSI`; OSC slides declare all four. The vocabulary slide in `pages/ansi-stty.md` introduces the names.
+同一终端上之后的 Step 复用这些变量；这些名字只存在于该终端的 shell 里。只有光标和颜色 Step 的 slide 声明 `ESC` 和 `CSI`；OSC 相关的 slide 声明全部 4 个。`pages/ansi-stty.md` 里的术语 slide 会介绍这些名字
 
-## Where things run
 
-| Window | Terminals | Steps |
+## 各部分在哪里运行
+
+| 窗口 | 终端 | Step |
 | --- | --- | --- |
-| Slide window (`/#/N`) | Live shells on the page's Linux VM | Typed into the shells |
-| Presenter (`/#/presenter/N`) | Stand-in box | Sent to the slide window of the same browser and typed there |
-| Overview, next-slide preview, export | Stand-in box | Inert |
+| Slide 窗口 (`/#/N`) | 页面里 Linux VM 上实时运行的 shell | 输入到 shell 中 |
+| Presenter (`/#/presenter/N`) | 占位框 | 发送到同一浏览器的 slide 窗口，在那里输入 |
+| Overview、下一张 slide 的预览、导出 | 占位框 | 不起作用 |
 
-A terminal's shell is spawned the first time its slide is shown, so pty numbers follow the order slides are visited. Returning to a slide reattaches the same shell with its history.
+终端的 shell 在它的 slide 第一次显示时 spawn，所以 pty 编号按 slide 的访问顺序分配。回到一张 slide 时会重新连上同一个 shell，历史记录仍在
 
-## Figures
 
-A new diagram component renders its SVG inside `<DiagramFrame>` (`components/diagrams/DiagramFrame.vue`), which gives it the shared diagram styles.
+## 插图
 
-## Resources from other sites
+新的图示组件把 SVG 渲染在 `<DiagramFrame>` (`components/diagrams/DiagramFrame.vue`) 里，以获得共用的图示样式
 
-The deck is cross-origin isolated, so that Linux runs on 4 CPUs ([isolation.md](./isolation.md)), and its embedder policy is `require-corp`. A resource from another site loads only if:
 
-- its response has `Cross-Origin-Resource-Policy: cross-origin`, as Google Fonts and GitHub avatars send; or
-- it is requested with CORS (`<img crossorigin="anonymous">`, `<video crossorigin="anonymous">`) and the response has `Access-Control-Allow-Origin`, as GitHub Pages and badgen.net send. A Markdown image is not a CORS request, so such an image needs the HTML tag, as the closing slide's badge has.
+## 外站资源
 
-Check a new one with `curl -sI <url>` before using it. An iframe of another site does not load at all unless that site opts in, so the deck embeds none.
+为了让 Linux 跑在 4 个 CPU 上，deck 是 cross-origin isolated 的 ([isolation.md](./isolation.md))，embedder policy 为 `require-corp`。外站资源只有满足以下条件之一才会加载：
 
-`<WebVideo src="…" page="…" title="…" />` plays a video from another site with the browser's controls, with a link to the page it comes from. It loads the first time its slide is shown; previews and export show its title instead.
+- 响应带 `Cross-Origin-Resource-Policy: cross-origin`，Google Fonts 和 GitHub 头像就会发送；或者
+- 以 CORS 方式请求 (`<img crossorigin="anonymous">`、`<video crossorigin="anonymous">`)，且响应带 `Access-Control-Allow-Origin`，GitHub Pages 和 badgen.net 会发送它。
+  Markdown 图片发出的不是 CORS 请求，所以这类图片要写成 HTML 标签，结尾 slide 的徽章就是这样写的
+
+使用新的外站资源前，用 `curl -sI <url>` 检查。外站的 iframe 除非对方站点主动放行，否则完全无法加载，所以 deck 不嵌入任何 iframe
+
+`<WebVideo src="…" page="…" title="…" />` 用浏览器自带的控件播放外站视频，并附上视频来源页面的链接。它在所在 slide 第一次显示时加载；预览和导出中只显示它的标题
+
 
 ## Speaker notes
 
-Each slide's notes (the last `<!-- ... -->` of the slide) hold the talk outline. A demo slide's notes explain its steps in order, by number; the commands themselves live only in the `<ShellStep>`s, which the presenter view shows as buttons. Keep `$` inside code spans in notes, so KaTeX does not read `$...$` as math.
+每张 slide 的 notes (slide 里最后一个 `<!-- ... -->`) 写演讲提纲。Demo slide 的 notes 按编号依次解释各个 Step；命令本身只写在 `<ShellStep>` 里，presenter view 会把它们显示为按钮。
+Notes 里的 `$` 要放在 code span 中，避免 KaTeX 把 `$...$` 当作数学公式
 
-## Checking a demo
 
-1. `pnpm dev terminal-glance` (repository root).
-2. Open the slide, click every step in order, and read both terminals.
-3. Click them again after visiting other slides: the shells must still answer.
-4. `pnpm build` before pushing.
+## 检查一个 demo
+
+1. 在仓库根目录运行 `pnpm dev terminal-glance`
+2. 打开 slide，按顺序点击每个 Step，检查两个终端的输出
+3. 浏览过其他 slide 后再点击一遍：shell 必须仍有响应
+4. Push 之前运行 `pnpm build`

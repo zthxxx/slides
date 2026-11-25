@@ -1,84 +1,97 @@
-# Cross-origin isolation and the guest's CPUs
+# Cross-origin isolation 与 guest 的 CPU
 
-The deck runs its Linux on 4 CPUs (2 on phones) in Chrome, Firefox and Safari, wherever the page is cross-origin isolated, and on 1 CPU elsewhere. This document describes how the page gets isolated, what runs where, the rules this sets for the slides' content, and the problems met on the way, each with its symptom.
+在 Chrome、Firefox 和 Safari 里，只要页面是 cross-origin isolated，deck 的 Linux 就跑在 4 个 CPU 上 (手机上 2 个)；其他情况下跑在 1 个 CPU 上。
+本文说明页面如何获得 cross-origin isolation、各部分运行在哪个线程、这对 slides 内容提出的规则，以及途中遇到的问题，每个问题都附上症状
 
-What 4 CPUs change, measured in [performance.md](./performance.md#four-cpus): a slide with two terminals shows both prompts in half the time, parallel work runs 3.5 times as fast, a single program runs as fast as on one CPU, and the boot takes about 0.25 s longer.
+4 个 CPU 带来的变化是：有两个终端的 slide，两个 prompt 出现所需的时间减半；并行任务的速度是 1 个 CPU 时的 3.5 倍；单个程序和 1 个 CPU 时一样快；boot 多花约 0.25 s。实测数据见 [performance.md](./performance.md#4-个-cpu)
 
-## Why isolation
 
-unkernel 0.2.0 runs the guest on several CPUs, each in a thread of its own on one shared memory (`createKernel({ cpus })`). That needs two things of the page (unkernel@0.2.0-261124-c08e977 `webCpuBlocker`):
+## 为什么需要 cross-origin isolation
 
-- **A `SharedArrayBuffer`,** which a browser gives only to a cross-origin isolated page: one whose document is served with `Cross-Origin-Opener-Policy: same-origin` and a `Cross-Origin-Embedder-Policy`.
-- **A thread that may block.** An SMP Linux's CPUs wait on one another, for example for a lock another CPU holds or for another CPU to finish work it was asked to do. In unkernel such a wait blocks the waiting CPU's thread (`memory.atomic.wait32`, wasm's `Atomics.wait`) until the other CPU wakes it. A page's main thread may not block, so with several CPUs the kernel runs in a worker. CPU 0's idle wait for the other CPUs is the exception: it does not block, it uses `Atomics.waitAsync`, which `webCpuBlocker` also checks for. With one CPU there is no other CPU to wait for, so the kernel can run on the page's thread.
+unkernel 0.2.0 可以让 guest 跑在多个 CPU 上，每个 CPU 各占一个线程，共用同一块内存 (`createKernel({ cpus })`)。这对页面有两个要求 (unkernel@0.2.0-261124-c08e977 `webCpuBlocker`)：
 
-`runtime/kernel.ts` (`guestCpus`) asks for 4 CPUs (2 on phones, as unkernel's own page suggests) when the page is isolated and `webCpuBlocker({ worker: true })` finds nothing missing, and runs the kernel on the page's thread on 1 CPU otherwise. The boot screen's "Boot Linux" row shows the count when it is more than one.
+- **需要 `SharedArrayBuffer`**，而浏览器只把它提供给 cross-origin isolated 的页面，也就是 document 响应带有 `Cross-Origin-Opener-Policy: same-origin` 和一个 `Cross-Origin-Embedder-Policy` 的页面
+- **需要一个可以阻塞的线程**。SMP Linux 的各个 CPU 会互相等待，比如等另一个 CPU 释放它持有的锁，或者等另一个 CPU 做完请它做的事。
+  在 unkernel 里，这种等待会阻塞等待方 CPU 所在的线程 (`memory.atomic.wait32`，即 wasm 的 `Atomics.wait`)，直到另一个 CPU 把它唤醒。页面主线程不允许阻塞，所以有多个 CPU 时 kernel 跑在 worker 里。
+  CPU 0 空闲时等待其他 CPU 是例外：它不阻塞，用的是 `Atomics.waitAsync`，`webCpuBlocker` 也会检查这个接口。只有 1 个 CPU 时没有别的 CPU 可等，所以 kernel 可以跑在页面主线程上
 
-## How the page gets isolated
+页面是 cross-origin isolated、且 `webCpuBlocker({ worker: true })` 没有发现缺少的条件时，`runtime/kernel.ts` (`guestCpus`) 申请 4 个 CPU (手机上 2 个，与 unkernel 自己页面的建议一致)；否则 kernel 以 1 个 CPU 跑在页面主线程上。CPU 多于 1 个时，boot 界面的 “Boot Linux” 一行会显示 CPU 数量
 
-The deck sends the headers unkernel.dev sends from its server: `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`.
 
-| Where | Who sends the headers | First load |
+## 页面如何获得 cross-origin isolation
+
+Deck 发送的响应头与 unkernel.dev 服务端发送的相同: `Cross-Origin-Opener-Policy: same-origin` 和 `Cross-Origin-Embedder-Policy: require-corp`
+
+| 位置 | 谁发送响应头 | 首次加载 |
 | --- | --- | --- |
-| unkernel.dev, for comparison | its server (Vercel) | 4 CPUs |
-| The dev server | Vite, `server.headers` in `vite.config.ts` | 4 CPUs |
-| A build, on GitHub Pages | the service worker `public/coi-sw.js` | reloads once, then 4 CPUs |
+| unkernel.dev，作为对照 | 它的服务端 (Vercel) | 4 个 CPU |
+| Dev server | Vite，`vite.config.ts` 里的 `server.headers` | 4 个 CPU |
+| GitHub Pages 上的构建产物 | service worker `public/coi-sw.js` | 自动刷新一次，之后 4 个 CPU |
 
-GitHub Pages cannot send headers, so in a build:
+GitHub Pages 不能配置响应头，所以构建产物这样处理：
 
-- **`public/coi-sw.js`** adds the two headers to the deck's documents (`navigate` requests) and worker scripts (destination `worker`). The page's other requests (`cors`, `no-cors`: fetches, scripts, styles, images, fonts) go to the network without waking it, through ServiceWorker static routing (Chrome 123+); elsewhere its fetch handler passes them through.
-- **`runtime/isolate-page.js`**, which `vite.config.ts` (`isolatePage`) inlines at the top of the build's `index.html` so that it runs before the app's scripts, registers the worker with the deck's base as its scope. A load the worker did not serve, such as the first visit, is not isolated, so once the worker is active the script reloads the page, at most once per tab session (sessionStorage). A load that stays unisolated after that reload runs on 1 CPU instead of reloading again; without sessionStorage there is no reload.
-- **Updates replace the old worker.** The browser fetches the worker's script past the HTTP cache (`updateViaCache: 'none'`), and a changed script takes over at once (`skipWaiting`, `clients.claim`), so no page keeps an old version. `isolate-page.js` also unregisters every other registration under the deck's scope, such as one an older script URL or scope left.
-- **The dev server needs no worker.** The dev page unregisters a `coi-sw.js` that an earlier version of the deck registered on its origin (`setup/main.ts`).
+- **`public/coi-sw.js`** 给 deck 的 document (`navigate` 请求) 和 worker 脚本 (destination 为 `worker`) 加上这两个响应头。
+  页面的其他请求 (`cors`、`no-cors`: fetch、脚本、样式、图片、字体) 通过 ServiceWorker static routing (Chrome 123+) 直接走网络，不唤醒它；不支持 static routing 的浏览器里，由它的 fetch handler 原样放行
+- **`runtime/isolate-page.js`** 由 `vite.config.ts` (`isolatePage`) 内联到构建产物 `index.html` 的最前面，赶在 app 的脚本之前运行，以 deck 的 base 作为 scope 注册这个 worker。
+  没有经过 worker 的加载 (比如首次访问) 不是 cross-origin isolated，所以 worker 一进入 active 状态，脚本就刷新页面，每个 tab session 最多刷新一次 (sessionStorage)。刷新后仍未获得 cross-origin isolation 的加载以 1 个 CPU 运行，不再刷新；没有 sessionStorage 时不刷新
+- **更新会替换旧的 worker**。浏览器绕过 HTTP cache 获取 worker 脚本 (`updateViaCache: 'none'`)，脚本一有变化就立即接管 (`skipWaiting`、`clients.claim`)，所以不会有页面停留在旧版本。`isolate-page.js` 还会 unregister deck scope 下的其他所有 registration，比如旧的脚本 URL 或旧的 scope 留下的
+- **Dev server 不需要 worker**。Dev 页面会 unregister 早期版本的 deck 在同一 origin 上注册过的 `coi-sw.js` (`setup/main.ts`)
 
-`require-corp` is the embedder policy Chrome, Firefox and Safari all support; `credentialless` is not in Safari, and the iframe variant it pairs with (`<iframe credentialless>`) is only in Chromium.
+`require-corp` 是 Chrome、Firefox 和 Safari 都支持的 embedder policy；Safari 不支持 `credentialless`，与它配套的 iframe 变体 (`<iframe credentialless>`) 只有 Chromium 支持
 
-## What runs where
 
-| Part | 1 CPU | 4 CPUs |
+## 各部分运行在哪个线程
+
+| 部分 | 1 个 CPU | 4 个 CPU |
 | --- | --- | --- |
-| The kernel | the page's thread | `runtime/kernel-worker.ts`, a Web Worker; unkernel starts one more worker per extra CPU |
-| The disks (`disk.ts`) | the page's thread | the kernel's worker |
-| Fetching the images' files (`image-source.ts`) | the page's thread | the page's thread |
-| The kernel's load | compiled while it streams | patched for SMP, then compiled |
+| Kernel | 页面主线程 | `runtime/kernel-worker.ts`，一个 Web Worker；每多一个 CPU，unkernel 再启动一个 worker |
+| Disk (`disk.ts`) | 页面主线程 | kernel 所在的 worker |
+| 获取 image 的文件 (`image-source.ts`) | 页面主线程 | 页面主线程 |
+| Kernel 的加载 | 边下载边编译 | 打上 SMP patch 后再编译 |
 
-- **The kernel's worker is the deck's own.** unkernel's worker mode (`worker: true`) takes disks only as specs it builds itself (a file, an HTTP image read by range, its IndexedDB data disk), not the deck's chunked images with their boot bundles. `kernel-worker.ts` runs unkernel inline in a worker instead, with the same disks as the 1-CPU path.
-- **Files are fetched on the page's thread** whichever thread runs the kernel: the page owns index.html's preloads and the terminals' progress bar. The worker asks for a file by name (`load`), and a copy of its bytes as published crosses back (`file`). The messages are in `kernel-worker-protocol.ts`, the page's side in `kernel-worker-host.ts`.
-- **A pty's output crosses one chunk per `pull`.** The page's stream asks for the next chunk once the terminal has taken the last, so the guest still waits while the terminal is behind, as with an inline pty.
-- **The SMP kernel is patched from the bundle.** `unkernel.wasm` holds the single-CPU kernel and, in a custom section (`unkernel.kernel.smp.kwpatch`), the patch that makes it SMP. `loadKernelModule(response, { smp: true })` reads the whole download, applies the patch (about 90 ms) and compiles the result; the 1-CPU path compiles while the download streams.
+- **Kernel 的 worker 由 deck 自己实现**。unkernel 的 worker 模式 (`worker: true`) 只接受它自己构造的 disk spec (一个文件、按 range 读取的 HTTP image、它的 IndexedDB data disk)，接受不了 deck 分 chunk 发布、带 boot bundle 的 image。所以 `kernel-worker.ts` 在一个 worker 里以 inline 方式运行 unkernel，disk 与 1 个 CPU 的路径相同
+- **文件始终在页面主线程上获取**，无论 kernel 跑在哪个线程：index.html 的 preload 和终端的进度条都归页面管理。
+  Worker 按文件名请求文件 (`load`)，页面把发布时的字节复制一份传回去 (`file`)。消息定义在 `kernel-worker-protocol.ts`，页面一侧的实现在 `kernel-worker-host.ts`
+- **每次 `pull` 跨线程传一个 pty 输出 chunk**。页面这边的 stream 在终端取走上一个 chunk 后才请求下一个，所以终端处理不过来时 guest 仍会等待，和 inline 的 pty 一样
+- **SMP kernel 由 bundle 里的 patch 生成**。`unkernel.wasm` 里有单 CPU 的 kernel，还在一个 custom section (`unkernel.kernel.smp.kwpatch`) 里带着把它变成 SMP 的 patch。
+  `loadKernelModule(response, { smp: true })` 读完整个下载内容，应用 patch (约 90 ms) 后编译结果；1 个 CPU 的路径则边下载边编译
 
-## Rules for the slides' content
 
-Under `require-corp`, a resource from another site loads only if its response has `Cross-Origin-Resource-Policy: cross-origin`, or if it is requested with CORS and the response has `Access-Control-Allow-Origin` ([authoring.md](./authoring.md#resources-from-other-sites)).
+## Slides 内容的规则
 
-| Resource | Why it loads |
+在 `require-corp` 下，外站资源只有满足以下条件之一才会加载：响应带 `Cross-Origin-Resource-Policy: cross-origin`；或者以 CORS 方式请求，且响应带 `Access-Control-Allow-Origin` (见 [authoring.md](./authoring.md#外站资源))
+
+| 资源 | 能加载的原因 |
 | --- | --- |
-| Google Fonts stylesheet and font files, the jsdelivr favicon, GitHub avatars | they send `Cross-Origin-Resource-Policy: cross-origin` |
-| The botmux demo video (`WebVideo.vue`) | `<video crossorigin="anonymous">`; GitHub Pages sends `Access-Control-Allow-Origin: *` |
-| The closing slide's badgen badge | `<img crossorigin="anonymous">`; badgen sends CORS headers but no CORP |
+| Google Fonts 的样式表和字体文件、jsdelivr 的 favicon、GitHub 头像 | 它们发送 `Cross-Origin-Resource-Policy: cross-origin` |
+| botmux 的 demo 视频 (`WebVideo.vue`) | `<video crossorigin="anonymous">`；GitHub Pages 发送 `Access-Control-Allow-Origin: *` |
+| 结尾 slide 的 badgen 徽章 | `<img crossorigin="anonymous">`；badgen 发送 CORS 响应头，但不发送 CORP |
 
-- No iframe of another site: it loads only if that site opts in to the embedder policy, which a GitHub Pages site cannot.
-- A Markdown image (`![](…)`) is not a CORS request: an image from a site without CORP needs the HTML tag with `crossorigin`.
-- Check a new external resource with `curl -sI <url>` for either header before using it.
+- 不嵌入外站的 iframe：只有对方站点为这个 embedder policy 主动放行，它才能加载，而 GitHub Pages 上的站点做不到
+- Markdown 图片 (`![](…)`) 发出的不是 CORS 请求：图片所在的站点不发送 CORP 时，要改用带 `crossorigin` 的 HTML 标签
+- 引入新的外站资源之前，用 `curl -sI <url>` 确认它带有上述两种响应头之一
 
-## Problems met, and what the deck does
 
-| Symptom | Cause | What the deck does |
+## 遇到的问题与 deck 的处理
+
+| 症状 | 原因 | Deck 的处理 |
 | --- | --- | --- |
-| The console logs `[host] this kernel is not SMP: 4 CPUs asked, it runs on one`; `nproc` prints 1 | The kernel was handed over as an already compiled module, which unkernel uses as it is: the SMP patch is applied to the bytes | `loadKernelModule(…, { smp: true })` on the 4-CPU path |
-| The kernel's worker never starts; its script fails with `net::ERR_BLOCKED_BY_RESPONSE` | An isolated page starts a worker only if the worker script's response has an embedder policy too | The service worker adds the headers to worker scripts, and static routing leaves `same-origin` requests (module worker scripts) to it |
-| A plain iframe of the botmux page fails with `ERR_BLOCKED_BY_RESPONSE` (Chrome) | A cross-origin iframe loads under COEP only if its site opts in; only Chromium's `<iframe credentialless>` gets around that, and Firefox and Safari have no such iframe | The deck embeds no iframe: the slide plays the page's video with a link to the page |
-| An image fails with `ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep` | It came from a site without CORP, as a Markdown image (`no-cors`) | `<img crossorigin="anonymous">` from a site with CORS headers |
-| htop shows one CPU and 494 MiB on the first visit | The first navigation was not served by the service worker, so the page was not isolated | `isolate-page.js` reloads the first visit once the worker is active |
-| A head script added with `transformIndexHtml` is missing in dev | Slidev's dev server answers `/index.html` from its own middleware, without Vite's HTML transforms (@slidev/cli@53.1.0 `dist/serve-*.mjs`); a deck-root `index.html` is ignored by the repository's `.gitignore` and deleted by `pnpm clean` | The dev server sends the headers itself; the script is inlined in builds only |
-| A service worker that an earlier version registered stays on the dev origin (`localhost:3034`, scope `/`) | It outlives the deck, and would add COOP and COEP to any other site served later on that port | The dev page unregisters `coi-sw.js` |
-| A hard reload (Shift) runs on 1 CPU | It bypasses service workers; in Chrome 157 the page's own reload after it was not isolated either | The one reload per tab session stops there instead of looping; a normal reload is isolated again |
-| A pty bridge that transfers the output stream would fail in Safari | Safari cannot transfer a `ReadableStream` to another thread, as unkernel.dev's own service worker notes (`vm-sw.js`) | Output crosses as messages, one chunk per `pull` |
-| With `COEP: credentialless`, the app started about 0.85 s later than without isolation | Cross-origin `no-cors` requests are made without credentials on connections of their own, so the render-blocking Google Fonts stylesheet needed a new one | `require-corp`: the stylesheet sends CORP and keeps the shared connection |
+| 控制台输出 `[host] this kernel is not SMP: 4 CPUs asked, it runs on one`；`nproc` 输出 1 | Kernel 以已经编译好的 module 交给 unkernel，unkernel 会原样使用它：SMP patch 是打在字节上的 | 4 个 CPU 的路径用 `loadKernelModule(…, { smp: true })` |
+| Kernel 的 worker 始终没有启动，它的脚本报 `net::ERR_BLOCKED_BY_RESPONSE` | Cross-origin isolated 的页面只在 worker 脚本的响应也带 embedder policy 时才启动 worker | Service worker 给 worker 脚本也加上这两个响应头；static routing 把 `same-origin` 请求 (module worker 脚本) 留给它处理 |
+| 直接用 iframe 嵌入 botmux 页面，报 `ERR_BLOCKED_BY_RESPONSE` (Chrome) | 在 COEP 下，cross-origin iframe 只有对方站点主动放行才能加载；只有 Chromium 的 `<iframe credentialless>` 能绕过这一点，Firefox 和 Safari 没有这种 iframe | Deck 不嵌入任何 iframe：slide 播放该页面的视频，并附上页面链接 |
+| 图片加载失败，报 `ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep` | 图片来自不发送 CORP 的站点，且写成了 Markdown 图片 (`no-cors`) | 改用 `<img crossorigin="anonymous">`，并从发送 CORS 响应头的站点加载图片 |
+| 首次访问时 htop 显示 1 个 CPU 和 494 MiB | 第一次 navigation 没有经过 service worker，所以页面不是 cross-origin isolated | Worker 进入 active 状态后，`isolate-page.js` 刷新首次访问的页面 |
+| 用 `transformIndexHtml` 加入的 head 脚本在 dev 模式下缺失 | Slidev 的 dev server 用自己的 middleware 响应 `/index.html`，不经过 Vite 的 HTML transform (@slidev/cli@53.1.0 `dist/serve-*.mjs`)；仓库的 `.gitignore` 会忽略放在 deck 根目录的 `index.html`，`pnpm clean` 也会删除它 | Dev server 自己发送响应头；脚本只内联到构建产物里 |
+| 早期版本注册的 service worker 留在 dev origin 上 (`localhost:3034`，scope 为 `/`) | 它比 deck 存活得更久，会给之后在这个端口上运行的任何其他站点加上 COOP 和 COEP | Dev 页面会 unregister `coi-sw.js` |
+| Hard reload (Shift) 后以 1 个 CPU 运行 | Hard reload 会绕过 service worker；在 Chrome 157 里，紧随其后的页面自动刷新也没有获得 cross-origin isolation | 每个 tab session 只刷新一次，所以停在这里，不会循环刷新；普通刷新会重新获得 cross-origin isolation |
+| 如果 pty 桥接把输出 stream transfer 到另一个线程，在 Safari 里会失败 | Safari 不能把 `ReadableStream` transfer 到另一个线程，unkernel.dev 自己的 service worker 里有这条说明 (`vm-sw.js`) | 输出以消息形式跨线程传递，每次 `pull` 一个 chunk |
+| 使用 `COEP: credentialless` 时，app 启动比不做 cross-origin isolation 时晚约 0.85 s | Cross-origin 的 `no-cors` 请求不带 credentials，并使用单独的连接，所以阻塞渲染的 Google Fonts 样式表要新建一个连接 | 改用 `require-corp`，样式表本身发送 CORP，继续走共享连接 |
 
-## Checking it
 
-- In a terminal, `nproc` prints `4`, and htop shows CPUs 0 to 3 with about 470 MiB; with 1 CPU, 494 MiB.
-- In the console, `crossOriginIsolated` is `true`.
-- Dev: `curl -sI http://localhost:3034/` shows both headers.
-- A build: DevTools > Application > Service workers shows one worker, `coi-sw.js`, for the deck's scope; `(await navigator.serviceWorker.getRegistrations()).length` is 1.
-- A first visit needs a browser profile that has never opened the origin. `playwright-cli` keeps one Chrome profile across its sessions, so a service worker from an earlier run carries over: give such a run its own `--profile` directory.
+## 如何检查
+
+- 在终端里，`nproc` 输出 `4`，htop 显示 CPU 0 到 3，内存约 470 MiB；1 个 CPU 时为 494 MiB
+- 控制台里 `crossOriginIsolated` 为 `true`
+- Dev: `curl -sI http://localhost:3034/` 能看到这两个响应头
+- 构建产物: DevTools > Application > Service workers 里，deck 的 scope 下只有一个 worker，即 `coi-sw.js`；`(await navigator.serviceWorker.getRegistrations()).length` 为 1
+- 要复现首次访问，需要一个从未打开过该 origin 的浏览器 profile。`playwright-cli` 的各个 session 共用同一个 Chrome profile，之前运行留下的 service worker 会保留下来，所以这类运行要用单独的 `--profile` 目录
