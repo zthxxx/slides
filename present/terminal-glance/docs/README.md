@@ -1,6 +1,6 @@
 # terminal-glance
 
-“CLI 概览 (其一)” 是一场关于终端、TTY、PTY、shell 和 ANSI 的分享，其中的 demo 运行在页面内的真实 Linux 上。
+“Terminal 概览 (其一)” 是一场关于终端、TTY、PTY、shell 和 ANSI 的分享，其中的 demo 运行在页面内的真实 Linux 上。
 Demo 不需要服务器，也不需要联网：这个 Linux 是 unkernel (编译成 WebAssembly 的 Linux kernel)，配上一块预先构建、装好工具的 disk
 
 

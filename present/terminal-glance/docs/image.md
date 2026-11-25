@@ -155,7 +155,7 @@ fast-syntax-highlighting 的这次加载耗时 0.3 到 0.6 s，期间输入的�
 原来使用 zinit 和 `compinit -C` 时，zsh 启动后 390 到 405 ms 才到 prompt (脚本编译之前是 500 到 600 ms)，fast-syntax-highlighting 的加载在 prompt 之后 0.3 到 0.6 s 才结束。
 Image 也小了 7.5 MiB: zinit 和插件的 git 历史、文档在 guest 中占 11 MiB，现在两个插件只占 0.9 MiB
 
-两个 shell 同时启动时 (比如有两个终端的 slide)，它们共用 VM 唯一的 CPU，各自在约 0.3 s 后显示 prompt。剩下的耗时大多是 jovial 的第一次 precmd
+两个 shell 同时启动时 (比如有两个终端的 slide)，1 个 CPU 上两者共用这个 CPU，从切换 slide 到两个 prompt 都出现要 276 到 377 ms；4 个 CPU 上要 128 到 162 ms ([performance.md](./performance.md#4-个-cpu))。剩下的耗时大多是 jovial 的第一次 precmd
 
 高亮 deck 中的一行命令，每次重绘耗时 8 到 32 ms；第一次输入带有专属 highlighter 的命令 (chroma，比如 `git`) 时，最长要 0.16 s
 
