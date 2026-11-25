@@ -8,27 +8,89 @@
     "quality_profile": "showcase",
     "legend": {
       "entries": {
-        "default": { "label": "程序输出 · 探测" },
-        "return": { "label": "终端输入 · 应答" },
-        "emphasis": { "label": "程序输出 · 状态汇报" },
-        "dashed": { "label": "终端输入 · 用户按键" }
+        "emphasis": {
+          "label": "输出 · 程序写到终端"
+        },
+        "default": {
+          "label": "输入 · 到达程序的终端输入"
+        }
       }
     }
   },
   "participants": [
-    { "id": "program", "type": "backend", "label": "Program / Agent", "sublabel": "pts 上的程序" },
-    { "id": "host", "type": "frontend", "label": "Terminal / Gateway", "sublabel": "宿主 · 显示状态" }
+    {
+      "id": "program",
+      "type": "backend",
+      "label": "Program / Agent",
+      "sublabel": "pts 上的程序"
+    },
+    {
+      "id": "host",
+      "type": "frontend",
+      "label": "Terminal / Gateway",
+      "sublabel": "宿主 · 显示状态"
+    }
   ],
   "segments": [
-    { "from": 150, "to": 212, "label": "探测是否支持" },
-    { "from": 228, "to": 346, "label": "主动汇报状态" }
+    {
+      "from": 150,
+      "to": 212,
+      "label": "探测是否支持"
+    },
+    {
+      "from": 228,
+      "to": 346,
+      "label": "主动汇报状态"
+    }
   ],
   "messages": [
-    { "id": "probe", "from": "program", "to": "host", "y": 170, "label": "probe · ESC ] 7501 ; ? ST", "variant": "default" },
-    { "id": "probe-reply", "from": "host", "to": "program", "y": 198, "label": "reply · ESC ] 7501 ; ? ST", "variant": "return" },
-    { "id": "working", "from": "program", "to": "host", "y": 244, "label": "ESC ] 7501 ; state=working:app=ClaudeCode ST", "variant": "emphasis" },
-    { "id": "blocked", "from": "program", "to": "host", "y": 272, "label": "state=blocked:kind=permission", "variant": "emphasis" },
-    { "id": "user-enter", "from": "host", "to": "program", "y": 300, "label": "Enter · 普通终端输入", "variant": "dashed" },
-    { "id": "done", "from": "program", "to": "host", "y": 328, "label": "state=done", "variant": "emphasis" }
+    {
+      "id": "probe",
+      "from": "program",
+      "to": "host",
+      "y": 170,
+      "label": "输出 · probe ESC ] 7501 ; ? ST",
+      "variant": "emphasis"
+    },
+    {
+      "id": "probe-reply",
+      "from": "host",
+      "to": "program",
+      "y": 198,
+      "label": "输入 · reply ESC ] 7501 ; ? ST",
+      "variant": "default"
+    },
+    {
+      "id": "working",
+      "from": "program",
+      "to": "host",
+      "y": 244,
+      "label": "输出 · state=working:app=ClaudeCode",
+      "variant": "emphasis"
+    },
+    {
+      "id": "blocked",
+      "from": "program",
+      "to": "host",
+      "y": 272,
+      "label": "输出 · state=blocked:kind=permission",
+      "variant": "emphasis"
+    },
+    {
+      "id": "user-enter",
+      "from": "host",
+      "to": "program",
+      "y": 300,
+      "label": "输入 · 用户按 Enter",
+      "variant": "default"
+    },
+    {
+      "id": "done",
+      "from": "program",
+      "to": "host",
+      "y": 328,
+      "label": "输出 · state=done",
+      "variant": "emphasis"
+    }
   ]
 }

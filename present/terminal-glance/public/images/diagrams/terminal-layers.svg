@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 1179 348" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14" xmlns="http://www.w3.org/2000/svg" width="1179" height="348" data-theme="light" data-archify-bake="static">
+<svg viewBox="0 0 1245 348" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14" xmlns="http://www.w3.org/2000/svg" width="1245" height="348" data-theme="light" data-archify-bake="static">
         <title id="archify-diagram-title">接口固定，实现可换</title>
         <desc id="archify-diagram-description">由 Archify 生成的架构图。</desc>
         <style><![CDATA[
@@ -313,7 +313,7 @@ svg[data-preset="blueprint"][data-relationship-preview-active] [data-relationshi
 .c-region { fill: rgba(251, 191, 36, 0.05); stroke: #d97706; stroke-dasharray: 8,4; }
 .c-lane { fill: rgba(248, 250, 252, 0.65); stroke: #cbd5e1; stroke-dasharray: 6,6; }
 svg[data-theme="light"] { --bg: #f4f5f7; --grid: #e9edf2; --canvas-dot: #e2e7ec; --text: #111827; --text-muted: #5b6474; --text-dim: #9aa3b2; --text-faint: #6b7280; --panel: #ffffff; --panel-border: #e5e7eb; --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1; --arrow: #64748b; --arrow-emphasis: #059669; --arrow-security: #b43b57; --arrow-dashed: #6d4fc2; --edge-label: #5b6474; --mask: #ffffff; --frontend-fill: rgba(34, 211, 238, 0.15); --frontend-stroke: #0891b2; --backend-fill: rgba(52, 211, 153, 0.18); --backend-stroke: #059669; --database-fill: rgba(167, 139, 250, 0.2); --database-stroke: #7c3aed; --cloud-fill: rgba(251, 191, 36, 0.18); --cloud-stroke: #d97706; --security-fill: rgba(251, 113, 133, 0.15); --security-stroke: #e11d48; --messagebus-fill: rgba(251, 146, 60, 0.15); --messagebus-stroke: #ea580c; --external-fill: rgba(148, 163, 184, 0.18); --external-stroke: #64748b; --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff; --toolbar-menu-bg: #ffffff; --reader-accent: #077f9c; }
-]]></style><rect class="archify-bake-background" x="0" y="0" width="1179" height="348" fill="#f4f5f7"/><!-- Definitions -->
+]]></style><rect class="archify-bake-background" x="0" y="0" width="1245" height="348" fill="#f4f5f7"/><!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" class="m-default" />
@@ -355,147 +355,195 @@ svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-fram
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Boundaries (behind everything) -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="每一层都能换" x="10" y="30" width="1129" height="110" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="每一层都能换" x="10" y="30" width="1195" height="110" rx="12" class="c-region" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" data-composition-frame-label="本 deck 页面里的终端" x="10" y="170" width="1129" height="110" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" data-composition-frame-label="本 deck 页面里的终端" x="10" y="170" width="1195" height="110" rx="12" class="c-region" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
         <g data-graph-role="automatic-crossover" style="--step:0">
-          <path data-graph-role="automatic-crossover-underlay" d="M 255 90 L 351 90" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="emu" data-edge-to="holder" data-edge-label="VT bytes" data-edge-key="0" data-edge-id="vt-bytes" data-composition-points="255,90;351,90" data-composition-crossover="halo" data-composition-independent="true" d="M 255 90 L 351 90" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 240 81.95 L 380 81.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="emu" data-edge-to="holder" data-edge-label="输入 · VT bytes" data-edge-key="0" data-edge-id="i-emu-holder" data-composition-points="240,81.95;380,81.95" data-composition-crossover="halo" data-composition-independent="true" d="M 240 81.95 L 380 81.95" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:1">
-          <path data-graph-role="automatic-crossover-underlay" d="M 551 90 L 617 90" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="holder" data-edge-to="kernel" data-edge-label="ptmx fd" data-edge-key="1" data-edge-id="ptmx-fd" data-composition-points="551,90;617,90" data-composition-crossover="halo" data-composition-independent="true" d="M 551 90 L 617 90" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 380 97 L 240 97" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="holder" data-edge-to="emu" data-edge-label="输出 · VT bytes" data-edge-key="1" data-edge-id="o-holder-emu" data-composition-points="380,97;240,97" data-composition-crossover="halo" data-composition-independent="true" d="M 380 97 L 240 97" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:2">
-          <path data-graph-role="automatic-crossover-underlay" d="M 787 90 L 859 90" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="kernel" data-edge-to="prog" data-edge-label="tty fd" data-edge-key="2" data-edge-id="tty-fd" data-composition-points="787,90;859,90" data-composition-crossover="halo" data-composition-independent="true" d="M 787 90 L 859 90" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 560 81.95 L 675 81.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="holder" data-edge-to="kernel" data-edge-label="输入 · ptmx fd" data-edge-key="2" data-edge-id="i-holder-kernel" data-composition-points="560,81.95;675,81.95" data-composition-crossover="halo" data-composition-independent="true" d="M 560 81.95 L 675 81.95" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:3">
-          <path data-graph-role="automatic-crossover-underlay" d="M 255 230 L 351 230" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="ghostty" data-edge-to="kwtty" data-edge-label="vsock :1022" data-edge-key="3" data-edge-id="vsock" data-composition-points="255,230;351,230" data-composition-crossover="halo" data-composition-independent="true" d="M 255 230 L 351 230" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 675 97 L 560 97" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="kernel" data-edge-to="holder" data-edge-label="输出 · ptmx fd" data-edge-key="3" data-edge-id="o-kernel-holder" data-composition-points="675,97;560,97" data-composition-crossover="halo" data-composition-independent="true" d="M 675 97 L 560 97" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:4">
-          <path data-graph-role="automatic-crossover-underlay" d="M 551 230 L 617 230" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="kwtty" data-edge-to="pts" data-edge-label="ptmx" data-edge-key="4" data-edge-id="deck-ptmx" data-composition-points="551,230;617,230" data-composition-crossover="halo" data-composition-independent="true" d="M 551 230 L 617 230" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 840 81.95 L 950 81.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="kernel" data-edge-to="prog" data-edge-label="输入 · tty fd" data-edge-key="4" data-edge-id="i-kernel-prog" data-composition-points="840,81.95;950,81.95" data-composition-crossover="halo" data-composition-independent="true" d="M 840 81.95 L 950 81.95" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:5">
-          <path data-graph-role="automatic-crossover-underlay" d="M 787 230 L 859 230" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pts" data-edge-to="zsh" data-edge-label="fd 0 1 2" data-edge-key="5" data-edge-id="deck-fd" data-composition-points="787,230;859,230" data-composition-crossover="halo" data-composition-independent="true" d="M 787 230 L 859 230" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 950 97 L 840 97" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="prog" data-edge-to="kernel" data-edge-label="输出 · tty fd" data-edge-key="5" data-edge-id="o-prog-kernel" data-composition-points="950,97;840,97" data-composition-crossover="halo" data-composition-independent="true" d="M 950 97 L 840 97" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:6">
+          <path data-graph-role="automatic-crossover-underlay" d="M 240 221.95 L 380 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="ghostty" data-edge-to="kwtty" data-edge-label="输入 · vsock :1022" data-edge-key="6" data-edge-id="i-ghostty-kwtty" data-composition-points="240,221.95;380,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 240 221.95 L 380 221.95" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:7">
+          <path data-graph-role="automatic-crossover-underlay" d="M 380 237 L 240 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="kwtty" data-edge-to="ghostty" data-edge-label="输出 · vsock :1022" data-edge-key="7" data-edge-id="o-kwtty-ghostty" data-composition-points="380,237;240,237" data-composition-crossover="halo" data-composition-independent="true" d="M 380 237 L 240 237" class="a-emphasis" data-animate="edge" style="--step:7" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:8">
+          <path data-graph-role="automatic-crossover-underlay" d="M 560 221.95 L 675 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="kwtty" data-edge-to="pts" data-edge-label="输入 · ptmx" data-edge-key="8" data-edge-id="i-kwtty-pts" data-composition-points="560,221.95;675,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 560 221.95 L 675 221.95" class="a-default" data-animate="edge" style="--step:8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:9">
+          <path data-graph-role="automatic-crossover-underlay" d="M 675 237 L 560 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pts" data-edge-to="kwtty" data-edge-label="输出 · ptmx" data-edge-key="9" data-edge-id="o-pts-kwtty" data-composition-points="675,237;560,237" data-composition-crossover="halo" data-composition-independent="true" d="M 675 237 L 560 237" class="a-emphasis" data-animate="edge" style="--step:9" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:10">
+          <path data-graph-role="automatic-crossover-underlay" d="M 840 221.95 L 950 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pts" data-edge-to="zsh" data-edge-label="输入 · fd 0" data-edge-key="10" data-edge-id="i-pts-zsh" data-composition-points="840,221.95;950,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 840 221.95 L 950 221.95" class="a-default" data-animate="edge" style="--step:10" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:11">
+          <path data-graph-role="automatic-crossover-underlay" d="M 950 237 L 840 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="zsh" data-edge-to="pts" data-edge-label="输出 · fd 1 2" data-edge-key="11" data-edge-id="o-zsh-pts" data-composition-points="950,237;840,237" data-composition-crossover="halo" data-composition-independent="true" d="M 950 237 L 840 237" class="a-emphasis" data-animate="edge" style="--step:11" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
 
         <!-- Components -->
         <g id="node-emu" data-node-id="emu" data-node-label="终端模拟器" tabindex="0" role="button" aria-label="聚焦终端模拟器，iTerm2 · Ghostty · kitty · Warp, 每一层都能换" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="iTerm2 · Ghostty · kitty · Warp" data-node-context="每一层都能换">
           <title>终端模拟器 · iTerm2 · Ghostty · kitty · Warp · 每一层都能换</title>
-          <rect x="40" y="60" width="215" height="60" rx="8" class="c-mask"/>
-          <rect x="40" y="60" width="215" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
+          <rect x="40" y="60" width="200" height="60" rx="8" class="c-mask"/>
+          <rect x="40" y="60" width="200" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(46 66) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="147.5" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">终端模拟器</text>
-        <text data-detail="context" x="147.5" y="104" class="t-muted" font-size="10.5" text-anchor="middle">iTerm2 · Ghostty · kitty · Warp</text>
+          <text data-node-label="" data-detail-anchor="" x="140" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">终端模拟器</text>
+        <text data-detail="context" x="140" y="104" class="t-muted" font-size="10.3" text-anchor="middle">iTerm2 · Ghostty · kitty · Warp</text>
         </g>
 
         <g id="node-holder" data-node-id="holder" data-node-label="持有 ptmx" tabindex="0" role="button" aria-label="聚焦持有 ptmx，终端自己 · sshd · tmux server, 每一层都能换" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="终端自己 · sshd · tmux server" data-node-context="每一层都能换">
           <title>持有 ptmx · 终端自己 · sshd · tmux server · 每一层都能换</title>
-          <rect x="351" y="60" width="200" height="60" rx="8" class="c-mask"/>
-          <rect x="351" y="60" width="200" height="60" rx="8" class="c-messagebus" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <rect x="380" y="60" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="380" y="60" width="180" height="60" rx="8" class="c-messagebus" data-animate="node" style="--step:1" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="451" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">持有 ptmx</text>
-        <text data-detail="context" x="451" y="104" class="t-muted" font-size="10.5" text-anchor="middle">终端自己 · sshd · tmux server</text>
+          <text data-node-label="" data-detail-anchor="" x="470" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">持有 ptmx</text>
+        <text data-detail="context" x="470" y="104" class="t-muted" font-size="9.8" text-anchor="middle">终端自己 · sshd · tmux server</text>
         </g>
 
         <g id="node-kernel" data-node-id="kernel" data-node-label="内核 PTY" tabindex="0" role="button" aria-label="聚焦内核 PTY，Linux · macOS · unkernel, 每一层都能换" aria-pressed="false" data-node-kind="external" data-node-sublabel="Linux · macOS · unkernel" data-node-context="每一层都能换">
           <title>内核 PTY · Linux · macOS · unkernel · 每一层都能换</title>
-          <rect x="617" y="60" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="617" y="60" width="170" height="60" rx="8" class="c-external" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <rect x="675" y="60" width="165" height="60" rx="8" class="c-mask"/>
+          <rect x="675" y="60" width="165" height="60" rx="8" class="c-external" data-animate="node" style="--step:3" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="702" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">内核 PTY</text>
-        <text data-detail="context" x="702" y="104" class="t-muted" font-size="10.5" text-anchor="middle">Linux · macOS · unkernel</text>
+          <text data-node-label="" data-detail-anchor="" x="757.5" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">内核 PTY</text>
+        <text data-detail="context" x="757.5" y="104" class="t-muted" font-size="10.5" text-anchor="middle">Linux · macOS · unkernel</text>
         </g>
 
         <g id="node-prog" data-node-id="prog" data-node-label="程序" tabindex="0" role="button" aria-label="聚焦程序，zsh · bash · nvim · htop · Claude Code, 每一层都能换" aria-pressed="false" data-node-kind="backend" data-node-sublabel="zsh · bash · nvim · htop · Claude Code" data-node-context="每一层都能换">
           <title>程序 · zsh · bash · nvim · htop · Claude Code · 每一层都能换</title>
-          <rect x="859" y="60" width="250" height="60" rx="8" class="c-mask"/>
-          <rect x="859" y="60" width="250" height="60" rx="8" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(865 66) scale(0.6875)">
+          <rect x="950" y="60" width="225" height="60" rx="8" class="c-mask"/>
+          <rect x="950" y="60" width="225" height="60" rx="8" class="c-backend" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(956 66) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="984" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">程序</text>
-        <text data-detail="context" x="984" y="104" class="t-muted" font-size="10.5" text-anchor="middle">zsh · bash · nvim · htop · Claude Code</text>
+          <text data-node-label="" data-detail-anchor="" x="1062.5" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">程序</text>
+        <text data-detail="context" x="1062.5" y="104" class="t-muted" font-size="9.5" text-anchor="middle">zsh · bash · nvim · htop · Claude Code</text>
         </g>
 
         <g id="node-ghostty" data-node-id="ghostty" data-node-label="ghostty-web" tabindex="0" role="button" aria-label="聚焦ghostty-web，Ghostty VT · JS Pty, 本 deck 页面里的终端" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Ghostty VT · JS Pty" data-node-context="本 deck 页面里的终端">
           <title>ghostty-web · Ghostty VT · JS Pty · 本 deck 页面里的终端</title>
-          <rect x="40" y="200" width="215" height="60" rx="8" class="c-mask"/>
-          <rect x="40" y="200" width="215" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <rect x="40" y="200" width="200" height="60" rx="8" class="c-mask"/>
+          <rect x="40" y="200" width="200" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:6" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(46 206) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="147.5" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">ghostty-web</text>
-        <text data-detail="context" x="147.5" y="244" class="t-muted" font-size="10.5" text-anchor="middle">Ghostty VT · JS Pty</text>
+          <text data-node-label="" data-detail-anchor="" x="140" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">ghostty-web</text>
+        <text data-detail="context" x="140" y="244" class="t-muted" font-size="10.5" text-anchor="middle">Ghostty VT · JS Pty</text>
         </g>
 
         <g id="node-kwtty" data-node-id="kwtty" data-node-label="kwtty serve" tabindex="0" role="button" aria-label="聚焦kwtty serve，guest 内 · forkpty(), 本 deck 页面里的终端" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="guest 内 · forkpty()" data-node-context="本 deck 页面里的终端">
           <title>kwtty serve · guest 内 · forkpty() · 本 deck 页面里的终端</title>
-          <rect x="351" y="200" width="200" height="60" rx="8" class="c-mask"/>
-          <rect x="351" y="200" width="200" height="60" rx="8" class="c-messagebus" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <rect x="380" y="200" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="380" y="200" width="180" height="60" rx="8" class="c-messagebus" data-animate="node" style="--step:7" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="451" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">kwtty serve</text>
-        <text data-detail="context" x="451" y="244" class="t-muted" font-size="10.5" text-anchor="middle">guest 内 · forkpty()</text>
+          <text data-node-label="" data-detail-anchor="" x="470" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">kwtty serve</text>
+        <text data-detail="context" x="470" y="244" class="t-muted" font-size="10.5" text-anchor="middle">guest 内 · forkpty()</text>
         </g>
 
         <g id="node-pts" data-node-id="pts" data-node-label="/dev/pts/N" tabindex="0" role="button" aria-label="聚焦/dev/pts/N，unkernel · Linux in WASM, 本 deck 页面里的终端" aria-pressed="false" data-node-kind="external" data-node-sublabel="unkernel · Linux in WASM" data-node-context="本 deck 页面里的终端">
           <title>/dev/pts/N · unkernel · Linux in WASM · 本 deck 页面里的终端</title>
-          <rect x="617" y="200" width="170" height="60" rx="8" class="c-mask"/>
-          <rect x="617" y="200" width="170" height="60" rx="8" class="c-external" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <rect x="675" y="200" width="165" height="60" rx="8" class="c-mask"/>
+          <rect x="675" y="200" width="165" height="60" rx="8" class="c-external" data-animate="node" style="--step:9" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="702" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">/dev/pts/N</text>
-        <text data-detail="context" x="702" y="244" class="t-muted" font-size="10.5" text-anchor="middle">unkernel · Linux in WASM</text>
+          <text data-node-label="" data-detail-anchor="" x="757.5" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">/dev/pts/N</text>
+        <text data-detail="context" x="757.5" y="244" class="t-muted" font-size="10.5" text-anchor="middle">unkernel · Linux in WASM</text>
         </g>
 
         <g id="node-zsh" data-node-id="zsh" data-node-label="zsh" tabindex="0" role="button" aria-label="聚焦zsh，root 的 login shell, 本 deck 页面里的终端" aria-pressed="false" data-node-kind="backend" data-node-sublabel="root 的 login shell" data-node-context="本 deck 页面里的终端">
           <title>zsh · root 的 login shell · 本 deck 页面里的终端</title>
-          <rect x="859" y="200" width="250" height="60" rx="8" class="c-mask"/>
-          <rect x="859" y="200" width="250" height="60" rx="8" class="c-backend" data-animate="node" style="--step:6" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(865 206) scale(0.6875)">
+          <rect x="950" y="200" width="225" height="60" rx="8" class="c-mask"/>
+          <rect x="950" y="200" width="225" height="60" rx="8" class="c-backend" data-animate="node" style="--step:11" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(956 206) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="984" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">zsh</text>
-        <text data-detail="context" x="984" y="244" class="t-muted" font-size="10.5" text-anchor="middle">root 的 login shell</text>
+          <text data-node-label="" data-detail-anchor="" x="1062.5" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">zsh</text>
+        <text data-detail="context" x="1062.5" y="244" class="t-muted" font-size="10.5" text-anchor="middle">root 的 login shell</text>
         </g>
 
         <!-- Connection labels -->
-        <g data-detail="context" data-edge-from="emu" data-edge-to="holder" data-edge-label="VT bytes" data-edge-key="0" data-edge-id="vt-bytes">
-          <rect x="278.8" y="70" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="303" y="80" class="t-edge-default" font-size="10" font-weight="500" textLength="44.4" lengthAdjust="spacingAndGlyphs" text-anchor="middle">VT bytes</text>
+        <g data-detail="context" data-edge-from="emu" data-edge-to="holder" data-edge-label="输入 · VT bytes" data-edge-key="0" data-edge-id="i-emu-holder">
+          <rect x="269" y="61.95" width="82" height="14" rx="3" class="c-mask"/>
+          <text x="310" y="71.95" class="t-edge-default" font-size="8.8" font-weight="500" text-anchor="middle">输入 · VT bytes</text>
         </g>
-        <g data-detail="context" data-edge-from="holder" data-edge-to="kernel" data-edge-label="ptmx fd" data-edge-key="1" data-edge-id="ptmx-fd">
-          <rect x="562.2" y="70" width="43.6" height="14" rx="3" class="c-mask"/>
-          <text x="584" y="80" class="t-edge-default" font-size="10" font-weight="500" textLength="39.6" lengthAdjust="spacingAndGlyphs" text-anchor="middle">ptmx fd</text>
+        <g data-detail="context" data-edge-from="holder" data-edge-to="emu" data-edge-label="输出 · VT bytes" data-edge-key="1" data-edge-id="o-holder-emu">
+          <rect x="269" y="107" width="82" height="14" rx="3" class="c-mask"/>
+          <text x="310" y="117" class="t-edge-emphasis" font-size="8.8" font-weight="500" text-anchor="middle">输出 · VT bytes</text>
         </g>
-        <g data-detail="context" data-edge-from="kernel" data-edge-to="prog" data-edge-label="tty fd" data-edge-key="2" data-edge-id="tty-fd">
-          <rect x="803.6" y="70" width="38.8" height="14" rx="3" class="c-mask"/>
-          <text x="823" y="80" class="t-edge-default" font-size="10" font-weight="500" textLength="34.8" lengthAdjust="spacingAndGlyphs" text-anchor="middle">tty fd</text>
+        <g data-detail="context" data-edge-from="holder" data-edge-to="kernel" data-edge-label="输入 · ptmx fd" data-edge-key="2" data-edge-id="i-holder-kernel">
+          <rect x="578.9" y="61.95" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="617.5" y="71.95" class="t-edge-default" font-size="8.9" font-weight="500" text-anchor="middle">输入 · ptmx fd</text>
         </g>
-        <g data-detail="context" data-edge-from="ghostty" data-edge-to="kwtty" data-edge-label="vsock :1022" data-edge-key="3" data-edge-id="vsock">
-          <rect x="271.6" y="210" width="62.8" height="14" rx="3" class="c-mask"/>
-          <text x="303" y="220" class="t-edge-default" font-size="10" font-weight="500" textLength="58.8" lengthAdjust="spacingAndGlyphs" text-anchor="middle">vsock :1022</text>
+        <g data-detail="context" data-edge-from="kernel" data-edge-to="holder" data-edge-label="输出 · ptmx fd" data-edge-key="3" data-edge-id="o-kernel-holder">
+          <rect x="578.9" y="107" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="617.5" y="117" class="t-edge-emphasis" font-size="8.9" font-weight="500" text-anchor="middle">输出 · ptmx fd</text>
         </g>
-        <g data-detail="context" data-edge-from="kwtty" data-edge-to="pts" data-edge-label="ptmx" data-edge-key="4" data-edge-id="deck-ptmx">
-          <rect x="569" y="210" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="584" y="220" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">ptmx</text>
+        <g data-detail="context" data-edge-from="kernel" data-edge-to="prog" data-edge-label="输入 · tty fd" data-edge-key="4" data-edge-id="i-kernel-prog">
+          <rect x="858.8" y="61.95" width="72.4" height="14" rx="3" class="c-mask"/>
+          <text x="895" y="71.95" class="t-edge-default" font-size="9" font-weight="500" text-anchor="middle">输入 · tty fd</text>
         </g>
-        <g data-detail="context" data-edge-from="pts" data-edge-to="zsh" data-edge-label="fd 0 1 2" data-edge-key="5" data-edge-id="deck-fd">
-          <rect x="798.8" y="210" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="823" y="220" class="t-edge-default" font-size="10" font-weight="500" textLength="44.4" lengthAdjust="spacingAndGlyphs" text-anchor="middle">fd 0 1 2</text>
+        <g data-detail="context" data-edge-from="prog" data-edge-to="kernel" data-edge-label="输出 · tty fd" data-edge-key="5" data-edge-id="o-prog-kernel">
+          <rect x="858.8" y="107" width="72.4" height="14" rx="3" class="c-mask"/>
+          <text x="895" y="117" class="t-edge-emphasis" font-size="9" font-weight="500" text-anchor="middle">输出 · tty fd</text>
+        </g>
+        <g data-detail="context" data-edge-from="ghostty" data-edge-to="kwtty" data-edge-label="输入 · vsock :1022" data-edge-key="6" data-edge-id="i-ghostty-kwtty">
+          <rect x="261.8" y="201.95" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="310" y="211.95" class="t-edge-default" font-size="8.7" font-weight="500" text-anchor="middle">输入 · vsock :1022</text>
+        </g>
+        <g data-detail="context" data-edge-from="kwtty" data-edge-to="ghostty" data-edge-label="输出 · vsock :1022" data-edge-key="7" data-edge-id="o-kwtty-ghostty">
+          <rect x="261.8" y="247" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="310" y="257" class="t-edge-emphasis" font-size="8.7" font-weight="500" text-anchor="middle">输出 · vsock :1022</text>
+        </g>
+        <g data-detail="context" data-edge-from="kwtty" data-edge-to="pts" data-edge-label="输入 · ptmx" data-edge-key="8" data-edge-id="i-kwtty-pts">
+          <rect x="586.1" y="201.95" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="617.5" y="211.95" class="t-edge-default" font-size="9.1" font-weight="500" text-anchor="middle">输入 · ptmx</text>
+        </g>
+        <g data-detail="context" data-edge-from="pts" data-edge-to="kwtty" data-edge-label="输出 · ptmx" data-edge-key="9" data-edge-id="o-pts-kwtty">
+          <rect x="586.1" y="247" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="617.5" y="257" class="t-edge-emphasis" font-size="9.1" font-weight="500" text-anchor="middle">输出 · ptmx</text>
+        </g>
+        <g data-detail="context" data-edge-from="pts" data-edge-to="zsh" data-edge-label="输入 · fd 0" data-edge-key="10" data-edge-id="i-pts-zsh">
+          <rect x="863.6" y="201.95" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="895" y="211.95" class="t-edge-default" font-size="9.1" font-weight="500" text-anchor="middle">输入 · fd 0</text>
+        </g>
+        <g data-detail="context" data-edge-from="zsh" data-edge-to="pts" data-edge-label="输出 · fd 1 2" data-edge-key="11" data-edge-id="o-zsh-pts">
+          <rect x="858.8" y="247" width="72.4" height="14" rx="3" class="c-mask"/>
+          <text x="895" y="257" class="t-edge-emphasis" font-size="9" font-weight="500" text-anchor="middle">输出 · fd 1 2</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
@@ -894,4 +942,7 @@ The Atlas 3D view includes the unmodified minified build of
 `build/three.min.js`), copyright 2010-2021 three.js authors, under the MIT
 License. It is embedded in the analysis page and runs only when Atlas 3D is
 opened. The complete license is preserved in
-`modules/code-analysis/overlay/vendor/THREE-LICENSE.txt` in the packaged Skill.</metadata></svg>
+`modules/code-analysis/overlay/vendor/THREE-LICENSE.txt` in the packaged Skill.</metadata><style>
+.c-mask { display: none !important; }
+.c-mask + text { paint-order: stroke fill; stroke: var(--bg, #f4f5f7); stroke-width: 6px; stroke-linejoin: round; }
+</style></svg>

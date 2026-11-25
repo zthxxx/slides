@@ -114,14 +114,19 @@ Slide 里用 `<img>` 引用，宽度按图的尺寸和同一张 slide 上的其�
 ```
 
 `.diagram` (`styles/index.css`) 给图加圆角和描边。SVG 自带浅色背景，深色模式下也保持浅色。
-archify 的字号是按文档排版设计的，比 slide 正文小：图要画得紧凑，在 slide 上放大显示；节点的 `tag` 只有 7px，在 slide 上看不清，不要用
+archify 的字号是按文档排版设计的，比 slide 正文小：图要画得紧凑，在 slide 上放大显示；节点的 `tag` 只有 7px，在 slide 上看不清，不要用。
+archify 把每个标签放在一块底色上，文字没有在底色里垂直居中；`render.ts` 去掉这块底色，改为给文字描一圈画布底色的边
 
 终端分层的图共用一套画法 (`tty-layer`、`ssh-layers`、`tmux-layers`、`ssh-tmux-layers`，以及沿用它们的 `foreground-group`、`osc-roundtrip`、`agent-gateway`)，让观众在后面的图里认出前面见过的结构。新图沿用这套画法：
 
 - 每层终端是一条横带 (archify 的 `region`)：终端侧 → 内核 PTY → 程序，从本机开始编号 L0、L1、L2
-- ssh、tmux 这样的中间层画成上下两个框：上框是外层 pts 上的程序，下框是内层的终端侧，两框之间是它们的通道
+- ssh、tmux 这样的中间层画成上下两个框：上框是外层 pts 上的程序，下框是内层的终端侧。tmux client 不转发字节，所以 tmux server 画在它读写的 pts 正下方
+- 每一段字节通道都画成一对边：输入 (流向程序) 用默认样式，标签以「输入」开头；输出 (流向终端) 用 `emphasis`，标签以「输出」开头
+- 一对边必须是直线：两端的框在这对边的方向上居中对齐，两端都写明 `fromSide`、`toSide`；拐弯的一对边会互相交叉。
+  同一个框边上不要再接第三条边，它会落在这对边的两条线之间
+- 边的 id 写成 `i-<from>-<to>`、`o-<from>-<to>`：archify 按 id 排列同一个框边上的端口 (`renderers/shared/geometry.mjs` 的 `automaticPortSpread`)，这样输入总在上方或左侧
 - 组件类型表示角色：`frontend` 终端侧 (持有 ptmx)，`external` 内核 PTY，`backend` pts 上的程序，`security` ssh，`database` tmux (`icon: "none"`)
-- 坐标沿用同一套网格：列 x = 40、220、372、552、704、884、1036，行 y = 60、200、340
+- 坐标沿用同一套网格：列 x = 40、220、388、568、736、916、1084，行 y = 60、200、340
 
 
 ## 外站资源

@@ -1,6 +1,6 @@
 OSC：程序也能向终端提问
 
-<img class="diagram w-[1200px]" src="/images/diagrams/osc-roundtrip.svg" alt="OSC 11 往返：本机 Terminal 经 pts/0、ssh、SSH 连接、sshd、pts/1 连到远端的 bat；bat 输出的查询 ESC ] 11 ; ? ST 经这些层到达 Terminal，Terminal 的回答 ESC ] 11 ; rgb:… ST 作为输入原路回到 bat" />
+<img class="diagram w-[1440px]" src="/images/diagrams/osc-roundtrip.svg" alt="OSC 11 往返：本机 Terminal、pts/0、ssh 经 SSH 连到远端的 sshd、pts/1 和 bat，每一跳都有输入、输出两条通道；① bat 的查询 ESC ] 11 ; ? ST 沿输出方向一路到 Terminal，② Terminal 的回答 ESC ] 11 ; rgb:… ST 沿输入方向原路回到 bat" />
 
 <div class="text-[27px] mt-3">内核负责 TTY 行为；OSC 的通信端点是程序和终端模拟器</div>
 
@@ -40,7 +40,7 @@ OSC：程序也能向终端提问
 
 [OSC 7501](https://www.superlogical.com/rex/docs/build/program-status#program-status-protocol-osc-7501)：程序主动汇报状态
 
-<img class="diagram w-[700px]" src="/images/diagrams/program-status.svg" alt="OSC 7501 时序：程序发探测 ESC ] 7501 ; ? ST，支持的终端或 Gateway 原样应答；之后程序在输出里汇报 working、blocked:kind=permission，用户的 Enter 仍是普通终端输入，最后汇报 done" />
+<img class="diagram w-[760px]" src="/images/diagrams/program-status.svg" alt="OSC 7501 时序：程序输出探测 ESC ] 7501 ; ? ST，支持的终端或 Gateway 原样应答，应答作为输入到达程序；之后程序输出 working、blocked:kind=permission，用户的 Enter 是普通终端输入，最后输出 done" />
 
 <div class="text-[25px] mt-3">idle · working · blocked · done · error　 /　 clear 移除状态</div>
 

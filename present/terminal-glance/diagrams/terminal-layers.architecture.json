@@ -34,7 +34,7 @@
         60
       ],
       "size": [
-        215,
+        200,
         60
       ]
     },
@@ -43,30 +43,30 @@
       "type": "messagebus",
       "label": "持有 ptmx",
       "sublabel": "终端自己 · sshd · tmux server",
-      "icon": "none",
       "pos": [
-        351,
+        380,
         60
       ],
       "size": [
-        200,
+        180,
         60
-      ]
+      ],
+      "icon": "none"
     },
     {
       "id": "kernel",
       "type": "external",
       "label": "内核 PTY",
       "sublabel": "Linux · macOS · unkernel",
-      "icon": "none",
       "pos": [
-        617,
+        675,
         60
       ],
       "size": [
-        170,
+        165,
         60
-      ]
+      ],
+      "icon": "none"
     },
     {
       "id": "prog",
@@ -74,11 +74,11 @@
       "label": "程序",
       "sublabel": "zsh · bash · nvim · htop · Claude Code",
       "pos": [
-        859,
+        950,
         60
       ],
       "size": [
-        250,
+        225,
         60
       ]
     },
@@ -92,7 +92,7 @@
         200
       ],
       "size": [
-        215,
+        200,
         60
       ]
     },
@@ -101,30 +101,30 @@
       "type": "messagebus",
       "label": "kwtty serve",
       "sublabel": "guest 内 · forkpty()",
-      "icon": "none",
       "pos": [
-        351,
+        380,
         200
       ],
       "size": [
-        200,
+        180,
         60
-      ]
+      ],
+      "icon": "none"
     },
     {
       "id": "pts",
       "type": "external",
       "label": "/dev/pts/N",
       "sublabel": "unkernel · Linux in WASM",
-      "icon": "none",
       "pos": [
-        617,
+        675,
         200
       ],
       "size": [
-        170,
+        165,
         60
-      ]
+      ],
+      "icon": "none"
     },
     {
       "id": "zsh",
@@ -132,11 +132,11 @@
       "label": "zsh",
       "sublabel": "root 的 login shell",
       "pos": [
-        859,
+        950,
         200
       ],
       "size": [
-        250,
+        225,
         60
       ]
     }
@@ -165,40 +165,106 @@
   ],
   "connections": [
     {
-      "id": "vt-bytes",
+      "id": "i-emu-holder",
       "from": "emu",
       "to": "holder",
-      "label": "VT bytes"
+      "label": "输入 · VT bytes",
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
-      "id": "ptmx-fd",
+      "id": "o-holder-emu",
+      "from": "holder",
+      "to": "emu",
+      "label": "输出 · VT bytes",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-holder-kernel",
       "from": "holder",
       "to": "kernel",
-      "label": "ptmx fd"
+      "label": "输入 · ptmx fd",
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
-      "id": "tty-fd",
+      "id": "o-kernel-holder",
+      "from": "kernel",
+      "to": "holder",
+      "label": "输出 · ptmx fd",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-kernel-prog",
       "from": "kernel",
       "to": "prog",
-      "label": "tty fd"
+      "label": "输入 · tty fd",
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
-      "id": "vsock",
+      "id": "o-prog-kernel",
+      "from": "prog",
+      "to": "kernel",
+      "label": "输出 · tty fd",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-ghostty-kwtty",
       "from": "ghostty",
       "to": "kwtty",
-      "label": "vsock :1022"
+      "label": "输入 · vsock :1022",
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
-      "id": "deck-ptmx",
+      "id": "o-kwtty-ghostty",
+      "from": "kwtty",
+      "to": "ghostty",
+      "label": "输出 · vsock :1022",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-kwtty-pts",
       "from": "kwtty",
       "to": "pts",
-      "label": "ptmx"
+      "label": "输入 · ptmx",
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
-      "id": "deck-fd",
+      "id": "o-pts-kwtty",
+      "from": "pts",
+      "to": "kwtty",
+      "label": "输出 · ptmx",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-pts-zsh",
       "from": "pts",
       "to": "zsh",
-      "label": "fd 0 1 2"
+      "label": "输入 · fd 0",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "o-zsh-pts",
+      "from": "zsh",
+      "to": "pts",
+      "label": "输出 · fd 1 2",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
     }
   ]
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 654 348" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14" xmlns="http://www.w3.org/2000/svg" width="654" height="348" data-theme="light" data-archify-bake="static">
+<svg viewBox="0 0 698 348" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14" xmlns="http://www.w3.org/2000/svg" width="698" height="348" data-theme="light" data-archify-bake="static">
         <title id="archify-diagram-title">前台进程组</title>
         <desc id="archify-diagram-description">由 Archify 生成的架构图。</desc>
         <style><![CDATA[
@@ -313,7 +313,7 @@ svg[data-preset="blueprint"][data-relationship-preview-active] [data-relationshi
 .c-region { fill: rgba(251, 191, 36, 0.05); stroke: #d97706; stroke-dasharray: 8,4; }
 .c-lane { fill: rgba(248, 250, 252, 0.65); stroke: #cbd5e1; stroke-dasharray: 6,6; }
 svg[data-theme="light"] { --bg: #f4f5f7; --grid: #e9edf2; --canvas-dot: #e2e7ec; --text: #111827; --text-muted: #5b6474; --text-dim: #9aa3b2; --text-faint: #6b7280; --panel: #ffffff; --panel-border: #e5e7eb; --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1; --arrow: #64748b; --arrow-emphasis: #059669; --arrow-security: #b43b57; --arrow-dashed: #6d4fc2; --edge-label: #5b6474; --mask: #ffffff; --frontend-fill: rgba(34, 211, 238, 0.15); --frontend-stroke: #0891b2; --backend-fill: rgba(52, 211, 153, 0.18); --backend-stroke: #059669; --database-fill: rgba(167, 139, 250, 0.2); --database-stroke: #7c3aed; --cloud-fill: rgba(251, 191, 36, 0.18); --cloud-stroke: #d97706; --security-fill: rgba(251, 113, 133, 0.15); --security-stroke: #e11d48; --messagebus-fill: rgba(251, 146, 60, 0.15); --messagebus-stroke: #ea580c; --external-fill: rgba(148, 163, 184, 0.18); --external-stroke: #64748b; --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff; --toolbar-menu-bg: #ffffff; --reader-accent: #077f9c; }
-]]></style><rect class="archify-bake-background" x="0" y="0" width="654" height="348" fill="#f4f5f7"/><!-- Definitions -->
+]]></style><rect class="archify-bake-background" x="0" y="0" width="698" height="348" fill="#f4f5f7"/><!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" class="m-default" />
@@ -355,28 +355,32 @@ svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-fram
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Boundaries (behind everything) -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="L0 · 本机终端" x="10" y="30" width="604" height="250" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="L0 · 本机终端" x="10" y="30" width="648" height="250" rx="12" class="c-region" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
         <g data-graph-role="automatic-crossover" style="--step:0">
-          <path data-graph-role="automatic-crossover-underlay" d="M 164 90 L 220 90" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="emu" data-edge-to="pty0" data-edge-label="ptmx" data-edge-key="0" data-edge-id="emu-pty0" data-composition-points="164,90;220,90" data-composition-crossover="halo" data-composition-independent="true" d="M 164 90 L 220 90" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 164 81.95 L 290 81.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="emu" data-edge-to="pty0" data-edge-label="输入 · 按键" data-edge-key="0" data-edge-id="i-emu-pty0" data-composition-points="164,81.95;290,81.95" data-composition-crossover="halo" data-composition-independent="true" d="M 164 81.95 L 290 81.95" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:1">
-          <path data-graph-role="automatic-crossover-underlay" d="M 332 80.9 L 460 80.9" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pty0" data-edge-to="bash" data-edge-label="R" data-edge-key="1" data-edge-id="bash-read" data-composition-points="332,80.9;460,80.9" data-composition-crossover="halo" data-composition-independent="true" d="M 332 80.9 L 460 80.9" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 290 97 L 164 97" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pty0" data-edge-to="emu" data-edge-label="输出 · 含 echo" data-edge-key="1" data-edge-id="o-pty0-emu" data-composition-points="290,97;164,97" data-composition-crossover="halo" data-composition-independent="true" d="M 290 97 L 164 97" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:2">
-          <path data-graph-role="automatic-crossover-underlay" d="M 460 97 L 332 97" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="bash" data-edge-to="pty0" data-edge-label="W" data-edge-key="2" data-edge-id="bash-write" data-composition-points="460,97;332,97" data-composition-crossover="halo" data-composition-independent="true" d="M 460 97 L 332 97" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 414 81.95 L 504 81.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pty0" data-edge-to="bash" data-edge-label="R · 输入" data-edge-key="2" data-edge-id="i-pty0-bash" data-composition-points="414,81.95;504,81.95" data-composition-crossover="halo" data-composition-independent="true" d="M 414 81.95 L 504 81.95" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:3">
-          <path data-graph-role="automatic-crossover-underlay" d="M 460 237 L 291 237 Q 283 237 283 229 L 283 120" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="fish" data-edge-to="pty0" data-edge-label="W" data-edge-key="3" data-edge-id="fish-write" data-composition-points="460,237;283,237;283,120" data-composition-crossover="halo" data-composition-independent="true" d="M 460 237 L 291 237 Q 283 237 283 229 L 283 120" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 504 97 L 414 97" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="bash" data-edge-to="pty0" data-edge-label="W · 输出" data-edge-key="3" data-edge-id="o-bash-pty0" data-composition-points="504,97;414,97" data-composition-crossover="halo" data-composition-independent="true" d="M 504 97 L 414 97" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:4">
-          <path data-graph-role="automatic-crossover-underlay" d="M 269 120 L 269 215 Q 269 223 277 223 L 460 223" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pty0" data-edge-to="fish" data-edge-label="R → SIGTTIN" data-edge-key="4" data-edge-id="fish-read" data-composition-points="269,120;269,223;460,223" data-composition-crossover="halo" data-composition-independent="true" d="M 269 120 L 269 215 Q 269 223 277 223 L 460 223" class="a-security" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 343.95 120 L 343.95 200" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pty0" data-edge-to="fish" data-edge-label="R → SIGTTIN" data-edge-key="4" data-edge-id="i-pty0-fish" data-composition-points="343.95,120;343.95,200" data-composition-crossover="halo" data-composition-independent="true" d="M 343.95 120 L 343.95 200" class="a-security" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:5">
+          <path data-graph-role="automatic-crossover-underlay" d="M 359 200 L 359 120" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="fish" data-edge-to="pty0" data-edge-label="W · 输出" data-edge-key="5" data-edge-id="o-fish-pty0" data-composition-points="359,200;359,120" data-composition-crossover="halo" data-composition-independent="true" d="M 359 200 L 359 120" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
 
         <!-- Components -->
@@ -396,55 +400,59 @@ svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-fram
 
         <g id="node-pty0" data-node-id="pty0" data-node-label="pts/0" tabindex="0" role="button" aria-label="聚焦pts/0，前台进程组 → bash, L0 · 本机终端" aria-pressed="false" data-node-kind="external" data-node-sublabel="前台进程组 → bash" data-node-context="L0 · 本机终端">
           <title>pts/0 · 前台进程组 → bash · L0 · 本机终端</title>
-          <rect x="220" y="60" width="112" height="60" rx="8" class="c-mask"/>
-          <rect x="220" y="60" width="112" height="60" rx="8" class="c-external" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <rect x="290" y="60" width="124" height="60" rx="8" class="c-mask"/>
+          <rect x="290" y="60" width="124" height="60" rx="8" class="c-external" data-animate="node" style="--step:1" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="276" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">pts/0</text>
-        <text data-detail="context" x="276" y="104" class="t-muted" font-size="10.1" text-anchor="middle">前台进程组 → bash</text>
+          <text data-node-label="" data-detail-anchor="" x="352" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">pts/0</text>
+        <text data-detail="context" x="352" y="104" class="t-muted" font-size="10.5" text-anchor="middle">前台进程组 → bash</text>
         </g>
 
         <g id="node-bash" data-node-id="bash" data-node-label="bash" tabindex="0" role="button" aria-label="聚焦bash，前台进程组, L0 · 本机终端" aria-pressed="false" data-node-kind="backend" data-node-sublabel="前台进程组" data-node-context="L0 · 本机终端" data-emphasis="">
           <title>bash · 前台进程组 · L0 · 本机终端</title>
-          <rect x="460" y="60" width="124" height="60" rx="8" class="c-mask"/>
-          <rect x="460" y="60" width="124" height="60" rx="8" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(466 66) scale(0.6875)">
+          <rect x="504" y="60" width="124" height="60" rx="8" class="c-mask"/>
+          <rect x="504" y="60" width="124" height="60" rx="8" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(510 66) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="522" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">bash</text>
-        <text data-detail="context" x="522" y="104" class="t-muted" font-size="10.5" text-anchor="middle">前台进程组</text>
+          <text data-node-label="" data-detail-anchor="" x="566" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">bash</text>
+        <text data-detail="context" x="566" y="104" class="t-muted" font-size="10.5" text-anchor="middle">前台进程组</text>
         </g>
 
         <g id="node-fish" data-node-id="fish" data-node-label="fish" tabindex="0" role="button" aria-label="聚焦fish，后台进程组, L0 · 本机终端" aria-pressed="false" data-node-kind="backend" data-node-sublabel="后台进程组" data-node-context="L0 · 本机终端">
           <title>fish · 后台进程组 · L0 · 本机终端</title>
-          <rect x="460" y="200" width="124" height="60" rx="8" class="c-mask"/>
-          <rect x="460" y="200" width="124" height="60" rx="8" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(466 206) scale(0.6875)">
+          <rect x="290" y="200" width="124" height="60" rx="8" class="c-mask"/>
+          <rect x="290" y="200" width="124" height="60" rx="8" class="c-backend" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(296 206) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="522" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">fish</text>
-        <text data-detail="context" x="522" y="244" class="t-muted" font-size="10.5" text-anchor="middle">后台进程组</text>
+          <text data-node-label="" data-detail-anchor="" x="352" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">fish</text>
+        <text data-detail="context" x="352" y="244" class="t-muted" font-size="10.5" text-anchor="middle">后台进程组</text>
         </g>
 
         <!-- Connection labels -->
-        <g data-detail="context" data-edge-from="emu" data-edge-to="pty0" data-edge-label="ptmx" data-edge-key="0" data-edge-id="emu-pty0">
-          <rect x="177" y="70" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="192" y="80" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">ptmx</text>
+        <g data-detail="context" data-edge-from="emu" data-edge-to="pty0" data-edge-label="输入 · 按键" data-edge-key="0" data-edge-id="i-emu-pty0">
+          <rect x="195.6" y="61.95" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="227" y="71.95" class="t-edge-default" font-size="9.4" font-weight="500" text-anchor="middle">输入 · 按键</text>
         </g>
-        <g data-detail="context" data-edge-from="pty0" data-edge-to="bash" data-edge-label="R" data-edge-key="1" data-edge-id="bash-read">
-          <rect x="381" y="60.900000000000006" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="396" y="70.9" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">R</text>
+        <g data-detail="context" data-edge-from="pty0" data-edge-to="emu" data-edge-label="输出 · 含 echo" data-edge-key="1" data-edge-id="o-pty0-emu">
+          <rect x="188.4" y="107" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="227" y="117" class="t-edge-emphasis" font-size="9" font-weight="500" text-anchor="middle">输出 · 含 echo</text>
         </g>
-        <g data-detail="context" data-edge-from="bash" data-edge-to="pty0" data-edge-label="W" data-edge-key="2" data-edge-id="bash-write">
-          <rect x="381" y="107" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="396" y="117" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">W</text>
+        <g data-detail="context" data-edge-from="pty0" data-edge-to="bash" data-edge-label="R · 输入" data-edge-key="2" data-edge-id="i-pty0-bash">
+          <rect x="434.8" y="61.95" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="459" y="71.95" class="t-edge-default" font-size="9.6" font-weight="500" text-anchor="middle">R · 输入</text>
         </g>
-        <g data-detail="context" data-edge-from="fish" data-edge-to="pty0" data-edge-label="W" data-edge-key="3" data-edge-id="fish-write">
-          <rect x="356.5" y="247" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="371.5" y="257" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">W</text>
+        <g data-detail="context" data-edge-from="bash" data-edge-to="pty0" data-edge-label="W · 输出" data-edge-key="3" data-edge-id="o-bash-pty0">
+          <rect x="434.8" y="107" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="459" y="117" class="t-edge-emphasis" font-size="9.6" font-weight="500" text-anchor="middle">W · 输出</text>
         </g>
-        <g data-detail="context" data-edge-from="pty0" data-edge-to="fish" data-edge-label="R → SIGTTIN" data-edge-key="4" data-edge-id="fish-read">
-          <rect x="333.1" y="203" width="62.8" height="14" rx="3" class="c-mask"/>
-          <text x="364.5" y="213" class="t-edge-security" font-size="8.2" font-weight="500" text-anchor="middle">R → SIGTTIN</text>
+        <g data-detail="context" data-edge-from="pty0" data-edge-to="fish" data-edge-label="R → SIGTTIN" data-edge-key="4" data-edge-id="i-pty0-fish">
+          <rect x="275.15000000000003" y="153" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="306.55" y="163" class="t-edge-security" font-size="8.2" font-weight="500" text-anchor="middle">R → SIGTTIN</text>
+        </g>
+        <g data-detail="context" data-edge-from="fish" data-edge-to="pty0" data-edge-label="W · 输出" data-edge-key="5" data-edge-id="o-fish-pty0">
+          <rect x="365" y="153" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="389.2" y="163" class="t-edge-emphasis" font-size="9.6" font-weight="500" text-anchor="middle">W · 输出</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
@@ -834,4 +842,7 @@ The Atlas 3D view includes the unmodified minified build of
 `build/three.min.js`), copyright 2010-2021 three.js authors, under the MIT
 License. It is embedded in the analysis page and runs only when Atlas 3D is
 opened. The complete license is preserved in
-`modules/code-analysis/overlay/vendor/THREE-LICENSE.txt` in the packaged Skill.</metadata></svg>
+`modules/code-analysis/overlay/vendor/THREE-LICENSE.txt` in the packaged Skill.</metadata><style>
+.c-mask { display: none !important; }
+.c-mask + text { paint-order: stroke fill; stroke: var(--bg, #f4f5f7); stroke-width: 6px; stroke-linejoin: round; }
+</style></svg>

@@ -53,7 +53,7 @@ for (const file of selected) {
 
   const exported = path.join(runDir, `${name}.svg`)
   await $`node ${archify} export-svg ${type} ${source} ${exported} --theme light --quality ${quality} --json`.quiet()
-  const svg = pruneFontFaces(await readFile(exported, 'utf8'))
+  const svg = haloLabels(pruneFontFaces(await readFile(exported, 'utf8')))
   await writeFile(path.join(outDir, `${name}.svg`), svg)
   console.log(`✓ ${name} → public/images/diagrams/${name}.svg (${Math.round(svg.length / 1024)} KiB)`)
 }
@@ -93,6 +93,19 @@ function pruneFontFaces(svg: string): string {
     })
     return [...drawn].some(code => spans.some(([from, to]) => code >= from && code <= to)) ? rule : ''
   })
+}
+
+/**
+ * archify puts each edge, frame and segment label on a rounded chip (`rect.c-mask`) and sets the text on a baseline,
+ * so the text does not sit centred in its chip. A halo in the canvas colour keeps the label readable over lines and
+ * frames without a chip to align.
+ */
+function haloLabels(svg: string): string {
+  const style = `<style>
+.c-mask { display: none !important; }
+.c-mask + text { paint-order: stroke fill; stroke: var(--bg, #f4f5f7); stroke-width: 6px; stroke-linejoin: round; }
+</style>`
+  return svg.replace(/<\/svg>\s*$/, `${style}</svg>\n`)
 }
 
 function decodeEntities(text: string): string {

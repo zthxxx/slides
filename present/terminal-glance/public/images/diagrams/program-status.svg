@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 560 466" data-sequence-column-fit="spread" data-reader-fit="width-first" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-motion-choreography="sequence" xmlns="http://www.w3.org/2000/svg" width="560" height="466" data-theme="light" data-archify-bake="static">
+<svg viewBox="0 0 560 444" data-sequence-column-fit="spread" data-reader-fit="width-first" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-motion-choreography="sequence" xmlns="http://www.w3.org/2000/svg" width="560" height="444" data-theme="light" data-archify-bake="static">
         <title id="archify-diagram-title">OSC 7501 状态汇报</title>
         <desc id="archify-diagram-description">由 Archify 生成的时序图。</desc>
         <style><![CDATA[
@@ -313,7 +313,7 @@ svg[data-preset="blueprint"][data-relationship-preview-active] [data-relationshi
 .c-region { fill: rgba(251, 191, 36, 0.05); stroke: #d97706; stroke-dasharray: 8,4; }
 .c-lane { fill: rgba(248, 250, 252, 0.65); stroke: #cbd5e1; stroke-dasharray: 6,6; }
 svg[data-theme="light"] { --bg: #f4f5f7; --grid: #e9edf2; --canvas-dot: #e2e7ec; --text: #111827; --text-muted: #5b6474; --text-dim: #9aa3b2; --text-faint: #6b7280; --panel: #ffffff; --panel-border: #e5e7eb; --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1; --arrow: #64748b; --arrow-emphasis: #059669; --arrow-security: #b43b57; --arrow-dashed: #6d4fc2; --edge-label: #5b6474; --mask: #ffffff; --frontend-fill: rgba(34, 211, 238, 0.15); --frontend-stroke: #0891b2; --backend-fill: rgba(52, 211, 153, 0.18); --backend-stroke: #059669; --database-fill: rgba(167, 139, 250, 0.2); --database-stroke: #7c3aed; --cloud-fill: rgba(251, 191, 36, 0.18); --cloud-stroke: #d97706; --security-fill: rgba(251, 113, 133, 0.15); --security-stroke: #e11d48; --messagebus-fill: rgba(251, 146, 60, 0.15); --messagebus-stroke: #ea580c; --external-fill: rgba(148, 163, 184, 0.18); --external-stroke: #64748b; --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff; --toolbar-menu-bg: #ffffff; --reader-accent: #077f9c; }
-]]></style><rect class="archify-bake-background" x="0" y="0" width="560" height="466" fill="#f4f5f7"/><!-- Definitions -->
+]]></style><rect class="archify-bake-background" x="0" y="0" width="560" height="444" fill="#f4f5f7"/><!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" class="m-default" />
@@ -348,51 +348,51 @@ svg[data-theme="light"] { --bg: #f4f5f7; --grid: #e9edf2; --canvas-dot: #e2e7ec;
 
 
         <!-- Messages -->
-        <g data-edge-from="program" data-edge-to="host" data-edge-label="probe · ESC ] 7501 ; ? ST" data-edge-key="0" data-edge-id="probe">
-          <path data-composition-edge-from="program" data-composition-edge-to="host" data-composition-edge-id="probe" data-composition-points="164,170;418,170" d="M 164 170 L 418 170" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <g data-edge-from="program" data-edge-to="host" data-edge-label="输出 · probe ESC ] 7501 ; ? ST" data-edge-key="0" data-edge-id="probe">
+          <path data-composition-edge-from="program" data-composition-edge-to="host" data-composition-edge-id="probe" data-composition-points="164,170;418,170" d="M 164 170 L 418 170" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
-          <rect x="202.5" y="150" width="177" height="18" rx="3" class="c-mask"/>
-          <text x="291" y="160" class="t-muted" font-size="11" text-anchor="middle">probe · ESC ] 7501 ; ? ST</text>
+          <rect x="186" y="150" width="210" height="18" rx="3" class="c-mask"/>
+          <text x="291" y="160" class="t-edge-emphasis" font-size="11" text-anchor="middle">输出 · probe ESC ] 7501 ; ? ST</text>
         </g>
         </g>
 
-        <g data-edge-from="host" data-edge-to="program" data-edge-label="reply · ESC ] 7501 ; ? ST" data-edge-key="1" data-edge-id="probe-reply">
-          <path data-composition-edge-from="host" data-composition-edge-to="program" data-composition-edge-id="probe-reply" data-composition-points="418,198;164,198" d="M 418 198 L 164 198" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
+        <g data-edge-from="host" data-edge-to="program" data-edge-label="输入 · reply ESC ] 7501 ; ? ST" data-edge-key="1" data-edge-id="probe-reply">
+          <path data-composition-edge-from="host" data-composition-edge-to="program" data-composition-edge-id="probe-reply" data-composition-points="418,198;164,198" d="M 418 198 L 164 198" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="202.5" y="178" width="177" height="18" rx="3" class="c-mask"/>
-          <text x="291" y="188" class="t-muted" font-size="11" text-anchor="middle">reply · ESC ] 7501 ; ? ST</text>
+          <rect x="186" y="178" width="210" height="18" rx="3" class="c-mask"/>
+          <text x="291" y="188" class="t-muted" font-size="11" text-anchor="middle">输入 · reply ESC ] 7501 ; ? ST</text>
         </g>
         </g>
 
-        <g data-edge-from="program" data-edge-to="host" data-edge-label="ESC ] 7501 ; state=working:app=ClaudeCode ST" data-edge-key="2" data-edge-id="working">
+        <g data-edge-from="program" data-edge-to="host" data-edge-label="输出 · state=working:app=ClaudeCode" data-edge-key="2" data-edge-id="working">
           <path data-composition-edge-from="program" data-composition-edge-to="host" data-composition-edge-id="working" data-composition-points="164,244;418,244" d="M 164 244 L 418 244" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
-          <rect x="139.8" y="224" width="302.4" height="18" rx="3" class="c-mask"/>
-          <text x="291" y="234" class="t-edge-emphasis" font-size="11" text-anchor="middle">ESC ] 7501 ; state=working:app=ClaudeCode ST</text>
+          <rect x="169.5" y="224" width="243" height="18" rx="3" class="c-mask"/>
+          <text x="291" y="234" class="t-edge-emphasis" font-size="11" text-anchor="middle">输出 · state=working:app=ClaudeCode</text>
         </g>
         </g>
 
-        <g data-edge-from="program" data-edge-to="host" data-edge-label="state=blocked:kind=permission" data-edge-key="3" data-edge-id="blocked">
+        <g data-edge-from="program" data-edge-to="host" data-edge-label="输出 · state=blocked:kind=permission" data-edge-key="3" data-edge-id="blocked">
           <path data-composition-edge-from="program" data-composition-edge-to="host" data-composition-edge-id="blocked" data-composition-points="164,272;418,272" d="M 164 272 L 418 272" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
-          <rect x="189.3" y="252" width="203.39999999999998" height="18" rx="3" class="c-mask"/>
-          <text x="291" y="262" class="t-edge-emphasis" font-size="11" text-anchor="middle">state=blocked:kind=permission</text>
+          <rect x="166.2" y="252" width="249.6" height="18" rx="3" class="c-mask"/>
+          <text x="291" y="262" class="t-edge-emphasis" font-size="11" text-anchor="middle">输出 · state=blocked:kind=permission</text>
         </g>
         </g>
 
-        <g data-edge-from="host" data-edge-to="program" data-edge-label="Enter · 普通终端输入" data-edge-key="4" data-edge-id="user-enter">
-          <path data-composition-edge-from="host" data-composition-edge-to="program" data-composition-edge-id="user-enter" data-composition-points="418,300;164,300" d="M 418 300 L 164 300" class="a-dashed" data-animate="edge" style="--step:4" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <g data-edge-from="host" data-edge-to="program" data-edge-label="输入 · 用户按 Enter" data-edge-key="4" data-edge-id="user-enter">
+          <path data-composition-edge-from="host" data-composition-edge-to="program" data-composition-edge-id="user-enter" data-composition-points="418,300;164,300" d="M 418 300 L 164 300" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="219" y="280" width="144" height="18" rx="3" class="c-mask"/>
-          <text x="291" y="290" class="t-edge-dashed" font-size="11" text-anchor="middle">Enter · 普通终端输入</text>
+          <rect x="222.3" y="280" width="137.39999999999998" height="18" rx="3" class="c-mask"/>
+          <text x="291" y="290" class="t-muted" font-size="11" text-anchor="middle">输入 · 用户按 Enter</text>
         </g>
         </g>
 
-        <g data-edge-from="program" data-edge-to="host" data-edge-label="state=done" data-edge-key="5" data-edge-id="done">
+        <g data-edge-from="program" data-edge-to="host" data-edge-label="输出 · state=done" data-edge-key="5" data-edge-id="done">
           <path data-composition-edge-from="program" data-composition-edge-to="host" data-composition-edge-id="done" data-composition-points="164,328;418,328" d="M 164 328 L 418 328" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
-          <rect x="252" y="308" width="78" height="18" rx="3" class="c-mask"/>
-          <text x="291" y="318" class="t-edge-emphasis" font-size="11" text-anchor="middle">state=done</text>
+          <rect x="228.9" y="308" width="124.19999999999999" height="18" rx="3" class="c-mask"/>
+          <text x="291" y="318" class="t-edge-emphasis" font-size="11" text-anchor="middle">输出 · state=done</text>
         </g>
         </g>
 
@@ -437,19 +437,11 @@ svg[data-theme="light"] { --bg: #f4f5f7; --grid: #e9edf2; --canvas-dot: #e2e7ec;
           <text x="40" y="370" class="t-primary" font-size="12" font-weight="650">图例</text>
           <g data-legend-semantic-kind="emphasis" data-legend-x="40" data-legend-baseline="390" data-legend-width="161">
             <path d="M 40 387 L 74 387" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-            <text x="83" y="390" class="t-muted" font-size="10" font-weight="500">程序输出 · 状态汇报</text>
+            <text x="83" y="390" class="t-muted" font-size="10" font-weight="500">输出 · 程序写到终端</text>
           </g>
-          <g data-legend-semantic-kind="return" data-legend-x="223" data-legend-baseline="390" data-legend-width="136">
-            <path d="M 223 387 L 257 387" class="a-default" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-            <text x="266" y="390" class="t-muted" font-size="10" font-weight="500">终端输入 · 应答</text>
-          </g>
-          <g data-legend-semantic-kind="dashed" data-legend-x="40" data-legend-baseline="412" data-legend-width="161">
-            <path d="M 40 409 L 74 409" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-            <text x="83" y="412" class="t-muted" font-size="10" font-weight="500">终端输入 · 用户按键</text>
-          </g>
-          <g data-legend-semantic-kind="default" data-legend-x="223" data-legend-baseline="412" data-legend-width="136">
-            <path d="M 223 409 L 257 409" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-            <text x="266" y="412" class="t-muted" font-size="10" font-weight="500">程序输出 · 探测</text>
+          <g data-legend-semantic-kind="default" data-legend-x="223" data-legend-baseline="390" data-legend-width="198">
+            <path d="M 223 387 L 257 387" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+            <text x="266" y="390" class="t-muted" font-size="10" font-weight="500">输入 · 到达程序的终端输入</text>
           </g>
         </g>
       <metadata id="archify-software-notices">NOTICE
@@ -817,4 +809,7 @@ The Atlas 3D view includes the unmodified minified build of
 `build/three.min.js`), copyright 2010-2021 three.js authors, under the MIT
 License. It is embedded in the analysis page and runs only when Atlas 3D is
 opened. The complete license is preserved in
-`modules/code-analysis/overlay/vendor/THREE-LICENSE.txt` in the packaged Skill.</metadata></svg>
+`modules/code-analysis/overlay/vendor/THREE-LICENSE.txt` in the packaged Skill.</metadata><style>
+.c-mask { display: none !important; }
+.c-mask + text { paint-order: stroke fill; stroke: var(--bg, #f4f5f7); stroke-width: 6px; stroke-linejoin: round; }
+</style></svg>

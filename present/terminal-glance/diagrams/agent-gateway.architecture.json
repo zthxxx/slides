@@ -31,60 +31,17 @@
   },
   "components": [
     {
-      "id": "im",
-      "type": "cloud",
-      "label": "IM 消息",
-      "sublabel": "飞书会话",
-      "pos": [
-        716,
-        270
-      ],
-      "size": [
-        128,
-        60
-      ]
-    },
-    {
-      "id": "web",
-      "type": "frontend",
-      "label": "Web 终端",
-      "sublabel": "多个 viewer",
-      "pos": [
-        40,
-        250
-      ],
-      "size": [
-        140,
-        100
-      ]
-    },
-    {
-      "id": "worker",
-      "type": "messagebus",
-      "label": "botmux worker",
-      "sublabel": "输入 · 输出分发",
-      "tag": "状态：OSC 7501 · hooks · idle",
-      "pos": [
-        372,
-        250
-      ],
-      "size": [
-        164,
-        100
-      ]
-    },
-    {
       "id": "tmuxs",
       "type": "database",
       "label": "tmux server",
-      "sublabel": "画出 pane",
+      "sublabel": "每个 pane 一份 grid",
       "icon": "none",
       "pos": [
-        372,
+        370,
         60
       ],
       "size": [
-        164,
+        140,
         60
       ]
     },
@@ -95,7 +52,7 @@
       "sublabel": "line discipline",
       "icon": "none",
       "pos": [
-        592,
+        566,
         60
       ],
       "size": [
@@ -109,11 +66,53 @@
       "label": "Agent",
       "sublabel": "唯一的进程",
       "pos": [
-        744,
+        734,
         60
       ],
       "size": [
         100,
+        60
+      ]
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Web 终端",
+      "sublabel": "多个 viewer",
+      "pos": [
+        40,
+        230
+      ],
+      "size": [
+        140,
+        80
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "messagebus",
+      "label": "botmux worker",
+      "sublabel": "状态：OSC 7501 · hooks · idle",
+      "pos": [
+        350,
+        230
+      ],
+      "size": [
+        180,
+        80
+      ]
+    },
+    {
+      "id": "im",
+      "type": "cloud",
+      "label": "IM 消息",
+      "sublabel": "飞书话题",
+      "pos": [
+        754,
+        240
+      ],
+      "size": [
+        128,
         60
       ]
     }
@@ -131,45 +130,89 @@
   ],
   "connections": [
     {
-      "id": "im-worker",
-      "from": "im",
-      "to": "worker",
-      "label": "turn queue · ready gate"
-    },
-    {
-      "id": "web-worker",
-      "from": "web",
-      "to": "worker",
-      "label": "按键 · WebSocket"
-    },
-    {
-      "id": "worker-web",
-      "from": "worker",
-      "to": "web",
-      "label": "输出 · WebSocket"
-    },
-    {
-      "id": "worker-tmuxs",
-      "from": "worker",
-      "to": "tmuxs",
-      "label": "send-keys · paste-buffer"
-    },
-    {
-      "id": "tmuxs-worker",
-      "from": "tmuxs",
-      "to": "worker",
-      "label": "pipe-pane → FIFO"
-    },
-    {
-      "id": "tmuxs-pty1",
+      "id": "i-tmuxs-pty1",
       "from": "tmuxs",
       "to": "pty1",
-      "label": "ptmx"
+      "label": "输入",
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
-      "id": "pty1-agent",
+      "id": "o-pty1-tmuxs",
       "from": "pty1",
-      "to": "agent"
+      "to": "tmuxs",
+      "label": "输出",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-pty1-agent",
+      "from": "pty1",
+      "to": "agent",
+      "label": "输入",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "o-agent-pty1",
+      "from": "agent",
+      "to": "pty1",
+      "label": "输出",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-worker-tmuxs",
+      "from": "worker",
+      "to": "tmuxs",
+      "label": "输入 · send-keys / paste-buffer",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "o-tmuxs-worker",
+      "from": "tmuxs",
+      "to": "worker",
+      "label": "输出 · pipe-pane → FIFO",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "i-web-worker",
+      "from": "web",
+      "to": "worker",
+      "label": "输入 · 按键 · WebSocket",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "o-worker-web",
+      "from": "worker",
+      "to": "web",
+      "label": "输出 · WebSocket",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-im-worker",
+      "from": "im",
+      "to": "worker",
+      "label": "输入 · turn queue · ready gate",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "o-worker-im",
+      "from": "worker",
+      "to": "im",
+      "label": "输出 · 流式卡片 (经 daemon)",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
     }
   ]
 }

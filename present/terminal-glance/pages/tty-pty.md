@@ -29,20 +29,20 @@
 
 TTY 负责控制字符的输入输出
 
-<img class="diagram w-[1000px]" src="/images/diagrams/tty-layer.svg" alt="基础的一层终端：Terminal 持有 ptmx，内核 PTY pts/0 经过 line discipline，zsh 的 fd 0、1、2 都是 pts/0" />
+<img class="diagram w-[1300px]" src="/images/diagrams/tty-layer.svg" alt="基础的一层终端：按键从 Terminal 写进 ptmx，经 line discipline 由 zsh 从 fd 0 读到；zsh 写到 fd 1、2 的输出连同 echo 回显，从 ptmx 读回 Terminal" />
 
 <!--
 - TTY 可以看作一根带处理逻辑的双向管道，一端接终端，一端接进程：终端侧拿着 master 端 (ptmx)，程序的 fd 0、1、2 是 slave 端 (pts/0)
 - 中间的 line discipline 负责：回显 (echo)；行缓冲与行编辑 (icanon，比如退格、Ctrl-U)；把特殊字符转成信号 (isig，比如 Ctrl-C 转成 SIGINT)；换行转换 (icrnl、onlcr)
 - 一个 tty 上可以挂多个进程，但输入只交给前台进程组
-- 箭头从外层指向内层；按键和输出沿同一条链双向流动
+- 每一段都是一对箭头：灰色的输入从终端流向程序，绿色的输出原路返回；echo 回显由 line discipline 直接写回输出，不经过 zsh
 - 这一行「终端侧 → PTY → 程序」是后面每张分层图的基本单元，ssh 和 tmux 都是在它上面再叠一层同样的结构
 -->
 
 ---
 
 
-<img class="diagram w-[1240px]" src="/images/diagrams/foreground-group.svg" alt="pts/0 的前台进程组是 bash：bash 从 pts/0 读 (R) 也向它写 (W)；后台进程组 fish 只能写 (W)，一读 pts/0 就收到 SIGTTIN 被暂停" />
+<img class="diagram w-[1440px]" src="/images/diagrams/foreground-group.svg" alt="Terminal 和 pts/0 之间输入是按键、输出含 echo；pts/0 的前台进程组是 bash：bash 从 pts/0 读输入 (R) 也向它写输出 (W)；后台进程组 fish 只能写输出 (W)，一读 pts/0 就收到 SIGTTIN 被暂停" />
 
 <!--
 - 一个 tty 同一时刻只有一个前台进程组，它既能读也能写，对应图中的 bash (R/W)
@@ -113,7 +113,7 @@ done" />
 
 ssh & pts
 
-<img class="diagram w-[1300px]" src="/images/diagrams/ssh-layers.svg" alt="ssh 在基础分层上多叠一层：本机 Terminal 持有 ptmx，ssh 运行在 pts/0 上；经 SSH 连接到远端，sshd 持有 ptmx，zsh 运行在 pts/1 上" />
+<img class="diagram w-[1400px]" src="/images/diagrams/ssh-layers.svg" alt="ssh 在基础分层上多叠一层：输入从 Terminal 经 pts/0、ssh、SSH 连接、sshd、pts/1 到 zsh，输出沿同一条链反向回到 Terminal" />
 
 <!--
 - 本机这一层 (L0) 和前面的基础图一样，只是 pts/0 上跑的程序换成了 ssh；ssh 把本机 tty 切到 raw 模式，按键原样发往远端

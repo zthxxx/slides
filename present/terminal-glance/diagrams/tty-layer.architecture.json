@@ -8,22 +8,108 @@
     "quality_profile": "showcase",
     "legend": {
       "entries": {
-        "frontend": { "label": "终端侧 · 持有 ptmx" },
-        "external": { "label": "内核 PTY" },
-        "backend": { "label": "程序 · fd 0 1 2 是 pts" }
+        "frontend": {
+          "label": "终端侧 · 持有 ptmx"
+        },
+        "external": {
+          "label": "内核 PTY"
+        },
+        "backend": {
+          "label": "程序 · fd 0 1 2 是 pts"
+        }
       }
     }
   },
   "components": [
-    { "id": "emu", "type": "frontend", "label": "Terminal", "sublabel": "iTerm2 · Ghostty", "pos": [40, 60], "size": [124, 60] },
-    { "id": "pty0", "type": "external", "label": "pts/0", "sublabel": "line discipline", "icon": "none", "pos": [220, 60], "size": [112, 60] },
-    { "id": "zsh", "type": "backend", "label": "zsh", "sublabel": "shell", "pos": [372, 60], "size": [100, 60] }
+    {
+      "id": "emu",
+      "type": "frontend",
+      "label": "Terminal",
+      "sublabel": "iTerm2 · Ghostty",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        124,
+        60
+      ]
+    },
+    {
+      "id": "pty0",
+      "type": "external",
+      "label": "pts/0",
+      "sublabel": "line discipline",
+      "pos": [
+        290,
+        60
+      ],
+      "size": [
+        124,
+        60
+      ],
+      "icon": "none"
+    },
+    {
+      "id": "zsh",
+      "type": "backend",
+      "label": "zsh",
+      "sublabel": "shell",
+      "pos": [
+        534,
+        60
+      ],
+      "size": [
+        110,
+        60
+      ]
+    }
   ],
   "boundaries": [
-    { "kind": "region", "label": "L0 · 本机终端", "wraps": ["emu", "pty0", "zsh"] }
+    {
+      "kind": "region",
+      "label": "L0 · 本机终端",
+      "wraps": [
+        "emu",
+        "pty0",
+        "zsh"
+      ]
+    }
   ],
   "connections": [
-    { "id": "emu-pty0", "from": "emu", "to": "pty0", "label": "ptmx" },
-    { "id": "pty0-zsh", "from": "pty0", "to": "zsh" }
+    {
+      "id": "i-emu-pty0",
+      "from": "emu",
+      "to": "pty0",
+      "label": "输入 · 按键",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "o-pty0-emu",
+      "from": "pty0",
+      "to": "emu",
+      "label": "输出 · 含 echo",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "i-pty0-zsh",
+      "from": "pty0",
+      "to": "zsh",
+      "label": "输入 · fd 0",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "o-zsh-pty0",
+      "from": "zsh",
+      "to": "pty0",
+      "label": "输出 · fd 1 2",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    }
   ]
 }

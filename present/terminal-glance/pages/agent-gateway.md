@@ -14,13 +14,14 @@
 
 [Botmux Web 终端](https://deepcoldy.github.io/botmux/web-terminal)：一个 Agent，多条输入路径
 
-<img class="diagram w-[1400px]" src="/images/diagrams/agent-gateway.svg" alt="botmux worker 接在 tmux pane 这一层上：Web 终端经 WebSocket 发按键、收输出，IM 消息经 turn queue 和 ready gate 进入 worker；worker 用 send-keys / paste-buffer 写入 tmux server，用 pipe-pane 把原始输出复制到 FIFO 读回并解析状态；tmux server 持有 pts/1 的 ptmx，唯一的 Agent 进程运行在 pts/1 上" />
+<img class="diagram w-[1440px]" src="/images/diagrams/agent-gateway.svg" alt="botmux worker 接在 tmux pane 这一层上，每一段都有输入和输出：tmux server、pts/1、Agent 之间双向传字节；worker 用 send-keys / paste-buffer 输入，经 pipe-pane → FIFO 读回输出；Web 终端经 WebSocket 发按键、收输出；IM 消息经 turn queue 和 ready gate 输入，输出经 daemon 变成飞书话题里的流式卡片" />
 
 <!--
 - 这张图对应本地 botmux cb8ff44b2 的默认 tmux pipe 后端。只有一个 Agent 进程，跑在 tmux pane 的 pts 上；pane 的 ptmx 由 tmux server 持有，tmux 解析 Agent 的输出并画出 pane 的屏幕。IM 和 Web 是访问这个 pane 的不同路径
 - worker 用 send-keys 或 load-buffer + paste-buffer 写入 tmux，输出由 pipe-pane 复制到 FIFO；worker 一边解析状态，一边把输出广播给 WebSocket viewer
 - 新 viewer 可以用 capture-pane 得到当前屏幕，再接实时输出。屏幕快照包含渲染后的单元格，无法还原已经被解释的所有 OSC 事件
 - Web 的即时按键直接进入 backend.write；IM 消息有 turn queue 和 ready gate。两者可同时影响同一个输入区域，不能把共享终端理解成自动拥有全局输入锁
+- IM 这条路径也是双向的：消息经 daemon 进入 worker；worker 把终端输出整理成流式卡片，经 daemon 发回飞书话题 ([botmux 文档 · 架构](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/docs-site/docs/zh/architecture.md#L17))
 - botmux 也保留 tmux attach 路径：每个 viewer 有自己的 attach 客户端 PTY；PTY 后端则由 worker 持有 node-pty，两种情况最终仍汇入同一 Agent 的终端输入
 - 来源：[botmux · tmux pipe 架构](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/adapters/backend/tmux-pipe-backend.ts#L1-L25)、[读写实现](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/adapters/backend/tmux-pipe-backend.ts#L817-L1056)、[WebSocket 输入](https://github.com/deepcoldy/botmux/blob/cb8ff44b2d9e0d250040f3228feb11e9225d6514/src/worker.ts#L33430-L33552)
 -->
@@ -80,7 +81,7 @@ Gateway 怎样知道 Agent 在等什么？
 
 多一层 tmux，握手时序也会改变
 
-<img class="diagram w-[1020px]" src="/images/diagrams/probe-relay.svg" alt="两段时序：没有 relay 时，Agent 发出 7501 探测和 DA1，tmux server 自己在 1–2 ms 内回答 DA1，worker 经 pipe-pane 看到探测后用 send-keys 写回的 7501 回复晚于 DA1，Agent 判定不支持；pane 里有 relay 时，relay 先同步写回 7501 回复，再把 DA1 转发给 tmux，tmux 的 DA1 回复经 relay 回到 Agent 时已晚于 7501 回复" />
+<img class="diagram w-[930px]" src="/images/diagrams/probe-relay.svg" alt="两段时序，按 Agent 的终端区分输出和输入：没有 relay 时，Agent 输出 7501 探测和 DA1，tmux server 在 1–2 ms 内把 DA1 回复送回 Agent 的输入，worker 经 pipe-pane 旁路看到探测后用 send-keys 写回的 7501 回复晚于 DA1，Agent 判定不支持；pane 里有 relay 时，relay 先把 7501 回复同步写回 Agent 的输入，再把 DA1 输出转发给 tmux，tmux 的 DA1 回复经 relay 回到 Agent 时已晚于 7501 回复" />
 
 <!--
 - 上半张图：Agent 跑在 tmux pane 的 pts 上，这个 pane 的 ptmx 由 tmux server 持有。对 Agent 来说 tmux 就是它的终端：tmux 解析 pane 的输出、画出 pane 的屏幕，也像终端一样回答 DA1 这类查询
