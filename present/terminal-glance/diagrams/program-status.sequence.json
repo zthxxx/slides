@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "OSC 7501 状态汇报",
+    "locale": "zh-CN",
+    "output": "program-status.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "default": { "label": "程序输出 · 探测" },
+        "return": { "label": "终端输入 · 应答" },
+        "emphasis": { "label": "程序输出 · 状态汇报" },
+        "dashed": { "label": "终端输入 · 用户按键" }
+      }
+    }
+  },
+  "participants": [
+    { "id": "program", "type": "backend", "label": "Program / Agent", "sublabel": "pts 上的程序" },
+    { "id": "host", "type": "frontend", "label": "Terminal / Gateway", "sublabel": "宿主 · 显示状态" }
+  ],
+  "segments": [
+    { "from": 150, "to": 212, "label": "探测是否支持" },
+    { "from": 228, "to": 346, "label": "主动汇报状态" }
+  ],
+  "messages": [
+    { "id": "probe", "from": "program", "to": "host", "y": 170, "label": "probe · ESC ] 7501 ; ? ST", "variant": "default" },
+    { "id": "probe-reply", "from": "host", "to": "program", "y": 198, "label": "reply · ESC ] 7501 ; ? ST", "variant": "return" },
+    { "id": "working", "from": "program", "to": "host", "y": 244, "label": "ESC ] 7501 ; state=working:app=ClaudeCode ST", "variant": "emphasis" },
+    { "id": "blocked", "from": "program", "to": "host", "y": 272, "label": "state=blocked:kind=permission", "variant": "emphasis" },
+    { "id": "user-enter", "from": "host", "to": "program", "y": 300, "label": "Enter · 普通终端输入", "variant": "dashed" },
+    { "id": "done", "from": "program", "to": "host", "y": 328, "label": "state=done", "variant": "emphasis" }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "botmux 接在 tmux 这一层上",
+    "locale": "zh-CN",
+    "output": "agent-gateway.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "浏览器里的终端"
+        },
+        "cloud": {
+          "label": "IM 消息"
+        },
+        "messagebus": {
+          "label": "botmux worker"
+        },
+        "database": {
+          "label": "tmux · 解析、重画、自己回答查询"
+        },
+        "external": {
+          "label": "内核 PTY"
+        },
+        "backend": {
+          "label": "程序 · fd 0 1 2 是 pts"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "im",
+      "type": "cloud",
+      "label": "IM 消息",
+      "sublabel": "飞书会话",
+      "pos": [
+        716,
+        270
+      ],
+      "size": [
+        128,
+        60
+      ]
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Web 终端",
+      "sublabel": "多个 viewer",
+      "pos": [
+        40,
+        250
+      ],
+      "size": [
+        140,
+        100
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "messagebus",
+      "label": "botmux worker",
+      "sublabel": "输入 · 输出分发",
+      "tag": "状态：OSC 7501 · hooks · idle",
+      "pos": [
+        372,
+        250
+      ],
+      "size": [
+        164,
+        100
+      ]
+    },
+    {
+      "id": "tmuxs",
+      "type": "database",
+      "label": "tmux server",
+      "sublabel": "画出 pane",
+      "icon": "none",
+      "pos": [
+        372,
+        60
+      ],
+      "size": [
+        164,
+        60
+      ]
+    },
+    {
+      "id": "pty1",
+      "type": "external",
+      "label": "pts/1",
+      "sublabel": "line discipline",
+      "icon": "none",
+      "pos": [
+        592,
+        60
+      ],
+      "size": [
+        112,
+        60
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent",
+      "sublabel": "唯一的进程",
+      "pos": [
+        744,
+        60
+      ],
+      "size": [
+        100,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "tmux pane",
+      "wraps": [
+        "tmuxs",
+        "pty1",
+        "agent"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "im-worker",
+      "from": "im",
+      "to": "worker",
+      "label": "turn queue · ready gate"
+    },
+    {
+      "id": "web-worker",
+      "from": "web",
+      "to": "worker",
+      "label": "按键 · WebSocket"
+    },
+    {
+      "id": "worker-web",
+      "from": "worker",
+      "to": "web",
+      "label": "输出 · WebSocket"
+    },
+    {
+      "id": "worker-tmuxs",
+      "from": "worker",
+      "to": "tmuxs",
+      "label": "send-keys · paste-buffer"
+    },
+    {
+      "id": "tmuxs-worker",
+      "from": "tmuxs",
+      "to": "worker",
+      "label": "pipe-pane → FIFO"
+    },
+    {
+      "id": "tmuxs-pty1",
+      "from": "tmuxs",
+      "to": "pty1",
+      "label": "ptmx"
+    },
+    {
+      "id": "pty1-agent",
+      "from": "pty1",
+      "to": "agent"
+    }
+  ]
+}

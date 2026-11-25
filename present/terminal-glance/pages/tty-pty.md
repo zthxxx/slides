@@ -29,18 +29,20 @@
 
 TTY 负责控制字符的输入输出
 
-<TtyDriverDiagram />
+<img class="diagram w-[1000px]" src="/images/diagrams/tty-layer.svg" alt="基础的一层终端：Terminal 持有 ptmx，内核 PTY pts/0 经过 line discipline，zsh 的 fd 0、1、2 都是 pts/0" />
 
 <!--
-- TTY 可以看作一根带处理逻辑的双向管道，一端接终端，一端接进程
+- TTY 可以看作一根带处理逻辑的双向管道，一端接终端，一端接进程：终端侧拿着 master 端 (ptmx)，程序的 fd 0、1、2 是 slave 端 (pts/0)
 - 中间的 line discipline 负责：回显 (echo)；行缓冲与行编辑 (icanon，比如退格、Ctrl-U)；把特殊字符转成信号 (isig，比如 Ctrl-C 转成 SIGINT)；换行转换 (icrnl、onlcr)
 - 一个 tty 上可以挂多个进程，但输入只交给前台进程组
+- 箭头从外层指向内层；按键和输出沿同一条链双向流动
+- 这一行「终端侧 → PTY → 程序」是后面每张分层图的基本单元，ssh 和 tmux 都是在它上面再叠一层同样的结构
 -->
 
 ---
 
 
-<ForegroundGroupDiagram />
+<img class="diagram w-[1240px]" src="/images/diagrams/foreground-group.svg" alt="pts/0 的前台进程组是 bash：bash 从 pts/0 读 (R) 也向它写 (W)；后台进程组 fish 只能写 (W)，一读 pts/0 就收到 SIGTTIN 被暂停" />
 
 <!--
 - 一个 tty 同一时刻只有一个前台进程组，它既能读也能写，对应图中的 bash (R/W)
@@ -111,14 +113,15 @@ done" />
 
 ssh & pts
 
-<SshPtsDiagram />
+<img class="diagram w-[1300px]" src="/images/diagrams/ssh-layers.svg" alt="ssh 在基础分层上多叠一层：本机 Terminal 持有 ptmx，ssh 运行在 pts/0 上；经 SSH 连接到远端，sshd 持有 ptmx，zsh 运行在 pts/1 上" />
 
 <!--
-- ssh 登录时，sshd 认证通过后调用 `openpty()`，它打开 /dev/ptmx 拿到 master fd，内核同时创建 slave 设备 /dev/pts/N
-- sshd fork 出 shell，把 shell 的 0、1、2 绑到 pts/N；之后 sshd 在 ssh 协议和 ptmx fd 之间来回搬运字节
+- 本机这一层 (L0) 和前面的基础图一样，只是 pts/0 上跑的程序换成了 ssh；ssh 把本机 tty 切到 raw 模式，按键原样发往远端
+- 远端多出的一层 (L1) 也是同一个结构：sshd 认证通过后调用 `openpty()`，它打开 /dev/ptmx 拿到 master fd，内核同时创建 slave 设备 /dev/pts/N；sshd fork 出 shell，把 shell 的 0、1、2 绑到 pts/N
+- 之后 sshd 在 ssh 协议和 ptmx fd 之间来回搬运字节：对远端的 shell 来说，sshd 站在终端模拟器的位置
 - 终端模拟器 (iTerm2，或这个页面里的 ghostty-web) 做的是同一件事，只是不经过网络；tmux 也一样，tmux server 持有 ptmx，为每个窗格创建一个 pts
 - 连接断开时 master 被关闭，pts 随之挂断，内核给以它为控制终端的会话首进程 (这里是 shell) 发 SIGHUP
-- 来源：[openssh-portable sshpty.c · pty_allocate](https://github.com/openssh/openssh-portable/blob/master/sshpty.c)、[pty(7)](https://man7.org/linux/man-pages/man7/pty.7.html)、[The TTY demystified · hangup 与 SIGHUP](https://www.linusakesson.net/programming/tty/)
+- 来源：[openssh-portable sshpty.c · pty_allocate](https://github.com/openssh/openssh-portable/blob/master/sshpty.c)、[clientloop.c · 有 pty 时 enter_raw_mode (07d888e)](https://github.com/openssh/openssh-portable/blob/07d888efaf1605d5f53692e827ae4418a212ca26/clientloop.c#L1552-L1553)、[pty(7)](https://man7.org/linux/man-pages/man7/pty.7.html)、[The TTY demystified · hangup 与 SIGHUP](https://www.linusakesson.net/programming/tty/)
 -->
 
 ---

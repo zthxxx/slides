@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ssh 里再开 tmux",
+    "locale": "zh-CN",
+    "output": "ssh-tmux-layers.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "终端侧 · 持有 ptmx" },
+        "external": { "label": "内核 PTY" },
+        "backend": { "label": "程序 · fd 0 1 2 是 pts" },
+        "security": { "label": "ssh · 原样转发字节" },
+        "database": { "label": "tmux · 解析、重画、自己回答查询" }
+      }
+    }
+  },
+  "components": [
+    { "id": "emu", "type": "frontend", "label": "Terminal", "sublabel": "iTerm2 · Ghostty", "pos": [40, 60], "size": [124, 60] },
+    { "id": "pty0", "type": "external", "label": "pts/0", "sublabel": "line discipline", "icon": "none", "pos": [220, 60], "size": [112, 60] },
+    { "id": "ssh", "type": "security", "label": "ssh", "sublabel": "raw 模式", "pos": [372, 60], "size": [124, 60] },
+    { "id": "sshd", "type": "security", "label": "sshd", "sublabel": "openpty()", "pos": [372, 200], "size": [124, 60] },
+    { "id": "pty1", "type": "external", "label": "pts/1", "sublabel": "line discipline", "icon": "none", "pos": [552, 200], "size": [112, 60] },
+    { "id": "tmuxc", "type": "database", "label": "tmux client", "sublabel": "交出 tty fd", "icon": "none", "pos": [704, 200], "size": [124, 60] },
+    { "id": "tmuxs", "type": "database", "label": "tmux server", "sublabel": "每个 pane 一份 grid", "icon": "none", "pos": [704, 340], "size": [124, 140] },
+    { "id": "pty2", "type": "external", "label": "pts/2", "sublabel": "line discipline", "icon": "none", "pos": [884, 340], "size": [112, 60] },
+    { "id": "pty3", "type": "external", "label": "pts/3", "sublabel": "line discipline", "icon": "none", "pos": [884, 420], "size": [112, 60] },
+    { "id": "zsh", "type": "backend", "label": "zsh", "sublabel": "pane 1", "pos": [1036, 340], "size": [100, 60] },
+    { "id": "nvim", "type": "backend", "label": "nvim", "sublabel": "pane 2", "pos": [1036, 420], "size": [100, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "L0 · 本机终端", "wraps": ["emu", "pty0", "ssh"] },
+    { "kind": "region", "label": "L1 · ssh 会话 · 远端", "wraps": ["sshd", "pty1", "tmuxc"] },
+    { "kind": "region", "label": "L2 · tmux pane · 远端", "wraps": ["tmuxs", "pty2", "pty3", "zsh", "nvim"] }
+  ],
+  "connections": [
+    { "id": "emu-pty0", "from": "emu", "to": "pty0", "label": "ptmx" },
+    { "id": "pty0-ssh", "from": "pty0", "to": "ssh" },
+    { "id": "ssh-sshd", "from": "ssh", "to": "sshd", "label": "SSH · TCP", "variant": "security" },
+    { "id": "sshd-pty1", "from": "sshd", "to": "pty1", "label": "ptmx" },
+    { "id": "pty1-tmuxc", "from": "pty1", "to": "tmuxc" },
+    { "id": "tmuxc-tmuxs", "from": "tmuxc", "to": "tmuxs", "label": "unix socket", "variant": "dashed" },
+    { "id": "tmuxs-pty2", "from": "tmuxs", "to": "pty2", "label": "ptmx" },
+    { "id": "tmuxs-pty3", "from": "tmuxs", "to": "pty3", "label": "ptmx" },
+    { "id": "pty2-zsh", "from": "pty2", "to": "zsh" },
+    { "id": "pty3-nvim", "from": "pty3", "to": "nvim" }
+  ]
+}

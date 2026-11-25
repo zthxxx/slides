@@ -8,13 +8,13 @@ Slide 上的每个终端都是这台机器上一个独立 pty 里的 shell，由
 
 ```
 slides.md, pages/         内容、demo Step、speaker notes
+diagrams/                 插图的 archify 源文件；render.ts 把它们渲染成 public/images/diagrams/ 下的 SVG，slide 用 <img> 引用
    │
 components/               Vue 视图；依赖 Slidev 的概念 (render context、当前 slide、layout)
    ShellDemo.vue          一个 demo：上下堆叠的终端 + 编号的 Step；向下提供终端名
    Terminal.vue           一个终端窗口；所在 slide 激活时接管其 session 的元素；高度拖拽手柄
    ShellStep.vue          一个 Step 按钮；在本窗口播放，或从 presenter 窗口转发；shell 高亮 (shell-highlight.ts)
    WebVideo.vue           外站的视频，带浏览器自带的控件和指向其页面的链接
-   diagrams/              TTY、SSH、OSC 和 Agent 网关的 SVG 图；DiagramFrame.vue 为每张图提供共享的明暗样式
 setup/main.ts             Slidev app setup：在观众窗口里开始 Linux 的下载
    │
 runtime/                  纯 TypeScript；不含模板

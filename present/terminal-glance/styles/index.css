@@ -1,0 +1,8 @@
+/* Diagrams rendered by diagrams/render.ts: light SVGs that keep their own background in both color modes. */
+img.diagram {
+  display: block;
+  height: auto;
+  margin: 12px auto 0;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgb(127 127 127 / 0.25);
+}

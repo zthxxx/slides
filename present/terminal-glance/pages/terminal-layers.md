@@ -46,7 +46,7 @@ iTerm2 / Ghostty / kitty / Warp 是什么
 
 接口固定，实现可换
 
-<TerminalLayersDiagram />
+<img class="diagram w-[1480px]" src="/images/diagrams/terminal-layers.svg" alt="终端模拟器、持有 ptmx 的一方、内核 PTY、程序四层之间隔着 VT bytes、ptmx fd、tty fd 三个固定接口，每层都有多种实现；本 deck 的对应实现是 ghostty-web、经 vsock :1022 连到的 kwtty serve、unkernel 的 /dev/pts/N 和 zsh" />
 
 <!--
 - 前面拆开的几层之间，都隔着固定的接口：终端模拟器和对端交换的只是 VT/ANSI 字节；持有 ptmx 的一方用 read、write 搬字节，用 ioctl (TIOCSWINSZ) 改窗口大小；程序只看到 fd 0、1、2 上的 tty 和 termios 设置
@@ -61,10 +61,11 @@ iTerm2 / Ghostty / kitty / Warp 是什么
 
 tmux / herdr：终端里又装了一层终端
 
-<MultiplexerDiagram />
+<img class="diagram w-[1300px]" src="/images/diagrams/tmux-layers.svg" alt="tmux 在基础分层上多叠一层：本机 Terminal 持有 ptmx，tmux client 运行在 pts/0 上；tmux server 经 unix socket 接管它，为每个 pane 持有一个 ptmx，zsh 和 nvim 分别运行在 pts/1、pts/2 上；pane 里的程序只能用 passthrough 序列直达外层终端" />
 
 <!--
 - 回答开头的问题：是的，tmux 在中间又装了一层终端。对外层终端来说，tmux client 只是 pts/0 上的一个普通程序；对 pane 里的程序来说，tmux server 就是它们的终端模拟器
+- 和 ssh 那张图对照：形状一样，ssh / sshd 换成了 tmux client / server。区别在中间这一层做什么：ssh 原样转发字节，tmux 解析每个 pane 的输出，再把合成的画面重画到外层
 - tmux server 给每个 pane 开一个 ptmx (`fdforkpty`)，自己解析每个 pane 的输出、维护各自的字符格子，再把所有 pane 合成一个画面，重画到外层终端
 - tmux client 启动后通过 unix socket 把自己 tty 的 fd 交给 server，之后 server 直接读这个 fd 拿按键、往里写画面。detach 时 client 退出，server 和 pane 里的进程继续运行，所以 ssh 断线不丢会话
 - 因为 server 是 pane 的终端，pane 里程序发出的 DA1、OSC 11 这类查询由 tmux 自己回答，程序问到的是 tmux 的能力和颜色。要把序列原样送到外层终端，得包一层 passthrough：`ESC P tmux; … ESC \`，并打开 `allow-passthrough`。后面 botmux 的握手时序问题就出在这一层
@@ -99,6 +100,21 @@ tmux：两个客户端看同一个会话，会话里再开 shell
 - B 按 `^S d` detach：B 回到自己原来的 shell，会话和 pane 里的 shell 都还在，A 照常使用；断线后 attach 回来就是靠这一点。最后 A `tmux kill-session` 结束会话，回到 A 原来的 shell
 - 对照上一页的图：外层终端 → client 的 pts → tmux server → 每个 pane 的 ptmx / pts → shell
 - 来源：[tmux(1) 3.7c · attach、list-clients、FORMATS](https://github.com/tmux/tmux/blob/3.7c/tmux.1)
+-->
+
+---
+
+ssh 里再开 tmux：两层叠在一起
+
+<img class="diagram w-[1480px]" src="/images/diagrams/ssh-tmux-layers.svg" alt="ssh 和 tmux 两层叠加：本机 Terminal、pts/0 和 ssh；远端 sshd、pts/1 和 tmux client；tmux server 为每个 pane 持有 ptmx，zsh 和 nvim 运行在 pts/2、pts/3 上" />
+
+<!--
+- 把前两张图叠起来：本机这一层 (L0) 和 ssh 那张图一样；远端的 ssh 会话 (L1) 里，pts/1 上跑的不再是 zsh，而是 tmux client；tmux server 再开出一层 (L2)，每个 pane 一个 pts
+- 每多一层，就多一对 PTY，和一个「对外层是程序、对内层是终端」的中间人：ssh / sshd 原样转发字节，tmux client / server 解析后重画
+- `ssh -t host tmux attach` 时 pts/1 上就是 tmux client；平时在远端 shell 里敲 tmux，pts/1 上还有一个等着它的 login shell
+- 断线只拆掉上面两层：TCP 断开，sshd 关闭 pts/1 的 master，pts/1 挂断，这个会话里的 shell 和 tmux client 随之结束
+- tmux server 启动时 fork 后调用 `daemon()`，脱离了 pts/1 所在的会话，所以 L2 的 pane 和里面的程序继续运行；重新 ssh 上来再 `tmux attach`，回到同一个画面
+- 来源：[tmux 3.7c proc.c · proc_fork_and_daemon](https://github.com/tmux/tmux/blob/3.7c/proc.c#L371-L392)、[server.c · server_start](https://github.com/tmux/tmux/blob/3.7c/server.c#L188-L193)
 -->
 
 ---

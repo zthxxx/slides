@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "前台进程组",
+    "locale": "zh-CN",
+    "output": "foreground-group.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "终端侧 · 持有 ptmx"
+        },
+        "external": {
+          "label": "内核 PTY"
+        },
+        "backend": {
+          "label": "程序 · fd 0 1 2 是 pts"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "emu",
+      "type": "frontend",
+      "label": "Terminal",
+      "sublabel": "iTerm2 · Ghostty",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        124,
+        60
+      ]
+    },
+    {
+      "id": "pty0",
+      "type": "external",
+      "label": "pts/0",
+      "sublabel": "前台进程组 → bash",
+      "icon": "none",
+      "pos": [
+        220,
+        60
+      ],
+      "size": [
+        112,
+        60
+      ]
+    },
+    {
+      "id": "bash",
+      "type": "backend",
+      "label": "bash",
+      "sublabel": "前台进程组",
+      "emphasis": true,
+      "pos": [
+        460,
+        60
+      ],
+      "size": [
+        124,
+        60
+      ]
+    },
+    {
+      "id": "fish",
+      "type": "backend",
+      "label": "fish",
+      "sublabel": "后台进程组",
+      "pos": [
+        460,
+        200
+      ],
+      "size": [
+        124,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "L0 · 本机终端",
+      "wraps": [
+        "emu",
+        "pty0",
+        "bash",
+        "fish"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "emu-pty0",
+      "from": "emu",
+      "to": "pty0",
+      "label": "ptmx"
+    },
+    {
+      "id": "bash-read",
+      "from": "pty0",
+      "to": "bash",
+      "label": "R",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "bash-write",
+      "from": "bash",
+      "to": "pty0",
+      "label": "W",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "fish-write",
+      "from": "fish",
+      "to": "pty0",
+      "label": "W",
+      "fromSide": "left",
+      "toSide": "bottom"
+    },
+    {
+      "id": "fish-read",
+      "from": "pty0",
+      "to": "fish",
+      "label": "R → SIGTTIN",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "left"
+    }
+  ]
+}

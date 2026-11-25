@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "接口固定，实现可换",
+    "locale": "zh-CN",
+    "output": "terminal-layers.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "终端模拟器 · 字节 → 字符格子"
+        },
+        "messagebus": {
+          "label": "持有 ptmx · 搬运字节"
+        },
+        "external": {
+          "label": "内核 PTY"
+        },
+        "backend": {
+          "label": "程序 · fd 0 1 2 是 pts"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "emu",
+      "type": "frontend",
+      "label": "终端模拟器",
+      "sublabel": "iTerm2 · Ghostty · kitty · Warp",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        215,
+        60
+      ]
+    },
+    {
+      "id": "holder",
+      "type": "messagebus",
+      "label": "持有 ptmx",
+      "sublabel": "终端自己 · sshd · tmux server",
+      "icon": "none",
+      "pos": [
+        351,
+        60
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "kernel",
+      "type": "external",
+      "label": "内核 PTY",
+      "sublabel": "Linux · macOS · unkernel",
+      "icon": "none",
+      "pos": [
+        617,
+        60
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "prog",
+      "type": "backend",
+      "label": "程序",
+      "sublabel": "zsh · bash · nvim · htop · Claude Code",
+      "pos": [
+        859,
+        60
+      ],
+      "size": [
+        250,
+        60
+      ]
+    },
+    {
+      "id": "ghostty",
+      "type": "frontend",
+      "label": "ghostty-web",
+      "sublabel": "Ghostty VT · JS Pty",
+      "pos": [
+        40,
+        200
+      ],
+      "size": [
+        215,
+        60
+      ]
+    },
+    {
+      "id": "kwtty",
+      "type": "messagebus",
+      "label": "kwtty serve",
+      "sublabel": "guest 内 · forkpty()",
+      "icon": "none",
+      "pos": [
+        351,
+        200
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "pts",
+      "type": "external",
+      "label": "/dev/pts/N",
+      "sublabel": "unkernel · Linux in WASM",
+      "icon": "none",
+      "pos": [
+        617,
+        200
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "zsh",
+      "type": "backend",
+      "label": "zsh",
+      "sublabel": "root 的 login shell",
+      "pos": [
+        859,
+        200
+      ],
+      "size": [
+        250,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "每一层都能换",
+      "wraps": [
+        "emu",
+        "holder",
+        "kernel",
+        "prog"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "本 deck 页面里的终端",
+      "wraps": [
+        "ghostty",
+        "kwtty",
+        "pts",
+        "zsh"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "vt-bytes",
+      "from": "emu",
+      "to": "holder",
+      "label": "VT bytes"
+    },
+    {
+      "id": "ptmx-fd",
+      "from": "holder",
+      "to": "kernel",
+      "label": "ptmx fd"
+    },
+    {
+      "id": "tty-fd",
+      "from": "kernel",
+      "to": "prog",
+      "label": "tty fd"
+    },
+    {
+      "id": "vsock",
+      "from": "ghostty",
+      "to": "kwtty",
+      "label": "vsock :1022"
+    },
+    {
+      "id": "deck-ptmx",
+      "from": "kwtty",
+      "to": "pts",
+      "label": "ptmx"
+    },
+    {
+      "id": "deck-fd",
+      "from": "pts",
+      "to": "zsh",
+      "label": "fd 0 1 2"
+    }
+  ]
+}

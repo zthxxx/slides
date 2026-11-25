@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "多一层 tmux，握手时序也会改变",
+    "locale": "zh-CN",
+    "output": "probe-relay.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "default": {
+          "label": "写出"
+        },
+        "return": {
+          "label": "回复"
+        },
+        "security": {
+          "label": "DA1 抢先回复"
+        },
+        "emphasis": {
+          "label": "relay 同步回复"
+        },
+        "dashed": {
+          "label": "worker 的旁路"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent",
+      "sublabel": "pane pts / 内层 pts"
+    },
+    {
+      "id": "relay",
+      "type": "cloud",
+      "label": "relay",
+      "sublabel": "pane 里 · 持有内层 ptmx"
+    },
+    {
+      "id": "tmux",
+      "type": "database",
+      "label": "tmux server",
+      "sublabel": "pane 的终端",
+      "icon": "none"
+    },
+    {
+      "id": "worker",
+      "type": "messagebus",
+      "label": "botmux worker",
+      "sublabel": "FIFO · send-keys"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 344,
+      "label": "没有 relay：tmux 自己回答 DA1"
+    },
+    {
+      "from": 356,
+      "to": 552,
+      "label": "pane 里的 relay：先回答探测，再转发"
+    }
+  ],
+  "messages": [
+    {
+      "id": "probe-a",
+      "from": "agent",
+      "to": "tmux",
+      "y": 172,
+      "label": "① 7501 探测 + DA1"
+    },
+    {
+      "id": "da1-a",
+      "from": "tmux",
+      "to": "agent",
+      "y": 202,
+      "label": "② DA1 回复 · 1–2 ms",
+      "variant": "security"
+    },
+    {
+      "id": "pipe-a",
+      "from": "tmux",
+      "to": "worker",
+      "y": 232,
+      "label": "③ pipe-pane → FIFO",
+      "variant": "dashed"
+    },
+    {
+      "id": "keys-a",
+      "from": "worker",
+      "to": "tmux",
+      "y": 262,
+      "label": "④ send-keys 7501 回复",
+      "variant": "dashed"
+    },
+    {
+      "id": "late-a",
+      "from": "tmux",
+      "to": "agent",
+      "y": 292,
+      "label": "④ 7501 回复，晚于 ②",
+      "variant": "return",
+      "note": "DA1 先到：Agent 判定不支持状态上报"
+    },
+    {
+      "id": "probe-b",
+      "from": "agent",
+      "to": "relay",
+      "y": 378,
+      "label": "① 7501 探测 + DA1"
+    },
+    {
+      "id": "reply-b",
+      "from": "relay",
+      "to": "agent",
+      "y": 408,
+      "label": "② 7501 回复",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fwd-b",
+      "from": "relay",
+      "to": "tmux",
+      "y": 438,
+      "label": "③ 转发 DA1"
+    },
+    {
+      "id": "da1-b",
+      "from": "tmux",
+      "to": "relay",
+      "y": 468,
+      "label": "④ DA1 回复",
+      "variant": "return"
+    },
+    {
+      "id": "late-b",
+      "from": "relay",
+      "to": "agent",
+      "y": 498,
+      "label": "④ DA1 回复，晚于 ②",
+      "variant": "return",
+      "note": "7501 先到：Agent 判定支持状态上报"
+    }
+  ]
+}

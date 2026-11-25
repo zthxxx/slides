@@ -14,6 +14,7 @@ Demo 不需要服务器，也不需要联网：这个 Linux 是 unkernel (编译
 | 构建 guest image (首次 checkout，或修改 `image/` 之后) | `pnpm -C present/terminal-glance build:image` |
 | 无论输入是否变化，都重新构建 image | `pnpm -C present/terminal-glance build:image --force` |
 | 运行测试 | `pnpm -C present/terminal-glance test` |
+| 重新渲染插图 (修改 `diagrams/` 之后，需要本机 Chrome) | `pnpm -C present/terminal-glance diagrams [<name>…]` |
 | 构建整个站点 (guest image 的输入有变化时会先构建它) | `pnpm build` |
 
 没有构建好的 image 时，页面仍能运行，用的是 unkernel 的 base shell (busybox ash，没有 Alpine)，并在每个终端里提示这一点
@@ -26,10 +27,12 @@ present/terminal-glance/
   slides.md          deck 的入口：封面、pages/ 的顺序、结尾的 slide
   pages/             按主题分组的 slide，各自带 demo Step 和 speaker notes
   components/        ShellDemo、Terminal、ShellStep (由 Slidev 自动注册)
+  diagrams/          插图的 archify 源文件 (<name>.<type>.json) 和渲染脚本 render.ts
+  styles/            deck 级样式：插图的 .diagram
   runtime/           VM、session、终端模拟器、disk、Step、presenter 转发
   image/             guest image 的构建 (IaC)
   test/              测试构建 ↔ runtime 之间的约定
-  public/images/     slide 图片
+  public/images/     slide 图片；diagrams/ 下是 render.ts 生成的插图 SVG
   public/linux/      构建出的 guest image (gitignored)
   .cache/            构建用的原始 disk (gitignored)
   docs/              本文档目录
@@ -42,7 +45,7 @@ present/terminal-glance/
 - [image.md](./image.md): guest image 是什么、如何构建和发布、shell 的启动耗时、体积、如何修改
 - [performance.md](./performance.md): 构建、下载、boot 和 image 为慢速网络做了哪些处理，附实测数据和剩余开销
 - [isolation.md](./isolation.md): cross-origin isolation 与 guest 的 4 个 CPU，包括响应头、service worker、kernel 的 worker、slides 内容的规则、遇到的问题
-- [authoring.md](./authoring.md): 用 `<ShellDemo>` 和 `<ShellStep>` 编写 demo slide，以及 speaker notes
+- [authoring.md](./authoring.md): 用 `<ShellDemo>` 和 `<ShellStep>` 编写 demo slide、插图，以及 speaker notes
 
 
 ## 演讲时

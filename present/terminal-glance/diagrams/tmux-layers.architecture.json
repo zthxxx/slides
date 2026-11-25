@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "tmux 多出一层终端",
+    "locale": "zh-CN",
+    "output": "tmux-layers.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "终端侧 · 持有 ptmx" },
+        "external": { "label": "内核 PTY" },
+        "backend": { "label": "程序 · fd 0 1 2 是 pts" },
+        "database": { "label": "tmux · 解析、重画、自己回答查询" }
+      }
+    }
+  },
+  "components": [
+    { "id": "emu", "type": "frontend", "label": "Terminal", "sublabel": "iTerm2 · Ghostty", "pos": [40, 60], "size": [124, 60] },
+    { "id": "pty0", "type": "external", "label": "pts/0", "sublabel": "line discipline", "icon": "none", "pos": [220, 60], "size": [112, 60] },
+    { "id": "tmuxc", "type": "database", "label": "tmux client", "sublabel": "交出 tty fd", "icon": "none", "pos": [372, 60], "size": [124, 60] },
+    { "id": "tmuxs", "type": "database", "label": "tmux server", "sublabel": "每个 pane 一份 grid", "icon": "none", "pos": [372, 200], "size": [124, 140] },
+    { "id": "pty1", "type": "external", "label": "pts/1", "sublabel": "line discipline", "icon": "none", "pos": [552, 200], "size": [112, 60] },
+    { "id": "pty2", "type": "external", "label": "pts/2", "sublabel": "line discipline", "icon": "none", "pos": [552, 280], "size": [112, 60] },
+    { "id": "zsh", "type": "backend", "label": "zsh", "sublabel": "pane 1", "pos": [704, 200], "size": [100, 60] },
+    { "id": "nvim", "type": "backend", "label": "nvim", "sublabel": "pane 2", "pos": [704, 280], "size": [100, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "L0 · 本机终端", "wraps": ["emu", "pty0", "tmuxc"] },
+    { "kind": "region", "label": "L1 · tmux pane", "wraps": ["tmuxs", "pty1", "pty2", "zsh", "nvim"] }
+  ],
+  "connections": [
+    { "id": "emu-pty0", "from": "emu", "to": "pty0", "label": "ptmx" },
+    { "id": "pty0-tmuxc", "from": "pty0", "to": "tmuxc" },
+    { "id": "tmuxc-tmuxs", "from": "tmuxc", "to": "tmuxs", "label": "unix socket", "variant": "dashed" },
+    { "id": "tmuxs-pty1", "from": "tmuxs", "to": "pty1", "label": "ptmx" },
+    { "id": "tmuxs-pty2", "from": "tmuxs", "to": "pty2", "label": "ptmx" },
+    { "id": "pty1-zsh", "from": "pty1", "to": "zsh" },
+    { "id": "pty2-nvim", "from": "pty2", "to": "nvim" },
+    { "id": "passthrough", "from": "nvim", "to": "emu", "label": "passthrough · ESC P tmux; … ESC \\", "variant": "dashed", "fromSide": "bottom", "toSide": "bottom" }
+  ]
+}

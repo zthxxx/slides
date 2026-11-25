@@ -103,7 +103,25 @@ echo "${OSC}7501;state=clear${ST}"' />
 
 ## 插图
 
-新的图示组件把 SVG 渲染在 `<DiagramFrame>` (`components/diagrams/DiagramFrame.vue`) 里，以获得共用的图示样式
+插图的源文件是 [archify](../../../.agents/skills/archify/SKILL.md) (3.3.2) 的 JSON：`diagrams/<name>.<type>.json`。
+`pnpm diagrams <name>` (`diagrams/render.ts`) 先用 archify 的 `finalize` 检查 schema、布局和浏览器中的渲染，再导出浅色 SVG 到 `public/images/diagrams/<name>.svg`。
+SVG 和源文件一起提交，CI 不渲染插图
+
+Slide 里用 `<img>` 引用，宽度按图的尺寸和同一张 slide 上的其他内容来定：
+
+```html
+<img class="diagram w-[1300px]" src="/images/diagrams/ssh-layers.svg" alt="…" />
+```
+
+`.diagram` (`styles/index.css`) 给图加圆角和描边。SVG 自带浅色背景，深色模式下也保持浅色。
+archify 的字号是按文档排版设计的，比 slide 正文小：图要画得紧凑，在 slide 上放大显示；节点的 `tag` 只有 7px，在 slide 上看不清，不要用
+
+终端分层的图共用一套画法 (`tty-layer`、`ssh-layers`、`tmux-layers`、`ssh-tmux-layers`，以及沿用它们的 `foreground-group`、`osc-roundtrip`、`agent-gateway`)，让观众在后面的图里认出前面见过的结构。新图沿用这套画法：
+
+- 每层终端是一条横带 (archify 的 `region`)：终端侧 → 内核 PTY → 程序，从本机开始编号 L0、L1、L2
+- ssh、tmux 这样的中间层画成上下两个框：上框是外层 pts 上的程序，下框是内层的终端侧，两框之间是它们的通道
+- 组件类型表示角色：`frontend` 终端侧 (持有 ptmx)，`external` 内核 PTY，`backend` pts 上的程序，`security` ssh，`database` tmux (`icon: "none"`)
+- 坐标沿用同一套网格：列 x = 40、220、372、552、704、884、1036，行 y = 60、200、340
 
 
 ## 外站资源

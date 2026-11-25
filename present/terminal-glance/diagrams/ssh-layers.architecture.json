@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ssh 多出一层终端",
+    "locale": "zh-CN",
+    "output": "ssh-layers.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "终端侧 · 持有 ptmx" },
+        "external": { "label": "内核 PTY" },
+        "backend": { "label": "程序 · fd 0 1 2 是 pts" },
+        "security": { "label": "ssh · 原样转发字节" }
+      }
+    }
+  },
+  "components": [
+    { "id": "emu", "type": "frontend", "label": "Terminal", "sublabel": "iTerm2 · Ghostty", "pos": [40, 60], "size": [124, 60] },
+    { "id": "pty0", "type": "external", "label": "pts/0", "sublabel": "line discipline", "icon": "none", "pos": [220, 60], "size": [112, 60] },
+    { "id": "ssh", "type": "security", "label": "ssh", "sublabel": "raw 模式", "pos": [372, 60], "size": [124, 60] },
+    { "id": "sshd", "type": "security", "label": "sshd", "sublabel": "openpty()", "pos": [372, 200], "size": [124, 60] },
+    { "id": "pty1", "type": "external", "label": "pts/1", "sublabel": "line discipline", "icon": "none", "pos": [552, 200], "size": [112, 60] },
+    { "id": "zsh", "type": "backend", "label": "zsh", "sublabel": "login shell", "pos": [704, 200], "size": [100, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "L0 · 本机终端", "wraps": ["emu", "pty0", "ssh"] },
+    { "kind": "region", "label": "L1 · ssh 会话 · 远端", "wraps": ["sshd", "pty1", "zsh"] }
+  ],
+  "connections": [
+    { "id": "emu-pty0", "from": "emu", "to": "pty0", "label": "ptmx" },
+    { "id": "pty0-ssh", "from": "pty0", "to": "ssh" },
+    { "id": "ssh-sshd", "from": "ssh", "to": "sshd", "label": "SSH · TCP", "variant": "security" },
+    { "id": "sshd-pty1", "from": "sshd", "to": "pty1", "label": "ptmx" },
+    { "id": "pty1-zsh", "from": "pty1", "to": "zsh" }
+  ]
+}

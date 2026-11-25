@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "终端的基础分层",
+    "locale": "zh-CN",
+    "output": "tty-layer.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "终端侧 · 持有 ptmx" },
+        "external": { "label": "内核 PTY" },
+        "backend": { "label": "程序 · fd 0 1 2 是 pts" }
+      }
+    }
+  },
+  "components": [
+    { "id": "emu", "type": "frontend", "label": "Terminal", "sublabel": "iTerm2 · Ghostty", "pos": [40, 60], "size": [124, 60] },
+    { "id": "pty0", "type": "external", "label": "pts/0", "sublabel": "line discipline", "icon": "none", "pos": [220, 60], "size": [112, 60] },
+    { "id": "zsh", "type": "backend", "label": "zsh", "sublabel": "shell", "pos": [372, 60], "size": [100, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "L0 · 本机终端", "wraps": ["emu", "pty0", "zsh"] }
+  ],
+  "connections": [
+    { "id": "emu-pty0", "from": "emu", "to": "pty0", "label": "ptmx" },
+    { "id": "pty0-zsh", "from": "pty0", "to": "zsh" }
+  ]
+}
