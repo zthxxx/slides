@@ -36,7 +36,7 @@
 
 Kernel wasm 和两个 boot bundle 共 6.3 MB，它们决定 Linux 最早什么时候能 boot: 3 Mbps 下要 17 s，25 Mbps 下要 2.0 s
 
-Cloudflare 按请求的 `Accept-Encoding` 实时压缩这个 wasm (`application/wasm` 在它默认压缩的类型里)，Chrome 拿到的是 br: unkernel 0.2.0 的 `unkernel.wasm` 原始大小 11,440,861 bytes，gzip 后 4,419,116 bytes。它只带未压缩的 base initramfs；Alpine 是单独的 image。在 unkernel 0.1.0 的 wasm 上，预先用 zopfli 压缩、由浏览器自己用 `DecompressionStream('gzip')` 解码的文件只省了 2.7 %，所以这个文件按 unkernel 发布时的原样提供
+两个 host 都实时压缩这个 wasm。Cloudflare 按请求的 `Accept-Encoding` 压缩 (`application/wasm` 在它默认压缩的类型里)，Chrome 拿到的是 br；GitHub Pages 只发送 gzip。unkernel 0.2.0 的 `unkernel.wasm` 原始大小 11,440,861 bytes，gzip 后 4,419,116 bytes。它只带未压缩的 base initramfs；Alpine 是单独的 image。在 unkernel 0.1.0 的 wasm 上，预先用 zopfli 压缩、由浏览器自己用 `DecompressionStream('gzip')` 解码的文件只省了 2.7 %，所以这个文件按 unkernel 发布时的原样提供
 
 
 ## 构建页面
@@ -146,7 +146,7 @@ Guest 的内存是 512 MiB (`kernel.ts`)，与 0.1.0 的默认值相同。unkern
 
 ### 4 个 CPU
 
-Guest 在一个 cross-origin isolated 页面的 worker 里以 4 个 CPU 运行 ([isolation.md](./isolation.md))。线上站点由 Cloudflare Pages 发送所需的两个响应头，首次访问也直接以 4 个 CPU boot
+Guest 在一个 cross-origin isolated 页面的 worker 里以 4 个 CPU 运行 ([isolation.md](./isolation.md))。线上站点由 Cloudflare Pages 提供时，它发送所需的两个响应头，首次访问也直接以 4 个 CPU boot；由 GitHub Pages 提供时，由 service worker 让页面进入 cross-origin isolated 状态，首次访问会在 service worker 激活后刷新一次
 
 本地用 Chrome 157 在构建产物上实测。每次运行都用新的浏览器 session，并清空、禁用 HTTP cache；测 1 个 CPU 时页面不是 cross-origin isolated，测 4 个 CPU 时是。每组 3 次，带 throttle 的两行各 2 次：
 
@@ -159,7 +159,9 @@ Guest 在一个 cross-origin isolated 页面的 worker 里以 4 个 CPU 运行 (
 | 延迟 400 ms、3 Mbps、冷加载: navigation → 第一个 prompt | 28.2 s | 27.7 到 27.9 s |
 | 同上: kernel 下载完成 → 第一个 prompt | 0.28 到 0.29 s | 0.41 到 0.42 s |
 
-首次访问和 hard reload 同样以 4 个 CPU boot：每次 document 响应都带着这两个响应头
+在 Cloudflare Pages 上，首次访问和 hard reload 同样以 4 个 CPU boot：每次 document 响应都带着这两个响应头
+
+在 GitHub Pages 上首次访问时 (全新的浏览器 profile，还没有 service worker)，页面在 worker 激活后刷新一次，然后以 4 个 CPU boot。不 throttle 时，prompt 在 navigation 后 1.17 s 出现；延迟 400 ms、3 Mbps 时为 28.5 s (各 1 次)；作为对比，以 1 个 CPU 运行、不刷新的首次访问为 28.2 s
 
 在 Node 上用同样的 image，4 个 CPU 同时跑四个 `seq 200000 | sort -r` 用时 2.7 s，1 个 CPU 要 9.3 到 9.4 s；单独跑一个用时 2.0 s，1 个 CPU 要 2.2 s
 
@@ -226,9 +228,9 @@ Shell 第一次输出 (即它的第一个 prompt) 或 kernel 开始运行后 5 s
 
 ## 缓存与托管
 
-脚本、样式表和 wasm 的文件名带 content hash，disk chunk 和 boot bundle 按内容命名，仓库根目录的 `public/_headers` 给它们 `Cache-Control: public, max-age=31536000, immutable`，缓存期内刷新不再为它们发请求。`index.html` 和 `linux/manifest.json` 保持固定的文件名，用 Cloudflare Pages 的默认值 `public, max-age=0, must-revalidate`：每次加载都发一次 conditional request 重新验证，这样浏览器能取到新的部署
+脚本、样式表和 wasm 的文件名带 content hash，disk chunk 和 boot bundle 按内容命名，仓库根目录的 `public/_headers` 给它们 `Cache-Control: public, max-age=31536000, immutable`，缓存期内刷新不再为它们发请求。`index.html` 和 `linux/manifest.json` 保持固定的文件名，用 Cloudflare Pages 的默认值 `public, max-age=0, must-revalidate`：每次加载都发一次 conditional request 重新验证，这样浏览器能取到新的部署。GitHub Pages 不读 `_headers`，给每个文件都带 `cache-control: max-age=600`: 10 分钟内刷新不会为它们发请求，之后的刷新对每个文件发一次 conditional request 重新验证
 
-站点由 Cloudflare Pages 提供 (Free 计划)：CI 构建后用 `wrangler pages deploy` 上传 `.site/` (Direct Upload)，`slides.zthxxx.me` 经 Cloudflare 代理。COOP、COEP 和上面的缓存规则都写在 `public/_headers` 里
+每次 push 到 master，CI 构建后把同一份 `.site/` 部署到两个 host：用 `wrangler pages deploy` 上传到 Cloudflare Pages (Free 计划，Direct Upload)，再发布到 GitHub Pages 的 `gh-pages` 分支。COOP、COEP 和上面的缓存规则写在 `public/_headers` 里，只有 Cloudflare Pages 读它。`slides.zthxxx.me` 的 DNS 在 Cloudflare：经 Cloudflare 代理的 CNAME `slides-1tj.pages.dev` 指向 Cloudflare Pages，DNS only 的 CNAME `zthxxx.github.io` 指向 GitHub Pages
 
 访问速度取决于访问者的网络被分到哪个 Cloudflare 节点。2026-11-26 在作者的中国大陆网络上，用同一份文件对比 GitHub Pages (节点在东南亚) 和 Cloudflare Pages。冷加载打开 slide 5，每次用全新的浏览器 context；GitHub Pages 的首次访问还要在 service worker 激活后刷新一次：
 
@@ -273,7 +275,7 @@ Input hash 匹配时 `pnpm build:image` 直接跳过；manifest 缺少 trace 时
 - **每次冷加载都要下载两个 image:** 第一个 prompt 之后共 25.4 MB，2.2 Mbps 下约 92 s；它们在整个 session 内保存在页面内存里，每个 image 最多保留 32 个解压后的 1 MiB chunk
 - **Boot bundle 的内容会下载两次：** 后台下载还会取它们来源的 chunk，每次冷加载多 1.8 MB
 - **中国大陆网络的线路：** Cloudflare Free 计划把这些访问分到美国西海岸的节点 (SEA、LAX)，实测吞吐从 1 MB/s 到 4 KB/s 不等；按后者，4.4 MB 的 wasm 要十几分钟 ([缓存与托管](#缓存与托管))
-- **Wasm 依赖 Cloudflare 的实时压缩。** 不压缩的话会多 7.0 MB，3 Mbps 下约 19 s；改用 zopfli 压缩的 `.wasm.gz`，再用 `DecompressionStream('gzip')` 解码，就能去掉这个依赖
-- **`index.html` 和 `linux/manifest.json`** 每次加载都要用一次 round trip 重新验证
-- **4 个 CPU 让 boot 开始得更晚：** SMP kernel 要等下载结束、patch (约 90 ms) 打完后才编译
+- **Wasm 依赖 host 的实时压缩** (Cloudflare 的 br、GitHub Pages 的 gzip)，而 GitHub 没有为此写文档。不压缩的话会多 7.0 MB，3 Mbps 下约 19 s；改用 zopfli 压缩的 `.wasm.gz`，再用 `DecompressionStream('gzip')` 解码，就能去掉这个依赖
+- **`index.html` 和 `linux/manifest.json`** 每次加载都要用一次 round trip 重新验证；在 GitHub Pages 上，10 分钟后每个文件都要这样重新验证
+- **4 个 CPU 让 boot 开始得更晚：** SMP kernel 要等下载结束、patch (约 90 ms) 打完后才编译。在 GitHub Pages 上，首次访问还会在 service worker 激活后刷新一次，这会取消正在进行的下载，3 Mbps 下约 0.3 s
 - **jovial 的第一次 precmd** 占每个 shell 启动的 77 到 82 ms: 35 到 42 ms 用于计算各 segment 的长度，每个 affix 跑一次 regex 循环 (`@jov.init-affix`)；15 到 18 ms 用于在 zpty 里启动 dev-env probe，每个 prompt 都会新起一个进程。在有两个终端的 slide 上，两个 shell 同时启动，1 个 CPU 时约 0.3 s 后显示 prompt，4 个 CPU 时为 0.13 到 0.16 s

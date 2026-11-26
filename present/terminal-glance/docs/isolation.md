@@ -106,7 +106,7 @@ COEP 的另一个取值 `credentialless` 换了一种做法：跨站的 `no-cors
 
 - COOP 和 COEP 只认 HTTP 响应头：`<meta http-equiv>` 对它们无效，页面加载后运行的脚本也补不上
 - 一次加载是否 cross-origin isolated，由这次 document 响应决定。没有带上响应头的加载，只能再 navigate 一次才能获得
-- 所以响应头要由 host 发送。Service worker 只能给经过它的请求加响应头，而首次访问时它还没有安装，hard reload 时浏览器绕过它
+- Host 发送响应头时，每次加载都带着它们。Service worker 只能给经过它的请求加响应头，而首次访问时它还没有安装，hard reload 时浏览器绕过它
 
 
 ## 页面如何获得 cross-origin isolation
@@ -117,11 +117,20 @@ Deck 发送的响应头与 unkernel.dev 服务端发送的相同: `Cross-Origin-
 | --- | --- | --- |
 | unkernel.dev，作为对照 | 它的服务端 (Vercel) | 4 个 CPU |
 | Dev server | Vite，`vite.config.ts` 里的 `server.headers` | 4 个 CPU |
-| 线上站点 (`slides.zthxxx.me`) | Cloudflare Pages，按仓库根目录的 `public/_headers` | 4 个 CPU |
+| Cloudflare Pages 上的构建产物 | Cloudflare Pages，按仓库根目录的 `public/_headers` | 4 个 CPU |
+| GitHub Pages 上的构建产物 | service worker `public/coi-sw.js` | 自动刷新一次，之后 4 个 CPU |
+
+线上站点 `slides.zthxxx.me` 的同一份构建产物部署在这两个 host 上，DNS 决定访问者由哪一个提供 ([performance.md](./performance.md#缓存与托管))。构建产物在两个 host 上都能获得 cross-origin isolation：
 
 - **`public/_headers`** 位于仓库根目录，构建后成为 `.site/_headers`，Cloudflare Pages 按它给静态文件加响应头。
   规则 `/present/terminal-glance/*` 覆盖这个 deck 的 document、脚本和 worker 脚本，所以首次访问和 hard reload 都是 cross-origin isolated；其他 deck 不带这两个响应头
-- **Deck 不注册 service worker**。早期版本的 deck 注册过 `coi-sw.js` 来添加这两个响应头，`setup/main.ts` 在页面启动时 unregister 留下的 registration，不让它继续拦截 deck 的 navigation
+- **`public/coi-sw.js`** 用于不能配置响应头的 GitHub Pages，给 deck 的 document (`navigate` 请求) 和 worker 脚本 (destination 为 `worker`) 加上这两个响应头。
+  页面的其他请求 (`cors`、`no-cors`: fetch、脚本、样式、图片、字体) 通过 ServiceWorker static routing (Chrome 123+) 直接走网络，不唤醒它；不支持 static routing 的浏览器里，由它的 fetch handler 原样放行
+- **`runtime/isolate-page.js`** 由 `vite.config.ts` (`isolatePage`) 内联到构建产物 `index.html` 的最前面，赶在 app 的脚本之前运行。
+  页面已经 cross-origin isolated (host 的响应头，或已激活的 worker) 时它什么都不做；否则以 deck 的 base 作为 scope 注册这个 worker，worker 一进入 active 状态就刷新页面，每个 tab session 最多刷新一次 (sessionStorage)，下一次 cross-origin isolated 的加载会清除这个记录。刷新后仍未获得 cross-origin isolation 的加载以 1 个 CPU 运行，不再刷新；没有 sessionStorage 时不刷新
+- **更新会替换旧的 worker**。浏览器绕过 HTTP cache 获取 worker 脚本 (`updateViaCache: 'none'`)，脚本一有变化就立即接管 (`skipWaiting`、`clients.claim`)，所以不会有页面停留在旧版本。注册之前，`isolate-page.js` 还会 unregister deck scope 下的其他所有 registration，比如旧的脚本 URL 或旧的 scope 留下的
+- **两个 host 之间切换**。在 GitHub Pages 上注册过的 worker 留在浏览器里，之后 Cloudflare Pages 提供的页面也经过它，它设置的是同样的两个值；只访问过 Cloudflare Pages 的浏览器不注册 worker，切到 GitHub Pages 后的第一次访问注册它并刷新一次
+- **Dev server 不需要 worker**。Dev 页面会 unregister 早期版本的 deck 在同一 origin 上注册过的 `coi-sw.js` (`setup/main.ts`)
 
 `require-corp` 是 Chrome、Firefox 和 Safari 都支持的 embedder policy；Safari 不支持 `credentialless`，与它配套的 iframe 变体 (`<iframe credentialless>`) 只有 Chromium 支持
 
@@ -178,10 +187,13 @@ Deck 在模板编译时统一加上这个属性：`vite/cross-origin-media.ts` �
 | 症状 | 原因 | Deck 的处理 |
 | --- | --- | --- |
 | 控制台输出 `[host] this kernel is not SMP: 4 CPUs asked, it runs on one`；`nproc` 输出 1 | Kernel 以已经编译好的 module 交给 unkernel，unkernel 会原样使用它：SMP patch 是打在字节上的 | 4 个 CPU 的路径用 `loadKernelModule(…, { smp: true })` |
-| Kernel 的 worker 始终没有启动，它的脚本报 `net::ERR_BLOCKED_BY_RESPONSE` | Cross-origin isolated 的页面只在 worker 脚本的响应也带 embedder policy 时才启动 worker | `public/_headers` 的规则覆盖 deck 下的所有文件，worker 脚本也带上这两个响应头 |
+| Kernel 的 worker 始终没有启动，它的脚本报 `net::ERR_BLOCKED_BY_RESPONSE` | Cross-origin isolated 的页面只在 worker 脚本的响应也带 embedder policy 时才启动 worker | `public/_headers` 的规则覆盖 deck 下的所有文件；service worker 也给 worker 脚本加上这两个响应头，static routing 把 `same-origin` 请求 (module worker 脚本) 留给它处理 |
 | 直接用 iframe 嵌入 botmux 页面，报 `ERR_BLOCKED_BY_RESPONSE` (Chrome) | 在 COEP 下，cross-origin iframe 只有对方站点主动放行才能加载；只有 Chromium 的 `<iframe credentialless>` 能绕过这一点，Firefox 和 Safari 没有这种 iframe | Deck 不嵌入任何 iframe：slide 播放该页面的视频，并附上页面链接 |
 | 图片加载失败，报 `ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep` | 图片来自不发送 CORP 的站点，且以 `no-cors` 方式请求 (没有 `crossorigin` 的 Markdown 图片) | `vite/cross-origin-media.ts` 在模板编译时给外站的 `<img>`、`<video>`、`<audio>` 加上 `crossorigin="anonymous"`；图片要来自发送 CORS 响应头的站点 |
-| 早期版本注册的 service worker `coi-sw.js` 留在浏览器里 (线上 scope 为 `/present/terminal-glance/`，dev origin `localhost:3034` 上为 `/`) | 它比 deck 存活得更久，会继续拦截 navigation；在 dev origin 上还会给之后在这个端口上运行的其他站点加上 COOP 和 COEP | 页面启动时 unregister `coi-sw.js` (`setup/main.ts`) |
+| 在 GitHub Pages 上首次访问时 htop 显示 1 个 CPU 和 494 MiB | 第一次 navigation 没有经过 service worker，所以页面不是 cross-origin isolated | Worker 进入 active 状态后，`isolate-page.js` 刷新首次访问的页面 |
+| 用 `transformIndexHtml` 加入的 head 脚本在 dev 模式下缺失 | Slidev 的 dev server 用自己的 middleware 响应 `/index.html`，不经过 Vite 的 HTML transform (@slidev/cli@53.1.0 `dist/serve-*.mjs`)；仓库的 `.gitignore` 会忽略放在 deck 根目录的 `index.html`，`pnpm clean` 也会删除它 | Dev server 自己发送响应头；脚本只内联到构建产物里 |
+| 早期版本注册的 service worker 留在 dev origin 上 (`localhost:3034`，scope 为 `/`) | 它比 deck 存活得更久，会给之后在这个端口上运行的任何其他站点加上 COOP 和 COEP | Dev 页面会 unregister `coi-sw.js` |
+| 在 GitHub Pages 上 hard reload (Shift) 后以 1 个 CPU 运行 | Hard reload 会绕过 service worker；在 Chrome 157 里，紧随其后的页面自动刷新也没有获得 cross-origin isolation | 每个 tab session 只刷新一次，所以停在这里，不会循环刷新；普通刷新会重新获得 cross-origin isolation |
 | 如果 pty 桥接把输出 stream transfer 到另一个线程，在 Safari 里会失败 | Safari 不能把 `ReadableStream` transfer 到另一个线程，unkernel.dev 自己的 service worker 里有这条说明 (`vm-sw.js`) | 输出以消息形式跨线程传递，每次 `pull` 一个 chunk |
 | 使用 `COEP: credentialless` 时，app 启动比不做 cross-origin isolation 时晚约 0.85 s | Cross-origin 的 `no-cors` 请求不带 credentials，并使用单独的连接，所以阻塞渲染的 Google Fonts 样式表要新建一个连接 | 改用 `require-corp`，样式表本身发送 CORP，继续走共享连接 |
 
@@ -191,5 +203,7 @@ Deck 在模板编译时统一加上这个属性：`vite/cross-origin-media.ts` �
 - 在终端里，`nproc` 输出 `4`，htop 显示 CPU 0 到 3，内存约 470 MiB；1 个 CPU 时为 494 MiB
 - 控制台里 `crossOriginIsolated` 为 `true`
 - Dev: `curl -sI http://localhost:3034/` 能看到这两个响应头
-- 线上站点: `curl -sI https://slides.zthxxx.me/present/terminal-glance/` 能看到这两个响应头；`(await navigator.serviceWorker.getRegistrations()).length` 为 0
-- 本地的构建产物: `pnpm build` 之后运行 `npx wrangler pages dev .site`，它和 Cloudflare Pages 一样按 `.site/_headers` 发送响应头
+- Cloudflare Pages: `curl -sI https://slides-1tj.pages.dev/present/terminal-glance/` 能看到这两个响应头；只访问过它的浏览器里，`(await navigator.serviceWorker.getRegistrations()).length` 为 0
+- GitHub Pages: `curl -sI --resolve slides.zthxxx.me:443:185.199.108.153 https://slides.zthxxx.me/present/terminal-glance/` 绕过 DNS 直接访问它，响应里没有这两个响应头。DevTools > Application > Service workers 里，deck 的 scope 下只有一个 worker，即 `coi-sw.js`；`(await navigator.serviceWorker.getRegistrations()).length` 为 1
+- 本地的构建产物: `pnpm build` 之后运行 `npx wrangler pages dev .site`，它和 Cloudflare Pages 一样按 `.site/_headers` 发送响应头；用不发送响应头的静态 server 提供 `.site/`，就是 GitHub Pages 的情况
+- 要复现首次访问，需要一个从未打开过该 origin 的浏览器 profile。`playwright-cli` 的各个 session 共用同一个 Chrome profile，之前运行留下的 service worker 会保留下来，所以这类运行要用单独的 `--profile` 目录

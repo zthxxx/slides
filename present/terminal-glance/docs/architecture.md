@@ -37,10 +37,12 @@ runtime/                  纯 TypeScript；不含模板
    steps.ts               纯函数：Step → 字节，`{a.pts}` 引用
    relay.ts               presenter 窗口 → slide 窗口 (BroadcastChannel)
    demo.ts                ShellDemo context 和终端的强调色
+   isolate-page.js        内联在构建产物 index.html 顶部的纯 JS：页面不是 cross-origin isolated 时注册 public/coi-sw.js，并刷新一次
    │
 unkernel (npm)            createKernel, vm.spawn() → Pty, CowDisk, BaseDisk; unkernel.wasm = kernel + base initramfs
 ghostty-web (npm)         WebAssembly 版的 Ghostty VT parser、canvas renderer、xterm.js 风格的 API
    │
+public/coi-sw.js          service worker：在 GitHub Pages 上给 deck 的文档和 worker 脚本加上 COOP/COEP (cross-origin isolation)
 public/linux/             由 image/ 构建 (gitignored)：manifest.json、chunks/ + boot/ (data disk)、distro/ (Alpine image)
 image/                    image 的构建：见 image.md
 vite/                     vite.config.ts 用到的模块
@@ -77,11 +79,12 @@ Image 是用另一个 unkernel 版本构建的时候，也会打印同类提示
 
 | 页面 | CPU | Kernel 运行在哪里 |
 | --- | --- | --- |
-| Cross-origin isolated: dev server，或线上站点 | 4 个，手机上 2 个 | `kernel-worker.ts`，使用同样的 disk；文件仍在页面主线程上获取 |
-| 非 cross-origin isolated: 不发送这两个响应头的 server，或嵌在其他站点的 iframe 里 | 1 个 | 页面主线程 |
+| Cross-origin isolated: dev server、Cloudflare Pages，或 service worker 已激活的 GitHub Pages | 4 个，手机上 2 个 | `kernel-worker.ts`，使用同样的 disk；文件仍在页面主线程上获取 |
+| 非 cross-origin isolated: GitHub Pages 上的 hard reload、不支持 service worker 的浏览器，或嵌在其他站点的 iframe 里 | 1 个 | 页面主线程 |
 
 - Dev server 自己发送 `Cross-Origin-Opener-Policy: same-origin` 和 `Cross-Origin-Embedder-Policy: require-corp` (`vite.config.ts`)。
-  线上站点由 Cloudflare Pages 按仓库根目录的 `public/_headers` 发送这两个响应头，首次访问和 hard reload 都以 4 个 CPU 运行
+  Cloudflare Pages 按仓库根目录的 `public/_headers` 发送这两个响应头，首次访问和 hard reload 都以 4 个 CPU 运行。
+  在 GitHub Pages 上由 `public/coi-sw.js` 添加这两个响应头；页面不是 cross-origin isolated 时，`index.html` 顶部的 `runtime/isolate-page.js` 注册它，并让页面刷新一次
 - 在这个 policy 下，deck 不加载没有 CORP 或 CORS 的外站资源，也不嵌入外站的 iframe
 
 细节、slides 内容的规则和途中遇到的问题见 [isolation.md](./isolation.md)；实测数据见 [performance.md](./performance.md#4-个-cpu)
@@ -259,7 +262,7 @@ Wire framing 遵循 [Program Status Protocol rev 0.4](https://www.superlogical.c
 | unkernel 需要 WebAssembly JSPI | Chrome / Edge 137+、Firefox 153+、Safari 27+。其他浏览器会在终端里看到提示 |
 | `unkernel` 固定在一个 prerelease 版本 (`0.2.0-261124-c08e977`) | 有计划地升级，按 [image.md](./image.md#升级-unkernel) 里的检查逐项进行；image 构建会获取该 release 的 Alpine image |
 | 每个线程只能有一个 kernel | 不要在 `kernel.ts` 之外调用 `createKernel` |
-| 多个 CPU 需要 cross-origin isolated 的页面和一个 worker | Dev server 自己发送响应头，线上站点由 Cloudflare Pages 按仓库根目录的 `public/_headers` 发送；不加载没有 CORP 或 CORS 的外站资源，不嵌入外站 iframe ([CPU](#cpu)) |
+| 多个 CPU 需要 cross-origin isolated 的页面和一个 worker | Dev server 自己发送响应头，Cloudflare Pages 按仓库根目录的 `public/_headers` 发送，GitHub Pages 上由 `public/coi-sw.js` 添加；不加载没有 CORP 或 CORS 的外站资源，不嵌入外站 iframe ([CPU](#cpu)) |
 | Guest 内存: 512 MiB (`kernel.ts`)，即演讲中 htop 那一步显示的值；分配不了时 unkernel 会尝试更小的值 | 对 deck 用到的工具足够；写入 disk 的数据也在内存里。unkernel 自己的默认值 (桌面端 2 GiB) 并不能 boot 得更快 |
 | Guest 里没有网络 | `apk add` 和 `git clone` 在页面上会失败；需要的工具改为预装在 image 里 |
 | `vite.config.ts` 把 `unkernel` 排除在依赖 pre-bundling 之外 | SDK 相对于自己的 module URL 查找 `unkernel.wasm` |

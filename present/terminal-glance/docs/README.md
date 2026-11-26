@@ -45,14 +45,14 @@ present/terminal-glance/
 - [architecture.md](./architecture.md): 分层、boot 与 session 的生命周期、终端模拟器、约束
 - [image.md](./image.md): guest image 是什么、如何构建和发布、shell 的启动耗时、体积、如何修改
 - [performance.md](./performance.md): 构建、下载、boot 和 image 为慢速网络做了哪些处理，附实测数据和剩余开销
-- [isolation.md](./isolation.md): cross-origin isolation 与 guest 的 4 个 CPU，包括浏览器为什么要求这两个响应头、它们的其他影响与限制、响应头由谁发送、kernel 的 worker、slides 内容的规则、遇到的问题
+- [isolation.md](./isolation.md): cross-origin isolation 与 guest 的 4 个 CPU，包括浏览器为什么要求这两个响应头、它们的其他影响与限制、响应头由谁发送、service worker、kernel 的 worker、slides 内容的规则、遇到的问题
 - [authoring.md](./authoring.md): 用 `<ShellDemo>` 和 `<ShellStep>` 编写 demo slide、插图，以及 speaker notes
 
 
 ## 演讲时
 
 - 打开 deck，再从 deck 打开 presenter view (同一浏览器)。在 presenter view 里点击的 Step 会输入到 slide 窗口的终端里
-- Linux 跑在 4 个 CPU 上。线上站点由 Cloudflare Pages 发送 cross-origin isolation 所需的两个响应头，首次访问和 hard reload (Shift) 都是 4 个 CPU ([isolation.md](./isolation.md))
+- Linux 跑在 4 个 CPU 上。线上站点由 Cloudflare Pages 提供时，它发送 cross-origin isolation 所需的两个响应头，首次访问和 hard reload (Shift) 都是 4 个 CPU。由 GitHub Pages 提供时，首次访问会注册让页面 cross-origin isolated 的 service worker，然后自动刷新一次；hard reload 会绕过这个 worker，以 1 个 CPU 运行 ([isolation.md](./isolation.md))
 - 点进终端可以手动输入；用键盘翻页前，点一下终端外面
 - 在终端里选中文字即复制。Cmd-click (Ctrl-click) 打开 URL。程序使用鼠标时 (tmux、htop)，点击和滚轮都交给程序；按住 Shift 可以选择文字
 - 拖动终端底边可以调整高度，刷新后高度保留。双击底边恢复布局的默认高度
