@@ -38,7 +38,7 @@ useResizeObserver(viewport, measure)
 
 <style scoped>
 .scroll-fade {
-  --scroll-fade-size: 2em;
+  --scroll-fade-size: 3em;
   /* each edge's fade grows with the content beyond it, so it appears and vanishes along with scrolling */
   --scroll-fade-top: min(var(--scroll-distance-top), var(--scroll-fade-size));
   --scroll-fade-bottom: min(var(--scroll-distance-bottom), var(--scroll-fade-size));
