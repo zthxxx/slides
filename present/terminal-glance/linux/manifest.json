@@ -1,0 +1,306 @@
+{
+  "format": "terminal-glance/disk@2",
+  "label": "kwdata",
+  "unkernel": "0.2.0-261124-c08e977",
+  "inputHash": "47347978fa5445456e55f5f9f9c424734d989dd88052cdce055c5bfe9e67c722",
+  "size": 4294967296,
+  "chunkSize": 1048576,
+  "encoding": "gzip",
+  "chunks": {
+    "0": "chunks/cc3d86e14848bf5a.gz",
+    "1": "chunks/89e5c5afd9ab44c5.gz",
+    "2": "chunks/6868e07c1f1e3b0b.gz",
+    "34": "chunks/7536a7cf1c2f3309.gz",
+    "128": "chunks/5f932e5a7d636779.gz",
+    "384": "chunks/65812c88a51c8abe.gz",
+    "640": "chunks/0d9ef934c31c450e.gz",
+    "896": "chunks/a22212631ff4c2f6.gz",
+    "1152": "chunks/5ddd44db5e42a44e.gz",
+    "1920": "chunks/fb994c174da399b1.gz",
+    "1921": "chunks/30c1fac397dd37cd.gz",
+    "1922": "chunks/dc716ed1f15c74d6.gz",
+    "1923": "chunks/8101f0c0b51edff2.gz",
+    "1924": "chunks/529f7d8a8774966e.gz",
+    "2048": "chunks/69993fab2717dc62.gz",
+    "2049": "chunks/5b301a368569f434.gz",
+    "2080": "chunks/65a61854c12f4d66.gz",
+    "2176": "chunks/9b1e6e2295ceffab.gz",
+    "2177": "chunks/4d444a9cb60c35cf.gz",
+    "2180": "chunks/815f4ed688d49ff1.gz",
+    "2181": "chunks/ed61b1ef37144d35.gz",
+    "2182": "chunks/941a81e822f24ca8.gz",
+    "2183": "chunks/281ef324ceebe664.gz",
+    "2184": "chunks/eb1a1d967f4fc0f3.gz",
+    "2185": "chunks/13a00e142a7307ef.gz",
+    "2186": "chunks/87fda27281a348e5.gz",
+    "2187": "chunks/4141c86338943ab7.gz",
+    "2188": "chunks/6c12d78e4fa7424d.gz",
+    "2189": "chunks/9fe895405c18cc2c.gz",
+    "2190": "chunks/528db7280cab00f7.gz",
+    "2191": "chunks/5c897f1a8da59361.gz",
+    "2192": "chunks/7b3ddc6fcfd06b3f.gz",
+    "2193": "chunks/ece4350e2ce70520.gz",
+    "2194": "chunks/a72776c2c6a29c7c.gz",
+    "2195": "chunks/b9790027894880a2.gz",
+    "2196": "chunks/d2711e379a7219b6.gz",
+    "2197": "chunks/e9c1fcc997acd710.gz",
+    "2198": "chunks/4ff72578f10ea9ec.gz",
+    "2199": "chunks/78e2e2d1f5aaf85e.gz",
+    "2200": "chunks/dbe256f842781253.gz",
+    "2201": "chunks/a6107447c4bd6674.gz",
+    "2202": "chunks/78fee47abfc0363e.gz",
+    "2203": "chunks/5a8507c96834310b.gz",
+    "2204": "chunks/381386703469a2b2.gz",
+    "2205": "chunks/8006a5670860ed5f.gz",
+    "2206": "chunks/fea5c3496497b8c3.gz",
+    "2207": "chunks/5ef0aace1a07dd21.gz",
+    "2208": "chunks/7b928b76b7d44b70.gz",
+    "2209": "chunks/0510aef1030858cb.gz",
+    "2210": "chunks/cd4fb8ecc856a350.gz",
+    "2211": "chunks/7edd5b3ec29d982f.gz",
+    "2212": "chunks/69a41c7d2fef18bb.gz",
+    "2213": "chunks/f2dc3b37db51d4c6.gz",
+    "2240": "chunks/42fe7a47699a3452.gz",
+    "2241": "chunks/a7fd0a6f60fc40ed.gz",
+    "2242": "chunks/3758f5e6fa910a21.gz",
+    "2243": "chunks/8ef00c74bcede7a1.gz",
+    "2244": "chunks/088feaa9eba2204f.gz",
+    "2245": "chunks/b9ad97e6dcbd8ff7.gz",
+    "2246": "chunks/00b6270d5f4b7bfd.gz",
+    "2247": "chunks/5603a5c1810d5e14.gz",
+    "2248": "chunks/b038d51a496f390f.gz",
+    "2249": "chunks/04be7530c0f67061.gz",
+    "2250": "chunks/013d008a62b66e15.gz",
+    "2251": "chunks/0b289204dba0387b.gz",
+    "2252": "chunks/9345c7f9c90a167d.gz",
+    "2253": "chunks/fb445ba4634d9c22.gz",
+    "2254": "chunks/47cb24db85a226b2.gz",
+    "2255": "chunks/ab546df02b138230.gz",
+    "2256": "chunks/6fef47079b1a1707.gz",
+    "2257": "chunks/fd6838875912b436.gz",
+    "2258": "chunks/95fd9b7e798ee86d.gz",
+    "2259": "chunks/d6d3e0ab26b547dd.gz",
+    "2260": "chunks/92f54c9799f74e8f.gz",
+    "2261": "chunks/87fbf4690d393141.gz",
+    "2262": "chunks/228a58ae2971f9dc.gz",
+    "2263": "chunks/edfa2ef1fece5ceb.gz",
+    "2264": "chunks/e67c625207c5d148.gz",
+    "2265": "chunks/e48f86d796322b4e.gz",
+    "2266": "chunks/d063e5e50a352b65.gz",
+    "2267": "chunks/d1a978443dfae0cb.gz",
+    "2268": "chunks/8156dbdc6478cf8b.gz",
+    "2269": "chunks/8c8f6a624aa46975.gz",
+    "2270": "chunks/3723b1a89d1040f4.gz",
+    "2271": "chunks/5e702cfd642d4aaa.gz",
+    "3200": "chunks/a81654f8b9572423.gz",
+    "3456": "chunks/7b0e82ad71d83b89.gz"
+  },
+  "stats": {
+    "nonZeroChunks": 87,
+    "uniqueChunks": 87,
+    "rawBytes": 91226112,
+    "compressedBytes": 21525270
+  },
+  "distro": {
+    "name": "alpine",
+    "image": "alpine-3.24.4-7ab2d6761e667913",
+    "sha256": "bb9bed60c5d5418dc35b23ed69112882df7a7c5ae878490fc45a82fc5c28ffab",
+    "size": 4046848,
+    "chunkSize": 1048576,
+    "encoding": "gzip",
+    "chunks": {
+      "0": "distro/chunks/06ab2c247e18243b.gz",
+      "1": "distro/chunks/ee98345d8e8e358d.gz",
+      "2": "distro/chunks/a413c1974db112d9.gz",
+      "3": "distro/chunks/222218ba115be0e9.gz"
+    },
+    "stats": {
+      "nonZeroChunks": 4,
+      "uniqueChunks": 4,
+      "rawBytes": 4046848,
+      "compressedBytes": 3972421
+    },
+    "boot": [
+      0
+    ],
+    "bootBundle": {
+      "file": "distro/boot/1f6ef2096c71c644.gz",
+      "blockSize": 16384,
+      "runs": [
+        [
+          0,
+          58
+        ]
+      ]
+    }
+  },
+  "boot": [
+    0,
+    2,
+    1920,
+    34,
+    2048,
+    2080,
+    2176,
+    2049,
+    2255,
+    2212,
+    2269,
+    2270,
+    2180,
+    2181,
+    2241,
+    2266,
+    2207,
+    2271,
+    2213,
+    2209,
+    2208
+  ],
+  "bootBundle": {
+    "file": "boot/673fdd26fcad2a1f.gz",
+    "blockSize": 16384,
+    "runs": [
+      [
+        0,
+        1
+      ],
+      [
+        128,
+        1
+      ],
+      [
+        132,
+        1
+      ],
+      [
+        136,
+        1
+      ],
+      [
+        2184,
+        4
+      ],
+      [
+        122880,
+        1
+      ],
+      [
+        131072,
+        1
+      ],
+      [
+        131075,
+        2
+      ],
+      [
+        131080,
+        9
+      ],
+      [
+        131120,
+        19
+      ],
+      [
+        133128,
+        4
+      ],
+      [
+        133134,
+        3
+      ],
+      [
+        133138,
+        1
+      ],
+      [
+        139264,
+        1
+      ],
+      [
+        139274,
+        3
+      ],
+      [
+        139577,
+        25
+      ],
+      [
+        141304,
+        8
+      ],
+      [
+        141316,
+        23
+      ],
+      [
+        141342,
+        14
+      ],
+      [
+        141405,
+        1
+      ],
+      [
+        141415,
+        14
+      ],
+      [
+        141581,
+        1
+      ],
+      [
+        141627,
+        1
+      ],
+      [
+        141655,
+        5
+      ],
+      [
+        143447,
+        3
+      ],
+      [
+        144383,
+        1
+      ],
+      [
+        145045,
+        1
+      ],
+      [
+        145234,
+        5
+      ],
+      [
+        145242,
+        43
+      ],
+      [
+        145301,
+        9
+      ],
+      [
+        145322,
+        5
+      ],
+      [
+        145352,
+        5
+      ],
+      [
+        145365,
+        5
+      ],
+      [
+        145373,
+        9
+      ],
+      [
+        145394,
+        14
+      ]
+    ]
+  }
+}
