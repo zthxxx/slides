@@ -42,14 +42,20 @@ useResizeObserver(viewport, measure)
 }
 
 .scroll-fade {
-  --scroll-fade-size: 3em;
+  --scroll-fade-size: 4em;
 
   overflow-y: auto;
+  /*
+   * the transition hints at 70% of the fade ease it in (about alpha = t^2),
+   * so the edge-most line reads as cut off instead of merely dimmed
+   */
   mask-image: linear-gradient(
     to bottom,
     transparent,
+    calc(var(--scroll-fade-top) * 0.7),
     #000 var(--scroll-fade-top),
     #000 calc(100% - var(--scroll-fade-bottom)),
+    calc(100% - var(--scroll-fade-bottom) * 0.7),
     transparent
   );
   transition:
