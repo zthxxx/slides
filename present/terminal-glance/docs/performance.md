@@ -146,7 +146,7 @@ Guest 的内存是 512 MiB (`kernel.ts`)，与 0.1.0 的默认值相同。unkern
 
 ### 4 个 CPU
 
-Guest 在一个 cross-origin isolated 页面的 worker 里以 4 个 CPU 运行 ([isolation.md](./isolation.md))。在 GitHub Pages 上由 service worker 让页面进入 cross-origin isolated 状态，首次访问会在 service worker 激活后刷新一次
+Guest 在一个 cross-origin isolated 页面的 worker 里以 4 个 CPU 运行 ([isolation.md](./isolation.md))。线上站点由 Cloudflare Pages 发送所需的两个响应头，首次访问也直接以 4 个 CPU boot
 
 本地用 Chrome 157 在构建产物上实测。每次运行都用新的浏览器 session，并清空、禁用 HTTP cache；测 1 个 CPU 时注销 service worker，测 4 个 CPU 时注册。每组 3 次，带 throttle 的两行各 2 次：
 
@@ -265,5 +265,5 @@ Input hash 匹配时 `pnpm build:image` 直接跳过；manifest 缺少 trace 时
 - **Boot bundle 的内容会下载两次：** 后台下载还会取它们来源的 chunk，每次冷加载多 1.8 MB
 - **Wasm 依赖 GitHub Pages 的 gzip，** 而 GitHub 没有为此写文档。不压缩的话会多 7.0 MB，3 Mbps 下约 19 s；改用 zopfli 压缩的 `.wasm.gz`，再用 `DecompressionStream('gzip')` 解码，就能去掉这个依赖
 - **10 分钟后**，每个文件都要用一次 round trip 重新验证
-- **4 个 CPU 让 boot 开始得更晚：** SMP kernel 要等下载结束、patch (约 90 ms) 打完后才编译。在 GitHub Pages 上，首次访问还会在 service worker 激活后刷新一次，这会取消正在进行的下载，3 Mbps 下约 0.3 s
+- **4 个 CPU 让 boot 开始得更晚：** SMP kernel 要等下载结束、patch (约 90 ms) 打完后才编译
 - **jovial 的第一次 precmd** 占每个 shell 启动的 77 到 82 ms: 35 到 42 ms 用于计算各 segment 的长度，每个 affix 跑一次 regex 循环 (`@jov.init-affix`)；15 到 18 ms 用于在 zpty 里启动 dev-env probe，每个 prompt 都会新起一个进程。在有两个终端的 slide 上，两个 shell 同时启动，1 个 CPU 时约 0.3 s 后显示 prompt，4 个 CPU 时为 0.13 到 0.16 s
