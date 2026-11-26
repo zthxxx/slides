@@ -1,8 +1,10 @@
+/// <reference types="@slidev/types" />
 import type { Plugin, ResolvedConfig, UserConfig } from 'vite'
 import type { DiskManifest } from './runtime/disk'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { crossOriginMedia } from './vite/cross-origin-media'
 
 const require = createRequire(import.meta.url)
 const { version: unkernelVersion } = require('unkernel/package.json') as { version: string }
@@ -91,6 +93,11 @@ export default {
     exclude: ['unkernel'],
   },
   plugins: [isolatePage(), preloadLinux()],
+  slidev: {
+    // Slidev passes these to its @vitejs/plugin-vue, which compiles the slides' Markdown and the components
+    // (@slidev/cli@53.1.0 `dist/serve-*.mjs`, `createVuePlugin`).
+    vue: { template: { compilerOptions: { nodeTransforms: [crossOriginMedia] } } },
+  },
   server: {
     // Cross-origin isolation for Linux's 4 CPUs (runtime/kernel.ts), sent by the dev server itself, as unkernel.dev's
     // server does; Slidev's own index.html middleware applies these too (@slidev/cli@53.1.0 `dist/serve-*.mjs`).

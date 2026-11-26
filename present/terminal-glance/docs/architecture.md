@@ -45,6 +45,8 @@ ghostty-web (npm)         WebAssembly 版的 Ghostty VT parser、canvas renderer
 public/coi-sw.js          service worker：给 deck 的文档和 worker 脚本加上 COOP/COEP (cross-origin isolation)
 public/linux/             由 image/ 构建 (gitignored)：manifest.json、chunks/ + boot/ (data disk)、distro/ (Alpine image)
 image/                    image 的构建：见 image.md
+vite/                     vite.config.ts 用到的模块
+   cross-origin-media.ts  模板编译时给外站的 <img>、<video>、<audio> 加上 crossorigin (cross-origin isolation)
 ```
 
 依赖只指向下层。`runtime/` 从不 import `components/`；`steps.ts` 和 `disk.ts` 承载值得测试的逻辑，I/O 通过参数传入 (`ChunkLoader`)

@@ -145,7 +145,7 @@ Ref Pictures & Flow:
   </a>
 </p>
 
-<a href="https://github.com/zthxxx"><img alt="zthxxx" src="https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2" crossorigin="anonymous" /></a>
+[![zthxxx](https://badgen.net/badge/github/zthxxx/blue?icon=github&label&scale=2)](https://github.com/zthxxx)
 
 [ [jovial](https://github.com/zthxxx/jovial) · [zsh-history-enquirer](https://github.com/zthxxx/zsh-history-enquirer) · [midk](https://github.com/zthxxx/midk) ]
 

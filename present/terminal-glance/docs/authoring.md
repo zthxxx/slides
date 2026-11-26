@@ -131,13 +131,13 @@ archify 把每个标签放在一块底色上，文字没有在底色里垂直居
 
 ## 外站资源
 
-为了让 Linux 跑在 4 个 CPU 上，deck 是 cross-origin isolated 的 ([isolation.md](./isolation.md))，embedder policy 为 `require-corp`。外站资源只有满足以下条件之一才会加载：
+为了让 Linux 跑在 4 个 CPU 上，deck 是 cross-origin isolated 的 ([isolation.md](./isolation.md#slides-内容的规则))，embedder policy 为 `require-corp`。外站资源只有满足以下条件之一才会加载：
 
-- 响应带 `Cross-Origin-Resource-Policy: cross-origin`，Google Fonts 和 GitHub 头像就会发送；或者
-- 以 CORS 方式请求 (`<img crossorigin="anonymous">`、`<video crossorigin="anonymous">`)，且响应带 `Access-Control-Allow-Origin`，GitHub Pages 和 badgen.net 会发送它。
-  Markdown 图片发出的不是 CORS 请求，所以这类图片要写成 HTML 标签，结尾 slide 的徽章就是这样写的
+- 以 CORS 方式请求，且响应带 `Access-Control-Allow-Origin`，GitHub Pages、badgen.net 和 GitHub 头像都会发送它。
+  外站图片直接写成 Markdown 图片 `![](https://…)`：模板编译时，`src` 指向其他站点的 `<img>`、`<video>`、`<audio>` 会自动带上 `crossorigin="anonymous"` (`vite/cross-origin-media.ts`)，以 CORS 方式请求。`src` 是绑定值的元素要自己写这个属性，比如 `WebVideo.vue`
+- 响应带 `Cross-Origin-Resource-Policy: cross-origin`，CSS 和 `<link>` 引用的资源靠这一条，Google Fonts 会发送它
 
-使用新的外站资源前，用 `curl -sI <url>` 检查。外站的 iframe 除非对方站点主动放行，否则完全无法加载，所以 deck 不嵌入任何 iframe
+使用新的外站资源前，用 `curl -sI <url>` 检查；对应的响应头没有时，把资源放进 deck 的 `public/`。外站的 iframe 除非对方站点主动放行，否则完全无法加载，所以 deck 不嵌入任何 iframe
 
 `<WebVideo src="…" page="…" title="…" />` 用浏览器自带的控件播放外站视频，并附上视频来源页面的链接。它在所在 slide 第一次显示时加载；预览和导出中只显示它的标题
 

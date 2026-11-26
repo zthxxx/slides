@@ -152,24 +152,30 @@ GitHub Pages 不能配置响应头，所以构建产物这样处理：
 
 在 `require-corp` 下，外站资源只有满足以下条件之一才会加载：响应带 `Cross-Origin-Resource-Policy: cross-origin`；或者以 CORS 方式请求，且响应带 `Access-Control-Allow-Origin` (见 [authoring.md](./authoring.md#外站资源))
 
-| 资源 | 能加载的原因 |
-| --- | --- |
-| Google Fonts 的样式表和字体文件、jsdelivr 的 favicon、GitHub 头像 | 它们发送 `Cross-Origin-Resource-Policy: cross-origin` |
-| botmux 的 demo 视频 (`WebVideo.vue`) | `<video crossorigin="anonymous">`；GitHub Pages 发送 `Access-Control-Allow-Origin: *` |
-| 结尾 slide 的 badgen 徽章 | `<img crossorigin="anonymous">`；badgen 发送 CORS 响应头，但不发送 CORP |
+| 资源 | 请求方式 | 能加载的原因 |
+| --- | --- | --- |
+| Google Fonts 的样式表和字体文件、jsdelivr 的 favicon | 由 CSS 和 `<link>` 发出，不经过模板 | 它们发送 `Cross-Origin-Resource-Policy: cross-origin` |
+| 结尾 slide 的 GitHub 头像和 badgen 徽章 | 模板里的 `<img>` (徽章是 Markdown 图片)，编译时自动带上 `crossorigin="anonymous"` | 它们发送 `Access-Control-Allow-Origin: *`；badgen 不发送 CORP |
+| botmux 的 demo 视频 (`WebVideo.vue`) | `src` 是绑定值，组件自己写 `crossorigin="anonymous"` | GitHub Pages 发送 `Access-Control-Allow-Origin: *` |
 
 两种条件对应两条路径：
 
 - **CORP**：资源所在的站点用它声明哪些站点可以嵌入这个资源。`same-origin`、`same-site` 用来限制嵌入，`cross-origin` 表示任何站点都可以。
   没有 COEP 的页面不检查 CORP，缺少这个响应头时资源照常加载，所以大多数站点不发送它；希望资源也能用在 cross-origin isolated 页面里的公共 CDN 才会发送 `cross-origin`，比如上表的 Google Fonts、jsdelivr 和 GitHub 头像
 - **`crossorigin` 属性**：`<img>`、`<video>`、`<script>`、`<link>` 带上 `crossorigin="anonymous"` 后，请求从 `no-cors` 变为 `cors`，跨站时不带 cookie。
-  对方在响应里返回 `Access-Control-Allow-Origin` 就表示同意，不再需要 CORP。没有这个属性时，响应里的 `Access-Control-Allow-Origin` 不起作用，所以 badgen 徽章只有在写成带 `crossorigin` 的标签后才能加载
+  对方在响应里返回 `Access-Control-Allow-Origin` 就表示同意，不再需要 CORP。没有这个属性时，响应里的 `Access-Control-Allow-Origin` 不起作用，badgen 徽章就会被拦下
+
+Deck 在模板编译时统一加上这个属性：`vite/cross-origin-media.ts` 由 `vite.config.ts` 的 `slidev.vue` 交给 Slidev 的 Vue 插件，slides 的 Markdown 和组件模板都经过它。
+`src` 指向其他站点的 `<img>`、`<video>`、`<audio>` 带上 `crossorigin="anonymous"`，Markdown 图片 `![](https://…)` 也一样；已经写了 `crossorigin` 的元素保持原值；`src` 是绑定值 (`:src`) 时编译期无法判断，由组件自己写这个属性
+
+统一走 CORS 的依据：2026-11 抽查的常用图床和 CDN 里，发送 CORP 的站点 (Google Fonts、jsdelivr、unpkg、GitHub 头像、raw.githubusercontent.com、shields.io、Unsplash) 都同时发送 `Access-Control-Allow-Origin`；wikimedia、simpleicons、badgen、GitHub Pages 只发送后者。
+只发送 CORP 的站点会因为这个属性加载失败，它的资源要放进 deck 的 `public/`
 
 编写 slides 时遵守以下规则：
 
 - 不嵌入外站的 iframe：只有对方站点为这个 embedder policy 主动放行，它才能加载，而 GitHub Pages 上的站点做不到
-- Markdown 图片 (`![](…)`) 发出的不是 CORS 请求：图片所在的站点不发送 CORP 时，要改用带 `crossorigin` 的 HTML 标签
-- 引入新的外站资源之前，用 `curl -sI <url>` 确认它带有上述两种响应头之一；两种都没有时，把资源放进 deck 的 `public/`，或者换一个来源
+- 外站图片直接写成 Markdown 图片 `![](https://…)`，不需要手写 `crossorigin`
+- 引入新的外站资源之前，用 `curl -sI <url>` 检查：模板里的图片、视频、音频要求响应带 `Access-Control-Allow-Origin`，CSS 和 `<link>` 引用的资源要求响应带 `Cross-Origin-Resource-Policy: cross-origin`。不满足时，把资源放进 deck 的 `public/`，或者换一个来源
 
 
 ## 遇到的问题与 deck 的处理
@@ -179,7 +185,7 @@ GitHub Pages 不能配置响应头，所以构建产物这样处理：
 | 控制台输出 `[host] this kernel is not SMP: 4 CPUs asked, it runs on one`；`nproc` 输出 1 | Kernel 以已经编译好的 module 交给 unkernel，unkernel 会原样使用它：SMP patch 是打在字节上的 | 4 个 CPU 的路径用 `loadKernelModule(…, { smp: true })` |
 | Kernel 的 worker 始终没有启动，它的脚本报 `net::ERR_BLOCKED_BY_RESPONSE` | Cross-origin isolated 的页面只在 worker 脚本的响应也带 embedder policy 时才启动 worker | Service worker 给 worker 脚本也加上这两个响应头；static routing 把 `same-origin` 请求 (module worker 脚本) 留给它处理 |
 | 直接用 iframe 嵌入 botmux 页面，报 `ERR_BLOCKED_BY_RESPONSE` (Chrome) | 在 COEP 下，cross-origin iframe 只有对方站点主动放行才能加载；只有 Chromium 的 `<iframe credentialless>` 能绕过这一点，Firefox 和 Safari 没有这种 iframe | Deck 不嵌入任何 iframe：slide 播放该页面的视频，并附上页面链接 |
-| 图片加载失败，报 `ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep` | 图片来自不发送 CORP 的站点，且写成了 Markdown 图片 (`no-cors`) | 改用 `<img crossorigin="anonymous">`，并从发送 CORS 响应头的站点加载图片 |
+| 图片加载失败，报 `ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep` | 图片来自不发送 CORP 的站点，且以 `no-cors` 方式请求 (没有 `crossorigin` 的 Markdown 图片) | `vite/cross-origin-media.ts` 在模板编译时给外站的 `<img>`、`<video>`、`<audio>` 加上 `crossorigin="anonymous"`；图片要来自发送 CORS 响应头的站点 |
 | 首次访问时 htop 显示 1 个 CPU 和 494 MiB | 第一次 navigation 没有经过 service worker，所以页面不是 cross-origin isolated | Worker 进入 active 状态后，`isolate-page.js` 刷新首次访问的页面 |
 | 用 `transformIndexHtml` 加入的 head 脚本在 dev 模式下缺失 | Slidev 的 dev server 用自己的 middleware 响应 `/index.html`，不经过 Vite 的 HTML transform (@slidev/cli@53.1.0 `dist/serve-*.mjs`)；仓库的 `.gitignore` 会忽略放在 deck 根目录的 `index.html`，`pnpm clean` 也会删除它 | Dev server 自己发送响应头；脚本只内联到构建产物里 |
 | 早期版本注册的 service worker 留在 dev origin 上 (`localhost:3034`，scope 为 `/`) | 它比 deck 存活得更久，会给之后在这个端口上运行的任何其他站点加上 COOP 和 COEP | Dev 页面会 unregister `coi-sw.js` |

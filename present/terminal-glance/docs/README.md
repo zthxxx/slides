@@ -31,6 +31,7 @@ present/terminal-glance/
   styles/            deck 级样式：插图的 .diagram
   runtime/           VM、session、终端模拟器、disk、Step、presenter 转发
   image/             guest image 的构建 (IaC)
+  vite/              vite.config.ts 用到的模块：给外站的图片和视频加上 crossorigin
   test/              测试构建 ↔ runtime 之间的约定
   public/images/     slide 图片；diagrams/ 下是 render.ts 生成的插图 SVG
   public/linux/      构建出的 guest image (gitignored)
