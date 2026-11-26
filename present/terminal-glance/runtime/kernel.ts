@@ -17,8 +17,8 @@ import { KernelWorkerHost } from './kernel-worker-host'
  * There is no network; the guest's writes stay in memory, so every page load starts from the same machine.
  * Every terminal session is a pty spawned on it.
  *
- * Where the page is cross-origin isolated (the dev server's headers, or a build's `public/coi-sw.js`), the kernel runs
- * in a worker on several CPUs (`kernel-worker.ts`); elsewhere on this thread, on one.
+ * Where the page is cross-origin isolated (the headers of the dev server, or of the host from the repository root's
+ * `public/_headers`), the kernel runs in a worker on several CPUs (`kernel-worker.ts`); elsewhere on this thread, on one.
  *
  * Source: unkernel@0.2.0-261124-c08e977 `dist/web.d.mts` (`createKernel` with `distro`, `checkSupport`, `CowDisk`,
  * `BaseDisk`) and `guest/base/initramfs/init` in its repository (the overlay root).
@@ -59,8 +59,9 @@ const SMP_CPUS = 4
 const SMP_CPUS_MOBILE = 2
 
 /**
- * Several CPUs need shared memory, so a cross-origin isolated page (`public/coi-sw.js`), and a thread that may block,
- * so a worker (unkernel@0.2.0-261124-c08e977 `webCpuBlocker`). Elsewhere the kernel runs on this thread, on one.
+ * Several CPUs need shared memory, so a cross-origin isolated page (the repository root's `public/_headers`), and a
+ * thread that may block, so a worker (unkernel@0.2.0-261124-c08e977 `webCpuBlocker`). Elsewhere the kernel runs on
+ * this thread, on one.
  */
 function guestCpus(): number {
   if (!globalThis.crossOriginIsolated || webCpuBlocker({ worker: true }) !== undefined)
