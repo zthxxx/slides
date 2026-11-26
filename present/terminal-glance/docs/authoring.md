@@ -107,11 +107,14 @@ echo "${OSC}7501;state=clear${ST}"' />
 `pnpm diagrams <name>` (`diagrams/render.ts`) 先用 archify 的 `finalize` 检查 schema、布局和浏览器中的渲染，再导出浅色 SVG 到 `public/images/diagrams/<name>.svg`。
 SVG 和源文件一起提交，CI 不渲染插图
 
-Slide 里用 `<img>` 引用，宽度按图的尺寸和同一张 slide 上的其他内容来定：
+Slide 里用 `<img>` 引用，宽度按图的长宽比和同一张 slide 上的其他内容来定。Slide 内容整体垂直居中，图的下沿要在 1580×889 画布的 y 810 以内，底部才留得出和顶部相当的边距；按这个高度定宽度后字太小，就改布局让图变矮：
 
 ```html
 <img class="diagram w-[1300px]" src="/images/diagrams/ssh-layers.svg" alt="…" />
 ```
+
+`render.ts` 在 Chrome 里量出图实际画到的范围，把 viewBox 裁到四边各留 20px：archify 的画布按固定分区留白，时序图的参与者总是从 y 72 开始 (`renderers/sequence/render-sequence.mjs` 的 `layout.topY`)。
+时序图底部 65px 是图例区，隐藏图例 (`meta.legend.mode: "hidden"`) 后裁剪会去掉它；消息标签已写明输入、输出时 (`probe-relay`)，这是省高度最多的办法
 
 `.diagram` (`styles/index.css`) 给图加圆角和描边。SVG 自带浅色背景，深色模式下也保持浅色。
 archify 的字号是按文档排版设计的，比 slide 正文小：图要画得紧凑，在 slide 上放大显示；节点的 `tag` 只有 7px，在 slide 上看不清，不要用。
@@ -120,13 +123,14 @@ archify 把每个标签放在一块底色上，文字没有在底色里垂直居
 终端分层的图共用一套画法 (`tty-layer`、`ssh-layers`、`tmux-layers`、`ssh-tmux-layers`，以及沿用它们的 `foreground-group`、`osc-roundtrip`、`agent-gateway`)，让观众在后面的图里认出前面见过的结构。新图沿用这套画法：
 
 - 每层终端是一条横带 (archify 的 `region`)：终端侧 → 内核 PTY → 程序，从本机开始编号 L0、L1、L2
-- ssh、tmux 这样的中间层画成上下两个框：上框是外层 pts 上的程序，下框是内层的终端侧。tmux client 不转发字节，所以 tmux server 画在它读写的 pts 正下方
+- ssh、tmux 这样的中间层画成上下两个框：上框是外层 pts 上的程序，下框是内层的终端侧。tmux client 不转发字节，所以 tmux server 画在它读写的 pts 正下方。
+  server 的上边和右边已经接了边，第二个 pane 放在 server 左侧的同一行，输入向左走 (`fromSide: "left"`)，两个 pane 共用一行
 - 每一段字节通道都画成一对边：输入 (流向程序) 用默认样式，标签以「输入」开头；输出 (流向终端) 用 `emphasis`，标签以「输出」开头
 - 一对边必须是直线：两端的框在这对边的方向上居中对齐，两端都写明 `fromSide`、`toSide`；拐弯的一对边会互相交叉。
   同一个框边上不要再接第三条边，它会落在这对边的两条线之间
 - 边的 id 写成 `i-<from>-<to>`、`o-<from>-<to>`：archify 按 id 排列同一个框边上的端口 (`renderers/shared/geometry.mjs` 的 `automaticPortSpread`)，这样输入总在上方或左侧
 - 组件类型表示角色：`frontend` 终端侧 (持有 ptmx)，`external` 内核 PTY，`backend` pts 上的程序，`security` ssh，`database` tmux (`icon: "none"`)
-- 坐标沿用同一套网格：列 x = 40、220、388、568、736、916、1084，行 y = 60、200、340
+- 坐标沿用同一套网格：列 x = 40、220、388、568、736、916、1084，行 y = 60、200、340。`tmux-layers` 左侧要放第二个 pane，L0 整体右移 150
 
 
 ## 外站资源

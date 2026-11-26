@@ -23,7 +23,8 @@
         "dashed": {
           "label": "worker 旁路 · pipe-pane / send-keys"
         }
-      }
+      },
+      "mode": "hidden"
     }
   },
   "participants": [

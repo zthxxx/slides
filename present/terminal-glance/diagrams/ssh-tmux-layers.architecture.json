@@ -164,8 +164,8 @@
       "label": "pts/3",
       "sublabel": "line discipline",
       "pos": [
-        568,
-        480
+        394,
+        340
       ],
       "size": [
         112,
@@ -179,8 +179,8 @@
       "label": "nvim",
       "sublabel": "pane 2",
       "pos": [
-        736,
-        480
+        238,
+        340
       ],
       "size": [
         100,
@@ -353,8 +353,8 @@
       "from": "tmuxs",
       "to": "pane2",
       "label": "输入",
-      "fromSide": "bottom",
-      "toSide": "top"
+      "fromSide": "left",
+      "toSide": "right"
     },
     {
       "id": "o-pane2-tmuxs",
@@ -362,16 +362,16 @@
       "to": "tmuxs",
       "label": "输出",
       "variant": "emphasis",
-      "fromSide": "top",
-      "toSide": "bottom"
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
       "id": "i-pane2-nvim",
       "from": "pane2",
       "to": "nvim",
       "label": "输入",
-      "fromSide": "right",
-      "toSide": "left"
+      "fromSide": "left",
+      "toSide": "right"
     },
     {
       "id": "o-nvim-pane2",
@@ -379,8 +379,8 @@
       "to": "pane2",
       "label": "输出",
       "variant": "emphasis",
-      "fromSide": "left",
-      "toSide": "right"
+      "fromSide": "right",
+      "toSide": "left"
     }
   ]
 }

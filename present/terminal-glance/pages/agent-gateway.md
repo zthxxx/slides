@@ -14,7 +14,7 @@
 
 [Botmux Web 终端](https://deepcoldy.github.io/botmux/web-terminal)：一个 Agent，多条输入路径
 
-<img class="diagram w-[1440px]" src="/images/diagrams/agent-gateway.svg" alt="botmux worker 接在 tmux pane 这一层上，每一段都有输入和输出：tmux server、pts/1、Agent 之间双向传字节；worker 用 send-keys / paste-buffer 输入，经 pipe-pane → FIFO 读回输出；Web 终端经 WebSocket 发按键、收输出；IM 消息经 turn queue 和 ready gate 输入，输出经 daemon 变成飞书话题里的流式卡片" />
+<img class="diagram w-[1400px]" src="/images/diagrams/agent-gateway.svg" alt="botmux worker 接在 tmux pane 这一层上，每一段都有输入和输出：tmux server、pts/1、Agent 之间双向传字节；worker 用 send-keys / paste-buffer 输入，经 pipe-pane → FIFO 读回输出；Web 终端经 WebSocket 发按键、收输出；IM 消息经 turn queue 和 ready gate 输入，输出经 daemon 变成飞书话题里的流式卡片" />
 
 <!--
 - 这张图对应本地 botmux cb8ff44b2 的默认 tmux pipe 后端。只有一个 Agent 进程，跑在 tmux pane 的 pts 上；pane 的 ptmx 由 tmux server 持有，tmux 解析 Agent 的输出并画出 pane 的屏幕。IM 和 Web 是访问这个 pane 的不同路径
@@ -81,7 +81,7 @@ Gateway 怎样知道 Agent 在等什么？
 
 多一层 tmux，握手时序也会改变
 
-<img class="diagram w-[930px]" src="/images/diagrams/probe-relay.svg" alt="两段时序，按 Agent 的终端区分输出和输入：没有 relay 时，Agent 输出 7501 探测和 DA1，tmux server 在 1–2 ms 内把 DA1 回复送回 Agent 的输入，worker 经 pipe-pane 旁路看到探测后用 send-keys 写回的 7501 回复晚于 DA1，Agent 判定不支持；pane 里有 relay 时，relay 先把 7501 回复同步写回 Agent 的输入，再把 DA1 输出转发给 tmux，tmux 的 DA1 回复经 relay 回到 Agent 时已晚于 7501 回复" />
+<img class="diagram w-[920px]" src="/images/diagrams/probe-relay.svg" alt="两段时序，按 Agent 的终端区分输出和输入：没有 relay 时，Agent 输出 7501 探测和 DA1，tmux server 在 1–2 ms 内把 DA1 回复送回 Agent 的输入，worker 经 pipe-pane 旁路看到探测后用 send-keys 写回的 7501 回复晚于 DA1，Agent 判定不支持；pane 里有 relay 时，relay 先把 7501 回复同步写回 Agent 的输入，再把 DA1 输出转发给 tmux，tmux 的 DA1 回复经 relay 回到 Agent 时已晚于 7501 回复" />
 
 <!--
 - 上半张图：Agent 跑在 tmux pane 的 pts 上，这个 pane 的 ptmx 由 tmux server 持有。对 Agent 来说 tmux 就是它的终端：tmux 解析 pane 的输出、画出 pane 的屏幕，也像终端一样回答 DA1 这类查询

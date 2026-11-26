@@ -30,7 +30,7 @@
       "label": "Terminal",
       "sublabel": "iTerm2 · Ghostty",
       "pos": [
-        40,
+        190,
         60
       ],
       "size": [
@@ -44,7 +44,7 @@
       "label": "pts/0",
       "sublabel": "line discipline",
       "pos": [
-        220,
+        370,
         60
       ],
       "size": [
@@ -59,7 +59,7 @@
       "label": "tmux client",
       "sublabel": "tty fd 交给 server",
       "pos": [
-        388,
+        538,
         60
       ],
       "size": [
@@ -74,7 +74,7 @@
       "label": "tmux server",
       "sublabel": "每个 pane 一份 grid",
       "pos": [
-        214,
+        364,
         200
       ],
       "size": [
@@ -89,7 +89,7 @@
       "label": "pts/1",
       "sublabel": "line discipline",
       "pos": [
-        394,
+        544,
         200
       ],
       "size": [
@@ -104,7 +104,7 @@
       "label": "zsh",
       "sublabel": "pane 1",
       "pos": [
-        562,
+        712,
         200
       ],
       "size": [
@@ -118,8 +118,8 @@
       "label": "pts/2",
       "sublabel": "line discipline",
       "pos": [
-        220,
-        340
+        196,
+        200
       ],
       "size": [
         112,
@@ -133,8 +133,8 @@
       "label": "nvim",
       "sublabel": "pane 2",
       "pos": [
-        388,
-        340
+        40,
+        200
       ],
       "size": [
         100,
@@ -247,8 +247,8 @@
       "from": "tmuxs",
       "to": "pane2",
       "label": "输入",
-      "fromSide": "bottom",
-      "toSide": "top"
+      "fromSide": "left",
+      "toSide": "right"
     },
     {
       "id": "o-pane2-tmuxs",
@@ -256,16 +256,16 @@
       "to": "tmuxs",
       "label": "输出",
       "variant": "emphasis",
-      "fromSide": "top",
-      "toSide": "bottom"
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
       "id": "i-pane2-nvim",
       "from": "pane2",
       "to": "nvim",
       "label": "输入",
-      "fromSide": "right",
-      "toSide": "left"
+      "fromSide": "left",
+      "toSide": "right"
     },
     {
       "id": "o-nvim-pane2",
@@ -273,8 +273,8 @@
       "to": "pane2",
       "label": "输出",
       "variant": "emphasis",
-      "fromSide": "left",
-      "toSide": "right"
+      "fromSide": "right",
+      "toSide": "left"
     },
     {
       "id": "o-passthrough",
@@ -282,8 +282,12 @@
       "to": "emu",
       "label": "输出 · passthrough ESC P tmux; … ESC \\",
       "variant": "emphasis",
-      "fromSide": "bottom",
-      "toSide": "bottom"
+      "fromSide": "top",
+      "toSide": "left",
+      "labelAt": [
+        196,
+        158
+      ]
     }
   ]
 }

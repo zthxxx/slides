@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 922 400" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14" xmlns="http://www.w3.org/2000/svg" width="922" height="400" data-theme="light" data-archify-bake="static">
+<svg viewBox="20 10 882 357" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14" xmlns="http://www.w3.org/2000/svg" width="882" height="357" data-theme="light" data-archify-bake="static">
         <title id="archify-diagram-title">botmux 接在 tmux 这一层上</title>
         <desc id="archify-diagram-description">由 Archify 生成的架构图。</desc>
         <style><![CDATA[
@@ -313,7 +313,7 @@ svg[data-preset="blueprint"][data-relationship-preview-active] [data-relationshi
 .c-region { fill: rgba(251, 191, 36, 0.05); stroke: #d97706; stroke-dasharray: 8,4; }
 .c-lane { fill: rgba(248, 250, 252, 0.65); stroke: #cbd5e1; stroke-dasharray: 6,6; }
 svg[data-theme="light"] { --bg: #f4f5f7; --grid: #e9edf2; --canvas-dot: #e2e7ec; --text: #111827; --text-muted: #5b6474; --text-dim: #9aa3b2; --text-faint: #6b7280; --panel: #ffffff; --panel-border: #e5e7eb; --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1; --arrow: #64748b; --arrow-emphasis: #059669; --arrow-security: #b43b57; --arrow-dashed: #6d4fc2; --edge-label: #5b6474; --mask: #ffffff; --frontend-fill: rgba(34, 211, 238, 0.15); --frontend-stroke: #0891b2; --backend-fill: rgba(52, 211, 153, 0.18); --backend-stroke: #059669; --database-fill: rgba(167, 139, 250, 0.2); --database-stroke: #7c3aed; --cloud-fill: rgba(251, 191, 36, 0.18); --cloud-stroke: #d97706; --security-fill: rgba(251, 113, 133, 0.15); --security-stroke: #e11d48; --messagebus-fill: rgba(251, 146, 60, 0.15); --messagebus-stroke: #ea580c; --external-fill: rgba(148, 163, 184, 0.18); --external-stroke: #64748b; --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff; --toolbar-menu-bg: #ffffff; --reader-accent: #077f9c; }
-]]></style><rect class="archify-bake-background" x="0" y="0" width="922" height="400" fill="#f4f5f7"/><!-- Definitions -->
+]]></style><rect class="archify-bake-background" x="20" y="10" width="882" height="357" fill="#f4f5f7"/><!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" class="m-default" />
@@ -352,7 +352,7 @@ svg[data-node-ui][data-preset="blueprint"] :is([data-graph-role="structural-fram
 svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-frame-label-mask"], g[data-edge-from] > rect.c-mask, .phase-chip) { rx: 3px; }</style>
 
         <!-- Background Grid -->
-        <rect width="100%" height="100%" fill="url(#grid)" />
+        <rect x="20" y="10" width="882" height="357" fill="url(#grid)" />
 
         <!-- Boundaries (behind everything) -->
         <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="tmux pane" x="340" y="30" width="524" height="110" rx="12" class="c-region" stroke-width="1"/>
@@ -375,28 +375,28 @@ svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-fram
           <path data-edge-from="agent" data-edge-to="pty1" data-edge-label="输出" data-edge-key="3" data-edge-id="o-agent-pty1" data-composition-points="734,97;678,97" data-composition-crossover="halo" data-composition-independent="true" d="M 734 97 L 678 97" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:4">
-          <path data-graph-role="automatic-crossover-underlay" d="M 431.95 230 L 431.95 120" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="worker" data-edge-to="tmuxs" data-edge-label="输入 · send-keys / paste-buffer" data-edge-key="4" data-edge-id="i-worker-tmuxs" data-composition-points="431.95,230;431.95,120" data-composition-crossover="halo" data-composition-independent="true" d="M 431.95 230 L 431.95 120" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 431.95 190 L 431.95 120" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="worker" data-edge-to="tmuxs" data-edge-label="输入 · send-keys / paste-buffer" data-edge-key="4" data-edge-id="i-worker-tmuxs" data-composition-points="431.95,190;431.95,120" data-composition-crossover="halo" data-composition-independent="true" d="M 431.95 190 L 431.95 120" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:5">
-          <path data-graph-role="automatic-crossover-underlay" d="M 447 120 L 447 230" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="tmuxs" data-edge-to="worker" data-edge-label="输出 · pipe-pane → FIFO" data-edge-key="5" data-edge-id="o-tmuxs-worker" data-composition-points="447,120;447,230" data-composition-crossover="halo" data-composition-independent="true" d="M 447 120 L 447 230" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 447 120 L 447 190" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="tmuxs" data-edge-to="worker" data-edge-label="输出 · pipe-pane → FIFO" data-edge-key="5" data-edge-id="o-tmuxs-worker" data-composition-points="447,120;447,190" data-composition-crossover="halo" data-composition-independent="true" d="M 447 120 L 447 190" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:6">
-          <path data-graph-role="automatic-crossover-underlay" d="M 180 261.95 L 350 261.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="web" data-edge-to="worker" data-edge-label="输入 · 按键 · WebSocket" data-edge-key="6" data-edge-id="i-web-worker" data-composition-points="180,261.95;350,261.95" data-composition-crossover="halo" data-composition-independent="true" d="M 180 261.95 L 350 261.95" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 180 221.95 L 350 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="web" data-edge-to="worker" data-edge-label="输入 · 按键 · WebSocket" data-edge-key="6" data-edge-id="i-web-worker" data-composition-points="180,221.95;350,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 180 221.95 L 350 221.95" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:7">
-          <path data-graph-role="automatic-crossover-underlay" d="M 350 277 L 180 277" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="worker" data-edge-to="web" data-edge-label="输出 · WebSocket" data-edge-key="7" data-edge-id="o-worker-web" data-composition-points="350,277;180,277" data-composition-crossover="halo" data-composition-independent="true" d="M 350 277 L 180 277" class="a-emphasis" data-animate="edge" style="--step:7" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 350 237 L 180 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="worker" data-edge-to="web" data-edge-label="输出 · WebSocket" data-edge-key="7" data-edge-id="o-worker-web" data-composition-points="350,237;180,237" data-composition-crossover="halo" data-composition-independent="true" d="M 350 237 L 180 237" class="a-emphasis" data-animate="edge" style="--step:7" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:8">
-          <path data-graph-role="automatic-crossover-underlay" d="M 754 261.95 L 530 261.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="im" data-edge-to="worker" data-edge-label="输入 · turn queue · ready gate" data-edge-key="8" data-edge-id="i-im-worker" data-composition-points="754,261.95;530,261.95" data-composition-crossover="halo" data-composition-independent="true" d="M 754 261.95 L 530 261.95" class="a-default" data-animate="edge" style="--step:8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 754 221.95 L 530 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="im" data-edge-to="worker" data-edge-label="输入 · turn queue · ready gate" data-edge-key="8" data-edge-id="i-im-worker" data-composition-points="754,221.95;530,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 754 221.95 L 530 221.95" class="a-default" data-animate="edge" style="--step:8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:9">
-          <path data-graph-role="automatic-crossover-underlay" d="M 530 277 L 754 277" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="worker" data-edge-to="im" data-edge-label="输出 · 流式卡片 (经 daemon)" data-edge-key="9" data-edge-id="o-worker-im" data-composition-points="530,277;754,277" data-composition-crossover="halo" data-composition-independent="true" d="M 530 277 L 754 277" class="a-emphasis" data-animate="edge" style="--step:9" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 530 237 L 754 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="worker" data-edge-to="im" data-edge-label="输出 · 流式卡片 (经 daemon)" data-edge-key="9" data-edge-id="o-worker-im" data-composition-points="530,237;754,237" data-composition-crossover="halo" data-composition-independent="true" d="M 530 237 L 754 237" class="a-emphasis" data-animate="edge" style="--step:9" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
 
         <!-- Components -->
@@ -431,41 +431,41 @@ svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-fram
 
         <g id="node-web" data-node-id="web" data-node-label="Web 终端" tabindex="0" role="button" aria-label="聚焦Web 终端，多个 viewer, 架构组件" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="多个 viewer" data-node-context="架构组件">
           <title>Web 终端 · 多个 viewer · 架构组件</title>
-          <rect x="40" y="230" width="140" height="80" rx="8" class="c-mask"/>
-          <rect x="40" y="230" width="140" height="80" rx="8" class="c-frontend" data-animate="node" style="--step:6" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(46 236) scale(0.6875)">
+          <rect x="40" y="190" width="140" height="80" rx="8" class="c-mask"/>
+          <rect x="40" y="190" width="140" height="80" rx="8" class="c-frontend" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(46 196) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="110" y="268" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">Web 终端</text>
-        <text data-detail="context" x="110" y="284" class="t-muted" font-size="10.5" text-anchor="middle">多个 viewer</text>
+          <text data-node-label="" data-detail-anchor="" x="110" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">Web 终端</text>
+        <text data-detail="context" x="110" y="244" class="t-muted" font-size="10.5" text-anchor="middle">多个 viewer</text>
         </g>
 
         <g id="node-worker" data-node-id="worker" data-node-label="botmux worker" tabindex="0" role="button" aria-label="聚焦botmux worker，状态：OSC 7501 · hooks · idle, 架构组件" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="状态：OSC 7501 · hooks · idle" data-node-context="架构组件">
           <title>botmux worker · 状态：OSC 7501 · hooks · idle · 架构组件</title>
-          <rect x="350" y="230" width="180" height="80" rx="8" class="c-mask"/>
-          <rect x="350" y="230" width="180" height="80" rx="8" class="c-messagebus" data-animate="node" style="--step:4" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(356 236) scale(0.6875)">
+          <rect x="350" y="190" width="180" height="80" rx="8" class="c-mask"/>
+          <rect x="350" y="190" width="180" height="80" rx="8" class="c-messagebus" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(356 196) scale(0.6875)">
             <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
             <circle cx="5" cy="4.5" r="1" class="sigil-fill"/>
             <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
             <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="440" y="268" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">botmux worker</text>
-        <text data-detail="context" x="440" y="284" class="t-muted" font-size="9.8" text-anchor="middle">状态：OSC 7501 · hooks · idle</text>
+          <text data-node-label="" data-detail-anchor="" x="440" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">botmux worker</text>
+        <text data-detail="context" x="440" y="244" class="t-muted" font-size="9.8" text-anchor="middle">状态：OSC 7501 · hooks · idle</text>
         </g>
 
         <g id="node-im" data-node-id="im" data-node-label="IM 消息" tabindex="0" role="button" aria-label="聚焦IM 消息，飞书话题, 架构组件" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="飞书话题" data-node-context="架构组件">
           <title>IM 消息 · 飞书话题 · 架构组件</title>
-          <rect x="754" y="240" width="128" height="60" rx="8" class="c-mask"/>
-          <rect x="754" y="240" width="128" height="60" rx="8" class="c-cloud" data-animate="node" style="--step:8" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(760 246) scale(0.6875)">
+          <rect x="754" y="200" width="128" height="60" rx="8" class="c-mask"/>
+          <rect x="754" y="200" width="128" height="60" rx="8" class="c-cloud" data-animate="node" style="--step:8" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(760 206) scale(0.6875)">
             <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="818" y="268" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">IM 消息</text>
-        <text data-detail="context" x="818" y="284" class="t-muted" font-size="10.5" text-anchor="middle">飞书话题</text>
+          <text data-node-label="" data-detail-anchor="" x="818" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">IM 消息</text>
+        <text data-detail="context" x="818" y="244" class="t-muted" font-size="10.5" text-anchor="middle">飞书话题</text>
         </g>
 
         <!-- Connection labels -->
@@ -486,28 +486,28 @@ svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-fram
           <text x="706" y="117" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
         </g>
         <g data-detail="context" data-edge-from="worker" data-edge-to="tmuxs" data-edge-label="输入 · send-keys / paste-buffer" data-edge-key="4" data-edge-id="i-worker-tmuxs">
-          <rect x="267.15000000000003" y="168" width="158.79999999999998" height="14" rx="3" class="c-mask"/>
-          <text x="346.55" y="178" class="t-edge-default" font-size="8.4" font-weight="500" text-anchor="middle">输入 · send-keys / paste-buffer</text>
+          <rect x="267.15000000000003" y="148" width="158.79999999999998" height="14" rx="3" class="c-mask"/>
+          <text x="346.55" y="158" class="t-edge-default" font-size="8.4" font-weight="500" text-anchor="middle">输入 · send-keys / paste-buffer</text>
         </g>
         <g data-detail="context" data-edge-from="tmuxs" data-edge-to="worker" data-edge-label="输出 · pipe-pane → FIFO" data-edge-key="5" data-edge-id="o-tmuxs-worker">
-          <rect x="453.00000000000006" y="168" width="120.39999999999999" height="14" rx="3" class="c-mask"/>
-          <text x="513.2" y="178" class="t-edge-emphasis" font-size="8.2" font-weight="500" text-anchor="middle">输出 · pipe-pane → FIFO</text>
+          <rect x="453.00000000000006" y="148" width="120.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="513.2" y="158" class="t-edge-emphasis" font-size="8.2" font-weight="500" text-anchor="middle">输出 · pipe-pane → FIFO</text>
         </g>
         <g data-detail="context" data-edge-from="web" data-edge-to="worker" data-edge-label="输入 · 按键 · WebSocket" data-edge-key="6" data-edge-id="i-web-worker">
-          <rect x="204.8" y="241.95" width="120.39999999999999" height="14" rx="3" class="c-mask"/>
-          <text x="265" y="251.95" class="t-edge-default" font-size="8.6" font-weight="500" text-anchor="middle">输入 · 按键 · WebSocket</text>
+          <rect x="204.8" y="201.95" width="120.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="265" y="211.95" class="t-edge-default" font-size="8.6" font-weight="500" text-anchor="middle">输入 · 按键 · WebSocket</text>
         </g>
         <g data-detail="context" data-edge-from="worker" data-edge-to="web" data-edge-label="输出 · WebSocket" data-edge-key="7" data-edge-id="o-worker-web">
-          <rect x="221.6" y="287" width="86.8" height="14" rx="3" class="c-mask"/>
-          <text x="265" y="297" class="t-edge-emphasis" font-size="8.8" font-weight="500" text-anchor="middle">输出 · WebSocket</text>
+          <rect x="221.6" y="247" width="86.8" height="14" rx="3" class="c-mask"/>
+          <text x="265" y="257" class="t-edge-emphasis" font-size="8.8" font-weight="500" text-anchor="middle">输出 · WebSocket</text>
         </g>
         <g data-detail="context" data-edge-from="im" data-edge-to="worker" data-edge-label="输入 · turn queue · ready gate" data-edge-key="8" data-edge-id="i-im-worker">
-          <rect x="565" y="241.95" width="154" height="14" rx="3" class="c-mask"/>
-          <text x="642" y="251.95" class="t-edge-default" font-size="8.4" font-weight="500" text-anchor="middle">输入 · turn queue · ready gate</text>
+          <rect x="565" y="201.95" width="154" height="14" rx="3" class="c-mask"/>
+          <text x="642" y="211.95" class="t-edge-default" font-size="8.4" font-weight="500" text-anchor="middle">输入 · turn queue · ready gate</text>
         </g>
         <g data-detail="context" data-edge-from="worker" data-edge-to="im" data-edge-label="输出 · 流式卡片 (经 daemon)" data-edge-key="9" data-edge-id="o-worker-im">
-          <rect x="572.2" y="287" width="139.6" height="14" rx="3" class="c-mask"/>
-          <text x="642" y="297" class="t-edge-emphasis" font-size="8.7" font-weight="500" text-anchor="middle">输出 · 流式卡片 (经 daemon)</text>
+          <rect x="572.2" y="247" width="139.6" height="14" rx="3" class="c-mask"/>
+          <text x="642" y="257" class="t-edge-emphasis" font-size="8.7" font-weight="500" text-anchor="middle">输出 · 流式卡片 (经 daemon)</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
@@ -518,30 +518,30 @@ svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-fram
 
         <!-- Legend -->
         <g data-legend="" data-legend-bridge="">
-          <text x="40" y="342" class="t-primary" font-size="12" font-weight="650">图例</text>
-          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="浏览器里的终端" data-legend-x="40" data-legend-baseline="362" data-legend-width="130">
-            <rect x="40" y="353" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
-            <text x="62" y="362" class="t-muted" font-size="10" font-weight="500">浏览器里的终端</text>
+          <text x="40" y="302" class="t-primary" font-size="12" font-weight="650">图例</text>
+          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="浏览器里的终端" data-legend-x="40" data-legend-baseline="322" data-legend-width="130">
+            <rect x="40" y="313" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
+            <text x="62" y="322" class="t-muted" font-size="10" font-weight="500">浏览器里的终端</text>
           </g>
-          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="程序 · fd 0 1 2 是 pts" data-legend-x="192" data-legend-baseline="362" data-legend-width="180">
-            <rect x="192" y="353" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
-            <text x="214" y="362" class="t-muted" font-size="10" font-weight="500">程序 · fd 0 1 2 是 pts</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="程序 · fd 0 1 2 是 pts" data-legend-x="192" data-legend-baseline="322" data-legend-width="180">
+            <rect x="192" y="313" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
+            <text x="214" y="322" class="t-muted" font-size="10" font-weight="500">程序 · fd 0 1 2 是 pts</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="tmux · 解析、重画、自己回答查询" data-legend-x="394" data-legend-baseline="362" data-legend-width="236">
-            <rect x="394" y="353" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
-            <text x="416" y="362" class="t-muted" font-size="10" font-weight="500">tmux · 解析、重画、自己回答查询</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="tmux · 解析、重画、自己回答查询" data-legend-x="394" data-legend-baseline="322" data-legend-width="236">
+            <rect x="394" y="313" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
+            <text x="416" y="322" class="t-muted" font-size="10" font-weight="500">tmux · 解析、重画、自己回答查询</text>
           </g>
-          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="IM 消息" data-legend-x="652" data-legend-baseline="362" data-legend-width="87">
-            <rect x="652" y="353" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
-            <text x="674" y="362" class="t-muted" font-size="10" font-weight="500">IM 消息</text>
+          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="IM 消息" data-legend-x="652" data-legend-baseline="322" data-legend-width="87">
+            <rect x="652" y="313" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
+            <text x="674" y="322" class="t-muted" font-size="10" font-weight="500">IM 消息</text>
           </g>
-          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="botmux worker" data-legend-x="40" data-legend-baseline="384" data-legend-width="124">
-            <rect x="40" y="375" width="16" height="10" rx="2.5" class="c-messagebus" stroke-width="1"/>
-            <text x="62" y="384" class="t-muted" font-size="10" font-weight="500">botmux worker</text>
+          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="botmux worker" data-legend-x="40" data-legend-baseline="344" data-legend-width="124">
+            <rect x="40" y="335" width="16" height="10" rx="2.5" class="c-messagebus" stroke-width="1"/>
+            <text x="62" y="344" class="t-muted" font-size="10" font-weight="500">botmux worker</text>
           </g>
-          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="内核 PTY" data-legend-x="186" data-legend-baseline="384" data-legend-width="93">
-            <rect x="186" y="375" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
-            <text x="208" y="384" class="t-muted" font-size="10" font-weight="500">内核 PTY</text>
+          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="内核 PTY" data-legend-x="186" data-legend-baseline="344" data-legend-width="93">
+            <rect x="186" y="335" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
+            <text x="208" y="344" class="t-muted" font-size="10" font-weight="500">内核 PTY</text>
           </g>
         </g>
       <metadata id="archify-software-notices">NOTICE

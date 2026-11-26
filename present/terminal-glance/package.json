@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/bun": "catalog:",
-    "fast-check": "catalog:"
+    "fast-check": "catalog:",
+    "playwright-chromium": "catalog:"
   }
 }

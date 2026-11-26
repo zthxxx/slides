@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 732 514" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14" xmlns="http://www.w3.org/2000/svg" width="732" height="514" data-theme="light" data-archify-bake="static">
+<svg viewBox="-10 10 872 345" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14" xmlns="http://www.w3.org/2000/svg" width="872" height="345" data-theme="light" data-archify-bake="static">
         <title id="archify-diagram-title">tmux 多出一层终端</title>
         <desc id="archify-diagram-description">由 Archify 生成的架构图。</desc>
         <style><![CDATA[
@@ -313,7 +313,7 @@ svg[data-preset="blueprint"][data-relationship-preview-active] [data-relationshi
 .c-region { fill: rgba(251, 191, 36, 0.05); stroke: #d97706; stroke-dasharray: 8,4; }
 .c-lane { fill: rgba(248, 250, 252, 0.65); stroke: #cbd5e1; stroke-dasharray: 6,6; }
 svg[data-theme="light"] { --bg: #f4f5f7; --grid: #e9edf2; --canvas-dot: #e2e7ec; --text: #111827; --text-muted: #5b6474; --text-dim: #9aa3b2; --text-faint: #6b7280; --panel: #ffffff; --panel-border: #e5e7eb; --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1; --arrow: #64748b; --arrow-emphasis: #059669; --arrow-security: #b43b57; --arrow-dashed: #6d4fc2; --edge-label: #5b6474; --mask: #ffffff; --frontend-fill: rgba(34, 211, 238, 0.15); --frontend-stroke: #0891b2; --backend-fill: rgba(52, 211, 153, 0.18); --backend-stroke: #059669; --database-fill: rgba(167, 139, 250, 0.2); --database-stroke: #7c3aed; --cloud-fill: rgba(251, 191, 36, 0.18); --cloud-stroke: #d97706; --security-fill: rgba(251, 113, 133, 0.15); --security-stroke: #e11d48; --messagebus-fill: rgba(251, 146, 60, 0.15); --messagebus-stroke: #ea580c; --external-fill: rgba(148, 163, 184, 0.18); --external-stroke: #64748b; --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff; --toolbar-menu-bg: #ffffff; --reader-accent: #077f9c; }
-]]></style><rect class="archify-bake-background" x="0" y="0" width="732" height="514" fill="#f4f5f7"/><!-- Definitions -->
+]]></style><rect class="archify-bake-background" x="-10" y="10" width="872" height="345" fill="#f4f5f7"/><!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" class="m-default" />
@@ -352,240 +352,240 @@ svg[data-node-ui][data-preset="blueprint"] :is([data-graph-role="structural-fram
 svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-frame-label-mask"], g[data-edge-from] > rect.c-mask, .phase-chip) { rx: 3px; }</style>
 
         <!-- Background Grid -->
-        <rect width="100%" height="100%" fill="url(#grid)" />
+        <rect x="-10" y="10" width="872" height="345" fill="url(#grid)" />
 
         <!-- Boundaries (behind everything) -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="L0 · 本机终端" x="10" y="30" width="532" height="110" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="L0 · 本机终端" x="160" y="30" width="532" height="110" rx="12" class="c-region" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" data-composition-frame-label="L1 · tmux pane" x="184" y="170" width="508" height="250" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" data-composition-frame-label="L1 · tmux pane" x="10" y="170" width="832" height="110" rx="12" class="c-region" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
         <g data-graph-role="automatic-crossover" style="--step:0">
-          <path data-graph-role="automatic-crossover-underlay" d="M 164 81.95 L 220 81.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="emu" data-edge-to="pty0" data-edge-label="输入" data-edge-key="0" data-edge-id="i-emu-pty0" data-composition-points="164,81.95;220,81.95" data-composition-crossover="halo" data-composition-independent="true" d="M 164 81.95 L 220 81.95" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 314 81.95 L 370 81.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="emu" data-edge-to="pty0" data-edge-label="输入" data-edge-key="0" data-edge-id="i-emu-pty0" data-composition-points="314,81.95;370,81.95" data-composition-crossover="halo" data-composition-independent="true" d="M 314 81.95 L 370 81.95" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:1">
-          <path data-graph-role="automatic-crossover-underlay" d="M 220 97 L 164 97" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pty0" data-edge-to="emu" data-edge-label="输出" data-edge-key="1" data-edge-id="o-pty0-emu" data-composition-points="220,97;164,97" data-composition-crossover="halo" data-composition-independent="true" d="M 220 97 L 164 97" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 370 97 L 314 97" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pty0" data-edge-to="emu" data-edge-label="输出" data-edge-key="1" data-edge-id="o-pty0-emu" data-composition-points="370,97;314,97" data-composition-crossover="halo" data-composition-independent="true" d="M 370 97 L 314 97" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:2">
-          <path data-graph-role="automatic-crossover-underlay" d="M 267.95 120 L 267.95 200" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pty0" data-edge-to="tmuxs" data-edge-label="输入 · 经交出的 fd" data-edge-key="2" data-edge-id="i-pty0-tmuxs" data-composition-points="267.95,120;267.95,200" data-composition-crossover="halo" data-composition-independent="true" d="M 267.95 120 L 267.95 200" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 417.95 120 L 417.95 200" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pty0" data-edge-to="tmuxs" data-edge-label="输入 · 经交出的 fd" data-edge-key="2" data-edge-id="i-pty0-tmuxs" data-composition-points="417.95,120;417.95,200" data-composition-crossover="halo" data-composition-independent="true" d="M 417.95 120 L 417.95 200" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:3">
-          <path data-graph-role="automatic-crossover-underlay" d="M 283 200 L 283 120" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="tmuxs" data-edge-to="pty0" data-edge-label="输出" data-edge-key="3" data-edge-id="o-tmuxs-pty0" data-composition-points="283,200;283,120" data-composition-crossover="halo" data-composition-independent="true" d="M 283 200 L 283 120" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 433 200 L 433 120" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="tmuxs" data-edge-to="pty0" data-edge-label="输出" data-edge-key="3" data-edge-id="o-tmuxs-pty0" data-composition-points="433,200;433,120" data-composition-crossover="halo" data-composition-independent="true" d="M 433 200 L 433 120" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:4">
-          <path data-graph-role="automatic-crossover-underlay" d="M 332 90 L 388 90" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pty0" data-edge-to="tmuxc" data-edge-label="fd 0 1 2" data-edge-key="4" data-edge-id="x-pty0-tmuxc" data-composition-points="332,90;388,90" data-composition-crossover="halo" data-composition-independent="true" d="M 332 90 L 388 90" class="a-dashed" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 482 90 L 538 90" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pty0" data-edge-to="tmuxc" data-edge-label="fd 0 1 2" data-edge-key="4" data-edge-id="x-pty0-tmuxc" data-composition-points="482,90;538,90" data-composition-crossover="halo" data-composition-independent="true" d="M 482 90 L 538 90" class="a-dashed" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:5">
-          <path data-graph-role="automatic-crossover-underlay" d="M 338 221.95 L 394 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="tmuxs" data-edge-to="pane1" data-edge-label="输入" data-edge-key="5" data-edge-id="i-tmuxs-pane1" data-composition-points="338,221.95;394,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 338 221.95 L 394 221.95" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 488 221.95 L 544 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="tmuxs" data-edge-to="pane1" data-edge-label="输入" data-edge-key="5" data-edge-id="i-tmuxs-pane1" data-composition-points="488,221.95;544,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 488 221.95 L 544 221.95" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:6">
-          <path data-graph-role="automatic-crossover-underlay" d="M 394 237 L 338 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pane1" data-edge-to="tmuxs" data-edge-label="输出" data-edge-key="6" data-edge-id="o-pane1-tmuxs" data-composition-points="394,237;338,237" data-composition-crossover="halo" data-composition-independent="true" d="M 394 237 L 338 237" class="a-emphasis" data-animate="edge" style="--step:6" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 544 237 L 488 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pane1" data-edge-to="tmuxs" data-edge-label="输出" data-edge-key="6" data-edge-id="o-pane1-tmuxs" data-composition-points="544,237;488,237" data-composition-crossover="halo" data-composition-independent="true" d="M 544 237 L 488 237" class="a-emphasis" data-animate="edge" style="--step:6" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:7">
-          <path data-graph-role="automatic-crossover-underlay" d="M 506 221.95 L 562 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pane1" data-edge-to="zsh" data-edge-label="输入" data-edge-key="7" data-edge-id="i-pane1-zsh" data-composition-points="506,221.95;562,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 506 221.95 L 562 221.95" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 656 221.95 L 712 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pane1" data-edge-to="zsh" data-edge-label="输入" data-edge-key="7" data-edge-id="i-pane1-zsh" data-composition-points="656,221.95;712,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 656 221.95 L 712 221.95" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:8">
-          <path data-graph-role="automatic-crossover-underlay" d="M 562 237 L 506 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="zsh" data-edge-to="pane1" data-edge-label="输出" data-edge-key="8" data-edge-id="o-zsh-pane1" data-composition-points="562,237;506,237" data-composition-crossover="halo" data-composition-independent="true" d="M 562 237 L 506 237" class="a-emphasis" data-animate="edge" style="--step:8" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 712 237 L 656 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="zsh" data-edge-to="pane1" data-edge-label="输出" data-edge-key="8" data-edge-id="o-zsh-pane1" data-composition-points="712,237;656,237" data-composition-crossover="halo" data-composition-independent="true" d="M 712 237 L 656 237" class="a-emphasis" data-animate="edge" style="--step:8" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:9">
-          <path data-graph-role="automatic-crossover-underlay" d="M 267.95 260 L 267.95 340" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="tmuxs" data-edge-to="pane2" data-edge-label="输入" data-edge-key="9" data-edge-id="i-tmuxs-pane2" data-composition-points="267.95,260;267.95,340" data-composition-crossover="halo" data-composition-independent="true" d="M 267.95 260 L 267.95 340" class="a-default" data-animate="edge" style="--step:9" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 364 221.95 L 308 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="tmuxs" data-edge-to="pane2" data-edge-label="输入" data-edge-key="9" data-edge-id="i-tmuxs-pane2" data-composition-points="364,221.95;308,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 364 221.95 L 308 221.95" class="a-default" data-animate="edge" style="--step:9" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:10">
-          <path data-graph-role="automatic-crossover-underlay" d="M 283 340 L 283 260" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pane2" data-edge-to="tmuxs" data-edge-label="输出" data-edge-key="10" data-edge-id="o-pane2-tmuxs" data-composition-points="283,340;283,260" data-composition-crossover="halo" data-composition-independent="true" d="M 283 340 L 283 260" class="a-emphasis" data-animate="edge" style="--step:10" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 308 237 L 364 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pane2" data-edge-to="tmuxs" data-edge-label="输出" data-edge-key="10" data-edge-id="o-pane2-tmuxs" data-composition-points="308,237;364,237" data-composition-crossover="halo" data-composition-independent="true" d="M 308 237 L 364 237" class="a-emphasis" data-animate="edge" style="--step:10" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:11">
-          <path data-graph-role="automatic-crossover-underlay" d="M 332 361.95 L 388 361.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="pane2" data-edge-to="nvim" data-edge-label="输入" data-edge-key="11" data-edge-id="i-pane2-nvim" data-composition-points="332,361.95;388,361.95" data-composition-crossover="halo" data-composition-independent="true" d="M 332 361.95 L 388 361.95" class="a-default" data-animate="edge" style="--step:11" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 196 221.95 L 140 221.95" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="pane2" data-edge-to="nvim" data-edge-label="输入" data-edge-key="11" data-edge-id="i-pane2-nvim" data-composition-points="196,221.95;140,221.95" data-composition-crossover="halo" data-composition-independent="true" d="M 196 221.95 L 140 221.95" class="a-default" data-animate="edge" style="--step:11" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:12">
-          <path data-graph-role="automatic-crossover-underlay" d="M 388 377 L 332 377" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="nvim" data-edge-to="pane2" data-edge-label="输出" data-edge-key="12" data-edge-id="o-nvim-pane2" data-composition-points="388,377;332,377" data-composition-crossover="halo" data-composition-independent="true" d="M 388 377 L 332 377" class="a-emphasis" data-animate="edge" style="--step:12" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 140 237 L 196 237" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="nvim" data-edge-to="pane2" data-edge-label="输出" data-edge-key="12" data-edge-id="o-nvim-pane2" data-composition-points="140,237;196,237" data-composition-crossover="halo" data-composition-independent="true" d="M 140 237 L 196 237" class="a-emphasis" data-animate="edge" style="--step:12" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:13">
-          <path data-graph-role="automatic-crossover-underlay" d="M 438 400 L 438 416 Q 438 424 430 424 L 110 424 Q 102 424 102 416 L 102 120" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="nvim" data-edge-to="emu" data-edge-label="输出 · passthrough ESC P tmux; … ESC \" data-edge-key="13" data-edge-id="o-passthrough" data-composition-points="438,400;438,424;102,424;102,120" data-composition-crossover="halo" data-composition-independent="true" d="M 438 400 L 438 416 Q 438 424 430 424 L 110 424 Q 102 424 102 416 L 102 120" class="a-emphasis" data-animate="edge" style="--step:12" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 90 200 L 90 98 Q 90 90 98 90 L 190 90" fill="none" stroke="#ffffff" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="nvim" data-edge-to="emu" data-edge-label="输出 · passthrough ESC P tmux; … ESC \" data-edge-key="13" data-edge-id="o-passthrough" data-composition-points="90,200;90,90;190,90" data-composition-crossover="halo" d="M 90 200 L 90 98 Q 90 90 98 90 L 190 90" class="a-emphasis" data-animate="edge" style="--step:12" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
 
         <!-- Components -->
         <g id="node-emu" data-node-id="emu" data-node-label="Terminal" tabindex="0" role="button" aria-label="聚焦Terminal，iTerm2 · Ghostty, L0 · 本机终端" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="iTerm2 · Ghostty" data-node-context="L0 · 本机终端">
           <title>Terminal · iTerm2 · Ghostty · L0 · 本机终端</title>
-          <rect x="40" y="60" width="124" height="60" rx="8" class="c-mask"/>
-          <rect x="40" y="60" width="124" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(46 66) scale(0.6875)">
+          <rect x="190" y="60" width="124" height="60" rx="8" class="c-mask"/>
+          <rect x="190" y="60" width="124" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(196 66) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="102" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">Terminal</text>
-        <text data-detail="context" x="102" y="104" class="t-muted" font-size="10.5" text-anchor="middle">iTerm2 · Ghostty</text>
+          <text data-node-label="" data-detail-anchor="" x="252" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">Terminal</text>
+        <text data-detail="context" x="252" y="104" class="t-muted" font-size="10.5" text-anchor="middle">iTerm2 · Ghostty</text>
         </g>
 
         <g id="node-pty0" data-node-id="pty0" data-node-label="pts/0" tabindex="0" role="button" aria-label="聚焦pts/0，line discipline, L0 · 本机终端" aria-pressed="false" data-node-kind="external" data-node-sublabel="line discipline" data-node-context="L0 · 本机终端">
           <title>pts/0 · line discipline · L0 · 本机终端</title>
-          <rect x="220" y="60" width="112" height="60" rx="8" class="c-mask"/>
-          <rect x="220" y="60" width="112" height="60" rx="8" class="c-external" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <rect x="370" y="60" width="112" height="60" rx="8" class="c-mask"/>
+          <rect x="370" y="60" width="112" height="60" rx="8" class="c-external" data-animate="node" style="--step:1" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="276" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">pts/0</text>
-        <text data-detail="context" x="276" y="104" class="t-muted" font-size="10.5" text-anchor="middle">line discipline</text>
+          <text data-node-label="" data-detail-anchor="" x="426" y="88" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">pts/0</text>
+        <text data-detail="context" x="426" y="104" class="t-muted" font-size="10.5" text-anchor="middle">line discipline</text>
         </g>
 
         <g id="node-tmuxc" data-node-id="tmuxc" data-node-label="tmux client" tabindex="0" role="button" aria-label="聚焦tmux client，tty fd 交给 server, L0 · 本机终端" aria-pressed="false" data-node-kind="database" data-node-sublabel="tty fd 交给 server" data-node-context="L0 · 本机终端">
           <title>tmux client · tty fd 交给 server · L0 · 本机终端</title>
-          <rect x="388" y="60" width="124" height="60" rx="8" class="c-mask"/>
-          <rect x="388" y="60" width="124" height="60" rx="8" class="c-database" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <rect x="538" y="60" width="124" height="60" rx="8" class="c-mask"/>
+          <rect x="538" y="60" width="124" height="60" rx="8" class="c-database" data-animate="node" style="--step:5" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="450" y="88" class="t-primary" font-size="11.5" font-weight="600" text-anchor="middle">tmux client</text>
-        <text data-detail="context" x="450" y="104" class="t-muted" font-size="10.5" text-anchor="middle">tty fd 交给 server</text>
+          <text data-node-label="" data-detail-anchor="" x="600" y="88" class="t-primary" font-size="11.5" font-weight="600" text-anchor="middle">tmux client</text>
+        <text data-detail="context" x="600" y="104" class="t-muted" font-size="10.5" text-anchor="middle">tty fd 交给 server</text>
         </g>
 
         <g id="node-tmuxs" data-node-id="tmuxs" data-node-label="tmux server" tabindex="0" role="button" aria-label="聚焦tmux server，每个 pane 一份 grid, L1 · tmux pane" aria-pressed="false" data-node-kind="database" data-node-sublabel="每个 pane 一份 grid" data-node-context="L1 · tmux pane">
           <title>tmux server · 每个 pane 一份 grid · L1 · tmux pane</title>
-          <rect x="214" y="200" width="124" height="60" rx="8" class="c-mask"/>
-          <rect x="214" y="200" width="124" height="60" rx="8" class="c-database" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <rect x="364" y="200" width="124" height="60" rx="8" class="c-mask"/>
+          <rect x="364" y="200" width="124" height="60" rx="8" class="c-database" data-animate="node" style="--step:3" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="276" y="228" class="t-primary" font-size="11.5" font-weight="600" text-anchor="middle">tmux server</text>
-        <text data-detail="context" x="276" y="244" class="t-muted" font-size="10.1" text-anchor="middle">每个 pane 一份 grid</text>
+          <text data-node-label="" data-detail-anchor="" x="426" y="228" class="t-primary" font-size="11.5" font-weight="600" text-anchor="middle">tmux server</text>
+        <text data-detail="context" x="426" y="244" class="t-muted" font-size="10.1" text-anchor="middle">每个 pane 一份 grid</text>
         </g>
 
         <g id="node-pane1" data-node-id="pane1" data-node-label="pts/1" tabindex="0" role="button" aria-label="聚焦pts/1，line discipline, L1 · tmux pane" aria-pressed="false" data-node-kind="external" data-node-sublabel="line discipline" data-node-context="L1 · tmux pane">
           <title>pts/1 · line discipline · L1 · tmux pane</title>
-          <rect x="394" y="200" width="112" height="60" rx="8" class="c-mask"/>
-          <rect x="394" y="200" width="112" height="60" rx="8" class="c-external" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <rect x="544" y="200" width="112" height="60" rx="8" class="c-mask"/>
+          <rect x="544" y="200" width="112" height="60" rx="8" class="c-external" data-animate="node" style="--step:6" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="450" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">pts/1</text>
-        <text data-detail="context" x="450" y="244" class="t-muted" font-size="10.5" text-anchor="middle">line discipline</text>
+          <text data-node-label="" data-detail-anchor="" x="600" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">pts/1</text>
+        <text data-detail="context" x="600" y="244" class="t-muted" font-size="10.5" text-anchor="middle">line discipline</text>
         </g>
 
         <g id="node-zsh" data-node-id="zsh" data-node-label="zsh" tabindex="0" role="button" aria-label="聚焦zsh，pane 1, L1 · tmux pane" aria-pressed="false" data-node-kind="backend" data-node-sublabel="pane 1" data-node-context="L1 · tmux pane">
           <title>zsh · pane 1 · L1 · tmux pane</title>
-          <rect x="562" y="200" width="100" height="60" rx="8" class="c-mask"/>
-          <rect x="562" y="200" width="100" height="60" rx="8" class="c-backend" data-animate="node" style="--step:8" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(568 206) scale(0.6875)">
+          <rect x="712" y="200" width="100" height="60" rx="8" class="c-mask"/>
+          <rect x="712" y="200" width="100" height="60" rx="8" class="c-backend" data-animate="node" style="--step:8" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(718 206) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="612" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">zsh</text>
-        <text data-detail="context" x="612" y="244" class="t-muted" font-size="10.5" text-anchor="middle">pane 1</text>
+          <text data-node-label="" data-detail-anchor="" x="762" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">zsh</text>
+        <text data-detail="context" x="762" y="244" class="t-muted" font-size="10.5" text-anchor="middle">pane 1</text>
         </g>
 
         <g id="node-pane2" data-node-id="pane2" data-node-label="pts/2" tabindex="0" role="button" aria-label="聚焦pts/2，line discipline, L1 · tmux pane" aria-pressed="false" data-node-kind="external" data-node-sublabel="line discipline" data-node-context="L1 · tmux pane">
           <title>pts/2 · line discipline · L1 · tmux pane</title>
-          <rect x="220" y="340" width="112" height="60" rx="8" class="c-mask"/>
-          <rect x="220" y="340" width="112" height="60" rx="8" class="c-external" data-animate="node" style="--step:10" stroke-width="1.5"/>
+          <rect x="196" y="200" width="112" height="60" rx="8" class="c-mask"/>
+          <rect x="196" y="200" width="112" height="60" rx="8" class="c-external" data-animate="node" style="--step:10" stroke-width="1.5"/>
           
-          <text data-node-label="" data-detail-anchor="" x="276" y="368" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">pts/2</text>
-        <text data-detail="context" x="276" y="384" class="t-muted" font-size="10.5" text-anchor="middle">line discipline</text>
+          <text data-node-label="" data-detail-anchor="" x="252" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">pts/2</text>
+        <text data-detail="context" x="252" y="244" class="t-muted" font-size="10.5" text-anchor="middle">line discipline</text>
         </g>
 
         <g id="node-nvim" data-node-id="nvim" data-node-label="nvim" tabindex="0" role="button" aria-label="聚焦nvim，pane 2, L1 · tmux pane" aria-pressed="false" data-node-kind="backend" data-node-sublabel="pane 2" data-node-context="L1 · tmux pane">
           <title>nvim · pane 2 · L1 · tmux pane</title>
-          <rect x="388" y="340" width="100" height="60" rx="8" class="c-mask"/>
-          <rect x="388" y="340" width="100" height="60" rx="8" class="c-backend" data-animate="node" style="--step:12" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(394 346) scale(0.6875)">
+          <rect x="40" y="200" width="100" height="60" rx="8" class="c-mask"/>
+          <rect x="40" y="200" width="100" height="60" rx="8" class="c-backend" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(46 206) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="438" y="368" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">nvim</text>
-        <text data-detail="context" x="438" y="384" class="t-muted" font-size="10.5" text-anchor="middle">pane 2</text>
+          <text data-node-label="" data-detail-anchor="" x="90" y="228" class="t-primary" font-size="14" font-weight="600" text-anchor="middle">nvim</text>
+        <text data-detail="context" x="90" y="244" class="t-muted" font-size="10.5" text-anchor="middle">pane 2</text>
         </g>
 
         <!-- Connection labels -->
         <g data-detail="context" data-edge-from="emu" data-edge-to="pty0" data-edge-label="输入" data-edge-key="0" data-edge-id="i-emu-pty0">
-          <rect x="177" y="61.95" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="192" y="71.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
+          <rect x="327" y="61.95" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="342" y="71.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
         </g>
         <g data-detail="context" data-edge-from="pty0" data-edge-to="emu" data-edge-label="输出" data-edge-key="1" data-edge-id="o-pty0-emu">
-          <rect x="177" y="107" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="192" y="117" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
+          <rect x="327" y="107" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="342" y="117" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
         </g>
         <g data-detail="context" data-edge-from="pty0" data-edge-to="tmuxs" data-edge-label="输入 · 经交出的 fd" data-edge-key="2" data-edge-id="i-pty0-tmuxs">
-          <rect x="165.55" y="153" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
-          <text x="213.75" y="163" class="t-edge-default" font-size="9" font-weight="500" text-anchor="middle">输入 · 经交出的 fd</text>
+          <rect x="315.55" y="153" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="363.75" y="163" class="t-edge-default" font-size="9" font-weight="500" text-anchor="middle">输入 · 经交出的 fd</text>
         </g>
         <g data-detail="context" data-edge-from="tmuxs" data-edge-to="pty0" data-edge-label="输出" data-edge-key="3" data-edge-id="o-tmuxs-pty0">
-          <rect x="289" y="153" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="304" y="163" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
+          <rect x="439" y="153" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="454" y="163" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
         </g>
         <g data-detail="context" data-edge-from="pty0" data-edge-to="tmuxc" data-edge-label="fd 0 1 2" data-edge-key="4" data-edge-id="x-pty0-tmuxc">
-          <rect x="335.8" y="70" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="360" y="80" class="t-edge-dashed" font-size="10" font-weight="500" textLength="44.4" lengthAdjust="spacingAndGlyphs" text-anchor="middle">fd 0 1 2</text>
+          <rect x="485.8" y="70" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="510" y="80" class="t-edge-dashed" font-size="10" font-weight="500" textLength="44.4" lengthAdjust="spacingAndGlyphs" text-anchor="middle">fd 0 1 2</text>
         </g>
         <g data-detail="context" data-edge-from="tmuxs" data-edge-to="pane1" data-edge-label="输入" data-edge-key="5" data-edge-id="i-tmuxs-pane1">
-          <rect x="351" y="201.95" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="366" y="211.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
+          <rect x="501" y="201.95" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="516" y="211.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
         </g>
         <g data-detail="context" data-edge-from="pane1" data-edge-to="tmuxs" data-edge-label="输出" data-edge-key="6" data-edge-id="o-pane1-tmuxs">
-          <rect x="351" y="247" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="366" y="257" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
+          <rect x="501" y="247" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="516" y="257" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
         </g>
         <g data-detail="context" data-edge-from="pane1" data-edge-to="zsh" data-edge-label="输入" data-edge-key="7" data-edge-id="i-pane1-zsh">
-          <rect x="519" y="201.95" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="534" y="211.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
+          <rect x="669" y="201.95" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="684" y="211.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
         </g>
         <g data-detail="context" data-edge-from="zsh" data-edge-to="pane1" data-edge-label="输出" data-edge-key="8" data-edge-id="o-zsh-pane1">
-          <rect x="519" y="247" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="534" y="257" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
+          <rect x="669" y="247" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="684" y="257" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
         </g>
         <g data-detail="context" data-edge-from="tmuxs" data-edge-to="pane2" data-edge-label="输入" data-edge-key="9" data-edge-id="i-tmuxs-pane2">
-          <rect x="231.95" y="293" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="246.95" y="303" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
+          <rect x="321" y="201.95" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="336" y="211.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
         </g>
         <g data-detail="context" data-edge-from="pane2" data-edge-to="tmuxs" data-edge-label="输出" data-edge-key="10" data-edge-id="o-pane2-tmuxs">
-          <rect x="289" y="293" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="304" y="303" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
+          <rect x="321" y="247" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="336" y="257" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
         </g>
         <g data-detail="context" data-edge-from="pane2" data-edge-to="nvim" data-edge-label="输入" data-edge-key="11" data-edge-id="i-pane2-nvim">
-          <rect x="345" y="341.95" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="360" y="351.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
+          <rect x="153" y="201.95" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="168" y="211.95" class="t-edge-default" font-size="10" font-weight="500" text-anchor="middle">输入</text>
         </g>
         <g data-detail="context" data-edge-from="nvim" data-edge-to="pane2" data-edge-label="输出" data-edge-key="12" data-edge-id="o-nvim-pane2">
-          <rect x="345" y="387" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="360" y="397" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
+          <rect x="153" y="247" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="168" y="257" class="t-edge-emphasis" font-size="10" font-weight="500" text-anchor="middle">输出</text>
         </g>
         <g data-detail="context" data-edge-from="nvim" data-edge-to="emu" data-edge-label="输出 · passthrough ESC P tmux; … ESC \" data-edge-key="13" data-edge-id="o-passthrough">
-          <rect x="173.8" y="404" width="192.4" height="14" rx="3" class="c-mask"/>
-          <text x="270" y="414" class="t-edge-emphasis" font-size="8" text-anchor="middle">输出 · passthrough ESC P tmux; … ESC \</text>
+          <rect x="99.8" y="148" width="192.4" height="14" rx="3" class="c-mask"/>
+          <text x="196" y="158" class="t-edge-emphasis" font-size="8" text-anchor="middle">输出 · passthrough ESC P tmux; … ESC \</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
         <g data-graph-role="structural-frame-label" data-composition-frame-id="0" data-composition-frame-kind="region" data-composition-frame-label="L0 · 本机终端">
-          <rect data-graph-role="structural-frame-label-mask" x="14" y="40" width="80.2" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="18" y="53" class="t-cloud" font-size="9" font-weight="600">L0 · 本机终端</text>
+          <rect data-graph-role="structural-frame-label-mask" x="164" y="40" width="80.2" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="168" y="53" class="t-cloud" font-size="9" font-weight="600">L0 · 本机终端</text>
         </g>
 
         <g data-graph-role="structural-frame-label" data-composition-frame-id="1" data-composition-frame-kind="region" data-composition-frame-label="L1 · tmux pane">
-          <rect data-graph-role="structural-frame-label-mask" x="306" y="180" width="85.6" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="310" y="193" class="t-cloud" font-size="9" font-weight="600">L1 · tmux pane</text>
+          <rect data-graph-role="structural-frame-label-mask" x="98" y="180" width="85.6" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="102" y="193" class="t-cloud" font-size="9" font-weight="600">L1 · tmux pane</text>
         </g>
 
         <!-- Legend -->
         <g data-legend="" data-legend-bridge="">
-          <text x="40" y="456" class="t-primary" font-size="12" font-weight="650">图例</text>
-          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="终端侧 · 持有 ptmx" data-legend-x="40" data-legend-baseline="476" data-legend-width="155">
-            <rect x="40" y="467" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
-            <text x="62" y="476" class="t-muted" font-size="10" font-weight="500">终端侧 · 持有 ptmx</text>
+          <text x="40" y="312" class="t-primary" font-size="12" font-weight="650">图例</text>
+          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="终端侧 · 持有 ptmx" data-legend-x="40" data-legend-baseline="332" data-legend-width="155">
+            <rect x="40" y="323" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
+            <text x="62" y="332" class="t-muted" font-size="10" font-weight="500">终端侧 · 持有 ptmx</text>
           </g>
-          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="程序 · fd 0 1 2 是 pts" data-legend-x="217" data-legend-baseline="476" data-legend-width="180">
-            <rect x="217" y="467" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
-            <text x="239" y="476" class="t-muted" font-size="10" font-weight="500">程序 · fd 0 1 2 是 pts</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="程序 · fd 0 1 2 是 pts" data-legend-x="217" data-legend-baseline="332" data-legend-width="180">
+            <rect x="217" y="323" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
+            <text x="239" y="332" class="t-muted" font-size="10" font-weight="500">程序 · fd 0 1 2 是 pts</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="tmux · 解析、重画、自己回答查询" data-legend-x="419" data-legend-baseline="476" data-legend-width="236">
-            <rect x="419" y="467" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
-            <text x="441" y="476" class="t-muted" font-size="10" font-weight="500">tmux · 解析、重画、自己回答查询</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="tmux · 解析、重画、自己回答查询" data-legend-x="419" data-legend-baseline="332" data-legend-width="236">
+            <rect x="419" y="323" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
+            <text x="441" y="332" class="t-muted" font-size="10" font-weight="500">tmux · 解析、重画、自己回答查询</text>
           </g>
-          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="内核 PTY" data-legend-x="40" data-legend-baseline="498" data-legend-width="93">
-            <rect x="40" y="489" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
-            <text x="62" y="498" class="t-muted" font-size="10" font-weight="500">内核 PTY</text>
+          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="内核 PTY" data-legend-x="677" data-legend-baseline="332" data-legend-width="93">
+            <rect x="677" y="323" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
+            <text x="699" y="332" class="t-muted" font-size="10" font-weight="500">内核 PTY</text>
           </g>
         </g>
       <metadata id="archify-software-notices">NOTICE

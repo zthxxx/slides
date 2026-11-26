@@ -61,7 +61,7 @@ iTerm2 / Ghostty / kitty / Warp 是什么
 
 tmux / herdr：终端里又装了一层终端
 
-<img class="diagram w-[1000px]" src="/images/diagrams/tmux-layers.svg" alt="tmux 在基础分层上多叠一层：tmux client 运行在 pts/0 上，把这个 tty 的 fd 交给 tmux server；server 直接读 pts/0 拿输入、往 pts/0 写输出，并为每个 pane 持有一个 ptmx，zsh 和 nvim 分别运行在 pts/1、pts/2 上；pane 里的程序只能用 passthrough 序列把输出直达外层终端" />
+<img class="diagram w-[1360px]" src="/images/diagrams/tmux-layers.svg" alt="tmux 在基础分层上多叠一层：tmux client 运行在 pts/0 上，把这个 tty 的 fd 交给 tmux server；server 直接读 pts/0 拿输入、往 pts/0 写输出，并为每个 pane 持有一个 ptmx，zsh 和 nvim 分别运行在 pts/1、pts/2 上；pane 里的程序只能用 passthrough 序列把输出直达外层终端" />
 
 <!--
 - 回答开头的问题：是的，tmux 在中间又装了一层终端。对外层终端来说，tmux client 只是 pts/0 上的一个普通程序；对 pane 里的程序来说，tmux server 就是它们的终端模拟器
@@ -107,7 +107,7 @@ tmux：两个客户端看同一个会话，会话里再开 shell
 
 ssh 里再开 tmux：两层叠在一起
 
-<img class="diagram w-[1240px]" src="/images/diagrams/ssh-tmux-layers.svg" alt="ssh 和 tmux 两层叠加：本机 Terminal、pts/0、ssh；远端 sshd、pts/1，tmux client 运行在 pts/1 上并把它交给 tmux server；tmux server 为每个 pane 持有 ptmx，zsh 和 nvim 运行在 pts/2、pts/3 上；每一段都有输入和输出两个方向" />
+<img class="diagram w-[1260px]" src="/images/diagrams/ssh-tmux-layers.svg" alt="ssh 和 tmux 两层叠加：本机 Terminal、pts/0、ssh；远端 sshd、pts/1，tmux client 运行在 pts/1 上并把它交给 tmux server；tmux server 为每个 pane 持有 ptmx，zsh 和 nvim 运行在 pts/2、pts/3 上；每一段都有输入和输出两个方向" />
 
 <!--
 - 把前两张图叠起来：本机这一层 (L0) 和 ssh 那张图一样；远端的 ssh 会话 (L1) 里，pts/1 上跑的不再是 zsh，而是 tmux client；tmux server 再开出一层 (L2)，每个 pane 一个 pts

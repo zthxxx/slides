@@ -10,9 +10,11 @@
  * stay in `.logs/diagrams/<name>/` for inspection. The SVG then comes from archify's static `export-svg`.
  * Ref: .agents/skills/archify (archify 3.3.2) `SKILL.md`, `references/delivery-contract.md`.
  */
+import type { Browser } from 'playwright-chromium'
 import { $, Glob } from 'bun'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { chromium } from 'playwright-chromium'
 
 const deckDir = path.resolve(import.meta.dir, '..')
 const archify = path.resolve(deckDir, '../../.agents/skills/archify/bin/archify.mjs')
@@ -27,6 +29,7 @@ if (unknown.length)
   throw new Error(`No diagram source named: ${unknown.join(', ')}`)
 
 await mkdir(outDir, { recursive: true })
+const browser = await chromium.launch({ channel: 'chrome' })
 
 let failed = 0
 for (const file of selected) {
@@ -53,11 +56,12 @@ for (const file of selected) {
 
   const exported = path.join(runDir, `${name}.svg`)
   await $`node ${archify} export-svg ${type} ${source} ${exported} --theme light --quality ${quality} --json`.quiet()
-  const svg = haloLabels(pruneFontFaces(await readFile(exported, 'utf8')))
+  const svg = await cropToContent(browser, haloLabels(pruneFontFaces(await readFile(exported, 'utf8'))))
   await writeFile(path.join(outDir, `${name}.svg`), svg)
   console.log(`✓ ${name} → public/images/diagrams/${name}.svg (${Math.round(svg.length / 1024)} KiB)`)
 }
 
+await browser.close()
 if (failed)
   process.exit(1)
 
@@ -106,6 +110,50 @@ function haloLabels(svg: string): string {
 .c-mask + text { paint-order: stroke fill; stroke: var(--bg, #f4f5f7); stroke-width: 6px; stroke-linejoin: round; }
 </style>`
   return svg.replace(/<\/svg>\s*$/, `${style}</svg>\n`)
+}
+
+/**
+ * archify sizes the canvas from fixed bands rather than from what it draws: a sequence always starts its participants at
+ * y 72 (`renderers/sequence/render-sequence.mjs` `layout.topY`), and an architecture keeps 30 above its first frame.
+ * Measures the drawn content in Chrome and fits the canvas to it with an even margin, so a diagram spends its slide
+ * height on content.
+ */
+async function cropToContent(browser: Browser, svg: string): Promise<string> {
+  const margin = 20
+  const page = await browser.newPage()
+  await page.setContent(svg)
+  const box = await page.evaluate(async () => {
+    await document.fonts.ready
+    const root = document.querySelector('svg')!
+    const toUser = root.getScreenCTM()!.inverse()
+    const edges = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }
+    for (const element of root.children) {
+      if (element.matches('defs, style, title, desc, metadata, .archify-bake-background, [fill="url(#grid)"]'))
+        continue
+      const rect = element.getBoundingClientRect()
+      if (!rect.width && !rect.height)
+        continue
+      const from = new DOMPoint(rect.left, rect.top).matrixTransform(toUser)
+      const to = new DOMPoint(rect.right, rect.bottom).matrixTransform(toUser)
+      edges.left = Math.min(edges.left, from.x)
+      edges.top = Math.min(edges.top, from.y)
+      edges.right = Math.max(edges.right, to.x)
+      edges.bottom = Math.max(edges.bottom, to.y)
+    }
+    return edges
+  })
+  await page.close()
+
+  const x = Math.floor(box.left) - margin
+  const y = Math.floor(box.top) - margin
+  const width = Math.ceil(box.right) + margin - x
+  const height = Math.ceil(box.bottom) + margin - y
+  const canvas = `x="${x}" y="${y}" width="${width}" height="${height}"`
+  return svg
+    .replace(/(<svg\b[^>]*?)\sviewBox="[^"]*"/, `$1 viewBox="${x} ${y} ${width} ${height}"`)
+    .replace(/(<svg\b[^>]*?)\swidth="[^"]*"\sheight="[^"]*"/, `$1 width="${width}" height="${height}"`)
+    .replace(/<rect class="archify-bake-background" [^>]*?fill=/, `<rect class="archify-bake-background" ${canvas} fill=`)
+    .replace(/<rect width="100%" height="100%" fill="url\(#grid\)"/, `<rect ${canvas} fill="url(#grid)"`)
 }
 
 function decodeEntities(text: string): string {

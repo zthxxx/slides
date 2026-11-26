@@ -146,6 +146,9 @@ importers:
       fast-check:
         specifier: 'catalog:'
         version: 4.10.2
+      playwright-chromium:
+        specifier: 'catalog:'
+        version: 1.50.1
 
 packages:
 
