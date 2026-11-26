@@ -33,6 +33,24 @@ yarn add slidev-theme-eloc
 Learn more how to use theme with https://sli.dev/themes/use
 
 
+## Components
+
+### `<ScrollFade>`
+
+A vertical scroll container. While content remains above or below it, that edge fades out,
+which hints at scrolling since the theme hides scrollbars.
+Give it a height limit; `--scroll-fade-size` sets the fade depth (default `3em`).
+
+```markdown
+<ScrollFade class="max-h-[600px]">
+
+- a long list
+- ...
+
+</ScrollFade>
+```
+
+
 ## Screenshots
 
 ![001](https://user-images.githubusercontent.com/15135943/181217300-670265d6-48f8-44e0-a558-75173d6037c3.png)

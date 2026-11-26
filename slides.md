@@ -6,7 +6,7 @@ routerMode: hash
 
 # SLIDES BY ZTHXXX
 
-<div class="scroll">
+<ScrollFade class="max-h-[600px]">
 
 <!-- `[title](/...)` with non-existent link only render as `<link>` by slidev which not show in slide -->
 - *2025.02* <a href="/present/pipeline-in-rxjs" target="_blank">Pipeline in `rxjs`</a>
@@ -20,14 +20,10 @@ routerMode: hash
 - *2019.10* <a href="/present/code-as-wygiwys" target="_blank">Code as WYGIWYS</a>
 <!-- - *2020.06* [Live in Terminal](/present/live-in-terminal/) <small>(need local service)</small> -->
 
-</div>
+</ScrollFade>
 
 <style>
   .slidev-layout {
-    .scroll {
-      @apply overflow-y-scroll max-h-[600px];
-    }
-
     h1 {
       @apply mb-8 text-8xl;
     }

@@ -23,7 +23,7 @@ routerMode: hash
 
 ## 开偏
 
-<div class="chat">
+<ScrollFade class="chat">
 
   <p class="left">我们在说吐槽大会，我们在追求什么？</p>
 
@@ -55,7 +55,7 @@ routerMode: hash
   人对于美好的事务有向往 <!-- 所以天然想改 -->
 
   看现在改动的 ROI，以及长远的考虑
-</div>
+</ScrollFade>
 
 <style>
   .slidev-layout {
@@ -64,7 +64,7 @@ routerMode: hash
     }
 
     .chat {
-      @apply w-full max-h-[660px] pb-[100px] overflow-scroll;
+      @apply w-full max-h-[660px] pb-[100px];
       @apply flex flex-col justify-start;
 
       p {
