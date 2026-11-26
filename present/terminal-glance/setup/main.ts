@@ -8,7 +8,8 @@ import { prefetchLinux } from '../runtime/kernel'
  * another window would compile a kernel it never boots.
  */
 export default defineAppSetup(({ router }) => {
-  unregisterIsolationWorker()
+  if (import.meta.env.DEV)
+    unregisterIsolationWorker()
   void router.isReady().then(() => {
     if (router.currentRoute.value.name === 'play' && !new URLSearchParams(location.search).has('print'))
       prefetchLinux()
@@ -16,10 +17,10 @@ export default defineAppSetup(({ router }) => {
 })
 
 /**
- * Earlier versions of the deck registered a service worker, `coi-sw.js`, to add COOP and COEP (scope
- * `/present/terminal-glance/` on the site, `/` on the dev origin). The host and the dev server send these headers
- * themselves (the repository root's `public/_headers`, vite.config.ts `server.headers`); a leftover worker would keep
- * intercepting the deck's navigations, and on the dev origin whatever else is served there later, such as another deck.
+ * The dev server isolates the page with its own headers (vite.config.ts `server.headers`), so it needs no service
+ * worker; one registered here by an earlier version of the deck would add the headers to whatever else is served on
+ * this origin later, such as another deck. A build keeps it: on GitHub Pages, which does not send the headers, the
+ * worker is what isolates the page (runtime/isolate-page.js).
  */
 function unregisterIsolationWorker(): void {
   void navigator.serviceWorker?.getRegistrations()

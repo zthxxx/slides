@@ -5,8 +5,8 @@ import { computed, ref, watch } from 'vue'
 /**
  * A video from another site, played in the slide with the browser's controls, and a link to the page it comes from.
  * It is a CORS request (`crossorigin`), which the deck's embedder policy (`require-corp`, from the repository root's
- * `public/_headers`) accepts from a host that answers with `Access-Control-Allow-Origin`, as GitHub Pages does; an
- * iframe of another site would be blocked under that policy.
+ * `public/_headers` or `public/coi-sw.js`) accepts from a host that answers with `Access-Control-Allow-Origin`, as
+ * GitHub Pages does; an iframe of another site would be blocked under that policy.
  */
 const props = defineProps<{
   src: string

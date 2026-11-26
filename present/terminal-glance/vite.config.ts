@@ -54,6 +54,33 @@ function preloadLinux(): Plugin {
   }
 }
 
+/**
+ * Inlines runtime/isolate-page.js at the top of a build's index.html: on a host that does not send COOP and COEP
+ * (GitHub Pages), it registers the service worker that makes the deck cross-origin isolated (public/coi-sw.js) and
+ * reloads the page once the worker is active, starting before the app's scripts so the reload comes early. Cloudflare
+ * Pages sends the headers from the repository root's `public/_headers`, and the dev server sends them itself (`server`).
+ */
+function isolatePage(): Plugin {
+  let base = '/'
+  return {
+    name: 'terminal-glance:isolate-page',
+    apply: 'build',
+    configResolved(resolved) {
+      base = resolved.base
+    },
+    transformIndexHtml: {
+      order: 'pre',
+      handler() {
+        // The full-line comments are for maintainers; index.html gets the code.
+        const code = readFileSync(new URL('./runtime/isolate-page.js', import.meta.url), 'utf8')
+          .replace(/^\s*\/\/.*\n/gm, '')
+          .replaceAll('__BASE__', JSON.stringify(base))
+        return [{ tag: 'script', children: code, injectTo: 'head-prepend' }]
+      },
+    },
+  }
+}
+
 export default {
   define: {
     // The page compares it with the version the published disk image was provisioned on (runtime/kernel.ts).
@@ -66,7 +93,7 @@ export default {
     // (`bundledKernelUrl`); pre-bundling would move the module away from that file.
     exclude: ['unkernel'],
   },
-  plugins: [preloadLinux()],
+  plugins: [isolatePage(), preloadLinux()],
   slidev: {
     // Slidev passes these to its @vitejs/plugin-vue, which compiles the slides' Markdown and the components
     // (@slidev/cli@53.1.0 `dist/serve-*.mjs`, `createVuePlugin`).
@@ -75,7 +102,8 @@ export default {
   server: {
     // Cross-origin isolation for Linux's 4 CPUs (runtime/kernel.ts), sent by the dev server itself, as unkernel.dev's
     // server does; Slidev's own index.html middleware applies these too (@slidev/cli@53.1.0 `dist/serve-*.mjs`).
-    // On the site, Cloudflare Pages sends the same two from the repository root's `public/_headers`.
+    // On the site, Cloudflare Pages sends the same two from the repository root's `public/_headers`; on GitHub Pages,
+    // public/coi-sw.js adds them (`isolatePage`).
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
