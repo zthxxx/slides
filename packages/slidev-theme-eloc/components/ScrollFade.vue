@@ -1,16 +1,25 @@
 <!--
   Vertical scroll container whose top / bottom edge fades out while content remains beyond it,
   the only scroll hint left since the theme hides scrollbars (`::-webkit-scrollbar` in ../styles/override.css).
-  The consumer sets its height limit (e.g. `max-height`); `--scroll-fade-size` sets the fade depth.
+  The consumer sets its height limit (e.g. `max-height`); `--scroll-fade-size` sets the full fade depth.
 -->
 <script setup lang="ts">
-import { useResizeObserver, useScroll } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useEventListener, useResizeObserver } from '@vueuse/core'
+import { ref, useTemplateRef } from 'vue'
 
 const viewport = useTemplateRef<HTMLElement>('viewport')
-const { arrivedState, measure } = useScroll(viewport)
+const distanceToTop = ref(0)
+const distanceToBottom = ref(0)
 
-// Slidev mounts upcoming slides while hidden, so the mount-time measure sees a zero-sized box
+function measure() {
+  const el = viewport.value
+  if (!el) return
+  distanceToTop.value = el.scrollTop
+  distanceToBottom.value = Math.max(0, el.scrollHeight - el.clientHeight - el.scrollTop)
+}
+
+useEventListener(viewport, 'scroll', measure, { passive: true })
+// Slidev mounts upcoming slides while hidden, so the size is only known once the box is laid out
 useResizeObserver(viewport, measure)
 </script>
 
@@ -18,9 +27,9 @@ useResizeObserver(viewport, measure)
   <div
     ref="viewport"
     class="scroll-fade"
-    :class="{
-      'fade-top': !arrivedState.top,
-      'fade-bottom': !arrivedState.bottom,
+    :style="{
+      '--scroll-distance-top': `${distanceToTop}px`,
+      '--scroll-distance-bottom': `${distanceToBottom}px`,
     }"
   >
     <slot />
@@ -28,21 +37,11 @@ useResizeObserver(viewport, measure)
 </template>
 
 <style scoped>
-/* registered so the fade edges can transition instead of snapping */
-@property --scroll-fade-top {
-  syntax: '<length>';
-  inherits: false;
-  initial-value: 0px;
-}
-
-@property --scroll-fade-bottom {
-  syntax: '<length>';
-  inherits: false;
-  initial-value: 0px;
-}
-
 .scroll-fade {
-  --scroll-fade-size: 4em;
+  --scroll-fade-size: 2em;
+  /* each edge's fade grows with the content beyond it, so it appears and vanishes along with scrolling */
+  --scroll-fade-top: min(var(--scroll-distance-top), var(--scroll-fade-size));
+  --scroll-fade-bottom: min(var(--scroll-distance-bottom), var(--scroll-fade-size));
 
   overflow-y: auto;
   /*
@@ -58,16 +57,5 @@ useResizeObserver(viewport, measure)
     calc(100% - var(--scroll-fade-bottom) * 0.7),
     transparent
   );
-  transition:
-    --scroll-fade-top 0.3s ease-out,
-    --scroll-fade-bottom 0.3s ease-out;
-
-  &.fade-top {
-    --scroll-fade-top: var(--scroll-fade-size);
-  }
-
-  &.fade-bottom {
-    --scroll-fade-bottom: var(--scroll-fade-size);
-  }
 }
 </style>

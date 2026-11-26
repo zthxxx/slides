@@ -39,7 +39,8 @@ Learn more how to use theme with https://sli.dev/themes/use
 
 A vertical scroll container. While content remains above or below it, that edge fades out,
 which hints at scrolling since the theme hides scrollbars.
-Give it a height limit; `--scroll-fade-size` sets the fade depth (default `4em`).
+The fade deepens with the content beyond the edge, up to `--scroll-fade-size` (default `2em`).
+Give it a height limit.
 
 ```markdown
 <ScrollFade class="max-h-[600px]">
