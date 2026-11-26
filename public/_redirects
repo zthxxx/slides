@@ -1,0 +1,3 @@
+# No redirects: the decks route by hash (`routerMode: hash`). Without this file, Slidev writes a SPA fallback here,
+# `/*  /index.html  200`, which Cloudflare Pages rejects as an infinite loop on every deploy.
+# Ref: @slidev/cli@53.1.0 `dist/build-*.mjs` (`_redirects`), https://developers.cloudflare.com/pages/configuration/redirects/

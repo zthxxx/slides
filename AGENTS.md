@@ -1,12 +1,12 @@
-This repo ships a **multi-deck Slidev site** deployed to https://slides.zthxxx.me (GitHub Pages, CNAME in `public/CNAME`).
+This repo ships a **multi-deck Slidev site** deployed to https://slides.zthxxx.me (Cloudflare Pages project `slides`, a Direct Upload from CI; response headers and caching rules in `public/_headers`).
 
 
 ### Layout
 
 - `slides.md` — root landing deck; its links point to each sub-deck under `/present/<slide>/`.
-  Uses `routerMode: hash` so the static GH Pages host can resolve in-deck navigation without server rewrites.
+  Uses `routerMode: hash` so the static host can resolve in-deck navigation without server rewrites (`public/_redirects` stays empty).
 - `packages/slidev-theme-eloc/` — the shared Slidev theme (`slidev-theme-eloc`), overrides its dependency set. Owns layouts, styles, and theme-level Slidev defaults.
-- `public/` — site-wide static assets copied to the root of `.site/` by Slidev.
+- `public/` — site-wide static assets copied to the root of `.site/` by Slidev, including the host's `_headers` and `_redirects`.
 - `present/<slide-name>/` — one deck per directory.
   - `slides.md`: Slidev entry file for this deck
   - `pages/*.md`: optional, slide content split from `slides.md` for better organization;
@@ -47,7 +47,10 @@ The root commands do not name any deck or package; a package opts in through the
 
 ## CI / Deploy
 
-Every push and PR runs `pnpm test` and `pnpm build`. On `master`, `.site/` is published to the `gh-pages`. see `.github/workflows/build.yml`
+Every push and PR runs `pnpm test` and `pnpm build`. On `master`, `.site/` is uploaded to Cloudflare Pages (`wrangler pages deploy`, secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`). see `.github/workflows/build.yml`
+
+`public/_headers` gives `/present/terminal-glance/*` the COOP/COEP headers its cross-origin isolation needs, and long-lived caching to files named by their content.
+Preview a build with these rules locally: `npx wrangler pages dev .site`.
 
 
 ## Adding a new deck

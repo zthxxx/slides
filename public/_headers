@@ -1,0 +1,26 @@
+# Cloudflare Pages applies these rules to the static files of `.site/`.
+# Ref: https://developers.cloudflare.com/pages/configuration/headers/
+
+# Cross-origin isolation, which gives terminal-glance's Linux its 4 CPUs: SharedArrayBuffer needs both headers on the
+# deck's documents and on its worker scripts (present/terminal-glance/docs/isolation.md).
+/present/terminal-glance/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
+# Files named by their content never change at their URL: Vite's hashed build output of each deck, and the guest
+# image's chunks and boot bundles (present/terminal-glance/image/pack.ts). The root `/assets/` is left out, since the
+# root `public/assets/` puts fonts with fixed names next to Vite's files.
+/present/:deck/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/present/terminal-glance/linux/chunks/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/present/terminal-glance/linux/boot/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/present/terminal-glance/linux/distro/chunks/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/present/terminal-glance/linux/distro/boot/*
+  Cache-Control: public, max-age=31536000, immutable

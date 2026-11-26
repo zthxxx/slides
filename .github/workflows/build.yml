@@ -68,11 +68,14 @@ jobs:
         run: |
           pnpm build
 
+      # Cloudflare Pages, as a Direct Upload of the built `.site/`: the host has to send the response headers in
+      # public/_headers (terminal-glance's cross-origin isolation).
+      # https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/
       - name: Deploy site
         if: ${{ github.ref == 'refs/heads/master' }}
-        uses: peaceiris/actions-gh-pages@v4
+        # https://github.com/cloudflare/wrangler-action
+        uses: cloudflare/wrangler-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./.site
-          # One commit on gh-pages, so the large generated assets of old builds do not pile up in its history.
-          force_orphan: true
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy .site --project-name=slides --branch=master
